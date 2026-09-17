@@ -37,18 +37,17 @@
         <div class="days" id="calendarDays"></div>
       </section>
 
-      <section class="filters">
-        <h2>Filtros</h2>
-        <label>Buscar paciente<input id="searchInput" type="search" placeholder="Nome ou código"></label>
-        <label>Fisioterapeuta<select id="therapistFilter"><option value="">Todas</option></select></label>
-        <label>Convênio<select id="agreementFilter"><option value="">Todos</option><option>IAMSPE</option><option>Outros</option></select></label>
-        <button class="secondary wide" id="clearFilters">Limpar filtros</button>
-      </section>
-      <section class="team-list"><h2>Fisioterapia</h2><div id="therapistList"><p class="empty-mini">Nenhum profissional cadastrado.</p></div></section>
+      <nav class="professional-directory" aria-label="Agendas por setor">
+        <details open><summary>Médicos <span>⌄</span></summary><div data-profession-list="Médico"><p class="empty-mini">Nenhum profissional.</p></div></details>
+        <details open><summary>Fisioterapia <span>⌄</span></summary><div data-profession-list="Fisioterapeuta"><p class="empty-mini">Nenhum profissional.</p></div></details>
+        <details><summary>Pilates <span>⌄</span></summary><div data-profession-list="Pilates"><p class="empty-mini">Nenhum profissional.</p></div></details>
+        <details><summary>RPG <span>⌄</span></summary><div data-profession-list="RPG"><p class="empty-mini">Nenhum profissional.</p></div></details>
+        <button class="add-professional admin-only" id="sidebarAddProfessional" type="button" hidden>Adicionar +</button>
+      </nav>
     </aside>
 
     <section class="workspace page-view" data-page="inicio" hidden>
-      <div class="workspace-head"><div><p class="eyebrow">PAINEL GERAL</p><h1>Início</h1><p data-selected-date></p></div></div>
+      <div class="workspace-head"><div><p class="eyebrow">PAINEL GERAL</p><h1>Início</h1><div class="head-date-row"><p data-selected-date></p><button class="header-filter" type="button">⌕ Filtro</button></div></div></div>
       <div class="home-overview">
         <article><span>▦</span><div><strong>Agenda do dia</strong><p>Nenhum atendimento cadastrado.</p></div></article>
         <article><span>▤</span><div><strong>Relatórios pendentes</strong><p><b id="homePending">0</b> solicitações aguardando.</p></div></article>
@@ -58,20 +57,20 @@
     </section>
 
     <section class="workspace page-view" data-page="agendas" hidden>
-      <div class="workspace-head"><div><p class="eyebrow">ATENDIMENTOS</p><h1>Agendas</h1><p data-selected-date></p></div><button class="primary" type="button">＋ Novo agendamento</button></div>
-      <div class="agenda-toolbar"><button class="secondary" id="todayButton">Hoje</button><strong data-selected-date></strong><select aria-label="Profissional da agenda"><option>Todos os profissionais</option></select></div>
+      <div class="workspace-head"><div><p class="eyebrow">ATENDIMENTOS</p><h1>Agendas</h1><div class="head-date-row"><p data-selected-date></p><button class="header-filter" type="button">⌕ Filtro</button></div></div><button class="primary" type="button">＋ Novo agendamento</button></div>
+      <div class="agenda-toolbar"><button class="secondary" id="todayButton">Hoje</button><strong data-selected-date></strong><select id="agendaProfessional" aria-label="Profissional da agenda"><option value="">Todos os profissionais</option></select></div>
       <section class="agenda-day"><div class="time-column"><span>08:00</span><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span><span>15:00</span><span>16:00</span><span>17:00</span></div><div class="agenda-empty"><strong>Agenda livre</strong><p>Nenhum atendimento cadastrado para esta data.</p></div></section>
     </section>
 
     <section class="workspace page-view" data-page="financeiro" hidden>
-      <div class="workspace-head"><div><p class="eyebrow">CONTROLE FINANCEIRO</p><h1>Financeiro</h1><p data-selected-date></p></div><button class="primary" type="button">＋ Novo lançamento</button></div>
+      <div class="workspace-head"><div><p class="eyebrow">CONTROLE FINANCEIRO</p><h1>Financeiro</h1><div class="head-date-row"><p data-selected-date></p><button class="header-filter" type="button">⌕ Filtro</button></div></div><button class="primary" type="button">＋ Novo lançamento</button></div>
       <div class="finance-summary"><article><span>Entradas</span><strong>R$ 0,00</strong></article><article><span>Saídas</span><strong>R$ 0,00</strong></article><article><span>Saldo do dia</span><strong>R$ 0,00</strong></article></div>
       <section class="day-panel"><h2>Lançamentos</h2><p class="large-empty">Nenhum lançamento financeiro nesta data.</p></section>
     </section>
 
     <section class="workspace page-view" data-page="relatorio">
       <div class="workspace-head">
-        <div><p class="eyebrow">RELATÓRIOS CLÍNICOS</p><h1>Fluxo de solicitações</h1><p id="todayLabel" data-selected-date></p></div>
+        <div><p class="eyebrow">RELATÓRIOS CLÍNICOS</p><h1>Fluxo de solicitações</h1><div class="head-date-row"><p id="todayLabel" data-selected-date></p><button class="header-filter" type="button">⌕ Filtro</button></div></div>
         <button class="primary" id="newRequest">＋ Nova solicitação</button>
       </div>
 
@@ -91,6 +90,18 @@
   </main>
 
   <footer><span>APFlow • Relatórios clínicos</span><span id="footerSummary">0 registros • 0 aguardando • 0 prontos</span><span>Sincronizado agora</span></footer>
+
+  <dialog id="filterDialog" class="filter-dialog">
+    <form method="dialog" class="filter-panel">
+      <div class="dialog-head"><div><p class="eyebrow">FILTROS DA ÁREA</p><h2 id="filterTitle">Filtrar relatórios</h2></div><button class="icon-button" value="cancel" aria-label="Fechar">×</button></div>
+      <div class="form-grid">
+        <label class="full">Buscar paciente ou código<input id="searchInput" type="search" placeholder="Nome ou código"></label>
+        <label>Profissional<select id="therapistFilter"><option value="">Todos</option></select></label>
+        <label>Convênio<select id="agreementFilter"><option value="">Todos</option><option>IAMSPE</option><option>Outros</option></select></label>
+      </div>
+      <div class="dialog-actions"><button class="secondary" id="clearFilters" type="button">Limpar filtros</button><button class="primary" value="confirm">Aplicar</button></div>
+    </form>
+  </dialog>
 
   <dialog id="requestDialog">
     <form id="requestForm" method="dialog">
@@ -112,10 +123,11 @@
       <div class="dialog-head"><div><p class="eyebrow">ÁREA RESTRITA</p><h2>Administração</h2></div><button class="icon-button" type="button" id="closeAdmin" aria-label="Fechar">×</button></div>
       <div class="admin-grid">
         <section class="admin-section">
-          <h3>Fisioterapeutas</h3>
-          <p>Cadastre profissionais disponíveis para receber solicitações.</p>
+          <h3>Profissionais</h3>
+          <p>Cadastre profissionais e vincule cada pessoa ao seu setor.</p>
           <form id="therapistForm" class="inline-form">
-            <label>Nome completo<input name="name" required placeholder="Nome da fisioterapeuta"></label>
+            <label>Nome completo<input name="name" required placeholder="Nome do profissional"></label>
+            <label>Setor<select name="profession" required><option>Médico</option><option>Fisioterapeuta</option><option>Pilates</option><option>RPG</option></select></label>
             <button class="primary" type="submit">Adicionar</button>
           </form>
           <div class="admin-list" id="adminTherapistList"></div>
