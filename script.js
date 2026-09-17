@@ -82,8 +82,9 @@ const codeInputs=[...document.querySelectorAll('.code-inputs input')];
 let firestoreConnected=false;
 
 function internalEmail(username){return `${username.trim().toLowerCase().replace(/[^a-z0-9._-]/g,'')}@apflow.local`}
+function firebasePassword(password){return `AP:${password}`}
 function firebaseMessage(reason){
- const messages={'auth/email-already-in-use':'Este usuário já existe.','auth/invalid-credential':'Usuário ou senha incorretos.','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.','auth/invalid-email':'Use um nome de usuário válido.','auth/operation-not-allowed':'Ative o provedor E-mail/senha no Firebase Authentication.'};
+ const messages={'auth/email-already-in-use':'Este usuário já existe.','auth/invalid-credential':'Usuário ou senha incorretos.','auth/weak-password':'A senha precisa ter pelo menos 4 caracteres.','auth/invalid-email':'Use um nome de usuário válido.','auth/operation-not-allowed':'Ative o provedor E-mail/senha no Firebase Authentication.'};
  return messages[reason.code]||'Não foi possível concluir. Tente novamente.';
 }
 function revealApp(user){loginScreen.classList.add('hidden');document.querySelector('.user-area strong').textContent=user.displayName||'Equipe APFlow';setConnection(true,'Firebase conectado');if(!firestoreConnected){firestoreConnected=true;connectFirestore()}}
@@ -100,7 +101,7 @@ loginForm.addEventListener('submit',async event=>{
  error.textContent='';button.disabled=true;button.textContent='Entrando...';
  try{
    await setPersistence(auth,data.get('remember')?browserLocalPersistence:browserSessionPersistence);
-   await signInWithEmailAndPassword(auth,internalEmail(data.get('username')),data.get('password'));
+   await signInWithEmailAndPassword(auth,internalEmail(data.get('username')),firebasePassword(data.get('password')));
  }catch(reason){error.textContent=firebaseMessage(reason)}
  finally{button.disabled=false;button.textContent='Entrar'}
 });
@@ -111,7 +112,7 @@ registerForm.addEventListener('submit',async event=>{
  try{
    if(await hashText(code)!==accessCodeHash)throw new Error('invalid-code');
    const username=data.get('username').trim();if(internalEmail(username)==='@apflow.local')throw new Error('invalid-username');
-   const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),data.get('password'));
+   const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),firebasePassword(data.get('password')));
    await updateProfile(credential.user,{displayName:data.get('fullName').trim()});
    await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),role:'equipe',createdAt:serverTimestamp()});
    document.querySelector('.user-area strong').textContent=data.get('fullName').trim();
