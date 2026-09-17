@@ -123,6 +123,21 @@
       <div class="dialog-actions"><button type="button" class="secondary" id="cancelDialog">Cancelar</button><button class="primary" type="submit">Enviar pedido</button></div>
     </form>
   </dialog>
+  <dialog id="appointmentDialog">
+    <form id="appointmentForm">
+      <div class="dialog-head"><div><p class="eyebrow">AGENDA DE FISIOTERAPIA</p><h2 id="appointmentTitle">Agendar paciente</h2></div><button class="icon-button" type="button" id="closeAppointment" aria-label="Fechar">×</button></div>
+      <input name="appointmentId" type="hidden"><input name="time" type="hidden"><input name="column" type="hidden">
+      <div class="form-grid">
+        <label class="full">Nome do paciente *<input name="patient" required></label>
+        <label>Código<input name="code" required></label>
+        <label>Convênio<select name="agreement"><option>IAMSPE</option><option>Outros</option></select></label>
+        <label class="full">Tipo de tratamento<input name="treatment" required placeholder="Ex.: Fisioterapia, trauma ou ortopedia"></label>
+        <label class="choice"><input name="billed" type="checkbox"> 💼 Cobrado/faturado</label>
+        <label class="choice"><input name="present" type="checkbox"> ✅ Paciente no local</label>
+      </div>
+      <div class="dialog-actions"><button class="secondary" type="button" id="cancelAppointment">Cancelar</button><button class="primary" type="submit">Salvar agendamento</button></div>
+    </form>
+  </dialog>
   <dialog id="adminDialog" class="admin-dialog">
     <div class="admin-panel">
       <div class="dialog-head"><div><p class="eyebrow">ÁREA RESTRITA</p><h2>Administração</h2></div><button class="icon-button" type="button" id="closeAdmin" aria-label="Fechar">×</button></div>
