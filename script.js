@@ -45,19 +45,22 @@ function render(){
  renderTherapistCounts();
 }
 function renderTherapistCounts(){
- const list=document.querySelector('#therapistList');
- list.innerHTML=therapists.length?therapists.map(t=>`<button>${t.name} <b>${reports.filter(r=>r.therapist===t.name&&r.status!=='entregue').length}</b></button>`).join(''):'<p class="empty-mini">Nenhum profissional cadastrado.</p>';
+ const groups=['Médico','Fisioterapeuta','Pilates','RPG'];
+ groups.forEach(group=>{const list=document.querySelector(`[data-profession-list="${group}"]`);const people=therapists.filter(person=>(person.profession||'Fisioterapeuta')===group);list.innerHTML=people.length?'':'<p class="empty-mini">Nenhum profissional.</p>';people.forEach(person=>{const link=document.createElement('button');link.type='button';link.className='professional-link';link.innerHTML=`<span>${person.name}</span><b>›</b>`;link.addEventListener('click',()=>openProfessionalAgenda(person.name));list.append(link)})});
 }
 function renderTherapists(){
- const filter=document.querySelector('#therapistFilter');const request=document.querySelector('#requestTherapist');
- const selectedFilter=filter.value;const selectedRequest=request.value;
+ const filter=document.querySelector('#therapistFilter');const request=document.querySelector('#requestTherapist');const agenda=document.querySelector('#agendaProfessional');
+ const selectedFilter=filter.value;const selectedRequest=request.value;const selectedAgenda=agenda.value;
  filter.innerHTML='<option value="">Todas</option>'+therapists.map(t=>`<option>${t.name}</option>`).join('');
- request.innerHTML='<option value="">Selecione</option>'+therapists.map(t=>`<option>${t.name}</option>`).join('');
- if(therapists.some(t=>t.name===selectedFilter))filter.value=selectedFilter;if(therapists.some(t=>t.name===selectedRequest))request.value=selectedRequest;
+ request.innerHTML='<option value="">Selecione</option>'+therapists.filter(t=>(t.profession||'Fisioterapeuta')==='Fisioterapeuta').map(t=>`<option>${t.name}</option>`).join('');
+ agenda.innerHTML='<option value="">Todos os profissionais</option>'+therapists.map(t=>`<option>${t.name}</option>`).join('');
+ if(therapists.some(t=>t.name===selectedFilter))filter.value=selectedFilter;if(therapists.some(t=>t.name===selectedRequest))request.value=selectedRequest;if(therapists.some(t=>t.name===selectedAgenda))agenda.value=selectedAgenda;
  renderTherapistCounts();
  const adminList=document.querySelector('#adminTherapistList');
- adminList.innerHTML=therapists.length?therapists.map(t=>`<div class="admin-row"><div><strong>${t.name}</strong><small>Fisioterapeuta</small></div><span>Ativo</span></div>`).join(''):'<p class="empty-mini">Nenhum fisioterapeuta cadastrado.</p>';
+ adminList.innerHTML=therapists.length?therapists.map(t=>`<div class="admin-row"><div><strong>${t.name}</strong><small>${t.profession||'Fisioterapeuta'}</small></div><span>Ativo</span></div>`).join(''):'<p class="empty-mini">Nenhum profissional cadastrado.</p>';
 }
+function switchPage(view){document.querySelectorAll('.tool[data-view]').forEach(item=>item.classList.toggle('active',item.dataset.view===view));document.querySelectorAll('.page-view').forEach(page=>page.hidden=page.dataset.page!==view)}
+function openProfessionalAgenda(name){switchPage('agendas');const agenda=document.querySelector('#agendaProfessional');agenda.value=name;showToast(`Agenda de ${name}`)}
 function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
 function longDate(date){const value=new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);return value.charAt(0).toUpperCase()+value.slice(1)}
 function dateKey(date){const year=date.getFullYear();const month=String(date.getMonth()+1).padStart(2,'0');const day=String(date.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
@@ -89,9 +92,12 @@ document.querySelector('#requestForm').addEventListener('submit',async e=>{
  try{await addDoc(collection(db,'relatorios'),report);form.reset();dialog.close();showToast('Solicitação salva no APFlow.')}catch(error){console.error(error);showToast('Não foi possível salvar. Ative o Firestore e confira as regras.')}finally{submit.disabled=false;submit.textContent='Enviar pedido'}
 });
 Object.values(filters).forEach(el=>el.addEventListener('input',render));
+filters.therapist.addEventListener('change',()=>{if(document.querySelector('.tool[data-view].active')?.dataset.view==='agendas')document.querySelector('#agendaProfessional').value=filters.therapist.value});
 document.querySelector('#clearFilters').addEventListener('click',()=>{Object.values(filters).forEach(el=>el.value='');render()});
 document.querySelectorAll('.metric').forEach(metric=>metric.addEventListener('click',()=>{document.querySelectorAll('.metric').forEach(m=>m.classList.remove('selected'));metric.classList.add('selected');const lane=document.querySelector(`.lane[data-status="${metric.dataset.filter}"]`);if(lane)lane.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})}));
-document.querySelectorAll('.tool[data-view]').forEach(tool=>tool.addEventListener('click',()=>{const view=tool.dataset.view;document.querySelectorAll('.tool[data-view]').forEach(item=>item.classList.toggle('active',item===tool));document.querySelectorAll('.page-view').forEach(page=>page.hidden=page.dataset.page!==view)}));
+document.querySelectorAll('.tool[data-view]').forEach(tool=>tool.addEventListener('click',()=>switchPage(tool.dataset.view)));
+const filterDialog=document.querySelector('#filterDialog');
+document.querySelectorAll('.header-filter').forEach(button=>button.addEventListener('click',()=>{const current=document.querySelector('.tool[data-view].active')?.dataset.view||'relatorio';const titles={inicio:'Filtrar visão geral',agendas:'Filtrar agendas',relatorio:'Filtrar relatórios',financeiro:'Filtrar financeiro'};document.querySelector('#filterTitle').textContent=titles[current];filterDialog.showModal()}));
 document.querySelector('#previousMonth').addEventListener('click',()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()});
 document.querySelector('#nextMonth').addEventListener('click',()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()});
 document.querySelector('#todayButton').addEventListener('click',()=>{selectedDate=new Date();calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);updateSelectedDate();renderCalendar()});
@@ -133,7 +139,7 @@ async function revealApp(user){
  loginScreen.classList.add('hidden');document.querySelector('.user-area strong').textContent=user.displayName||'Equipe APFlow';setConnection(true,'Firebase conectado');
  if(!firestoreConnected){firestoreConnected=true;connectFirestore()}
  if(!therapistsConnected){therapistsConnected=true;connectTherapists()}
- try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){document.querySelector('#adminButton').hidden=false;connectAdminUsers()}}catch(error){console.error('Perfil indisponível:',error)}
+ try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){document.querySelectorAll('.admin-only').forEach(element=>element.hidden=false);connectAdminUsers()}}catch(error){console.error('Perfil indisponível:',error)}
 }
 function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
 
@@ -187,7 +193,8 @@ function connectAdminUsers(){
 }
 const adminDialog=document.querySelector('#adminDialog');
 document.querySelector('#adminButton').addEventListener('click',()=>adminDialog.showModal());
+document.querySelector('#sidebarAddProfessional').addEventListener('click',()=>adminDialog.showModal());
 document.querySelector('#closeAdmin').addEventListener('click',()=>adminDialog.close());
-document.querySelector('#therapistForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const name=new FormData(form).get('name').trim();const button=form.querySelector('button');if(!name)return;button.disabled=true;try{await addDoc(collection(db,'profissionais'),{name,profession:'Fisioterapeuta',active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});form.reset();showToast('Fisioterapeuta adicionado.')}catch(error){console.error(error);showToast('Não foi possível adicionar o fisioterapeuta.')}finally{button.disabled=false}});
+document.querySelector('#therapistForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const name=data.get('name').trim();const profession=data.get('profession');const button=form.querySelector('button');if(!name)return;button.disabled=true;try{await addDoc(collection(db,'profissionais'),{name,profession,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});form.reset();showToast(`${profession} adicionado.`)}catch(error){console.error(error);showToast('Não foi possível adicionar o profissional.')}finally{button.disabled=false}});
 
 updateSelectedDate();renderCalendar();render();
