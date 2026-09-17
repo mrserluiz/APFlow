@@ -27,6 +27,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /agendamentos/{appointmentId} {
+      allow read, create, update: if request.auth != null;
+      allow delete: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
