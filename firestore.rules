@@ -2,14 +2,29 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
+    }
+
     match /relatorios/{relatorioId} {
       allow read, create, update: if request.auth != null;
       allow delete: if false;
     }
 
     match /usuarios/{userId} {
-      allow create, read, update: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId &&
+        request.resource.data.role in ['equipe', 'admin'] &&
+        (request.resource.data.role != 'admin' || request.resource.data.username == 'admin');
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow update: if isAdmin() ||
+        (request.auth != null && request.auth.uid == userId && request.resource.data.role == resource.data.role);
       allow delete: if false;
+    }
+
+    match /profissionais/{professionalId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin();
     }
 
     match /{document=**} {
