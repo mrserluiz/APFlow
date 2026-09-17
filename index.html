@@ -7,11 +7,12 @@
   <title>APFlow — Relatórios clínicos</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="login.css">
 </head>
 <body>
   <header class="app-header">
     <div class="window-title"><span class="brand-mark">✚</span><strong>APFlow</strong><span>Gestão de processos clínicos</span></div>
-    <div class="user-area"><span class="online-dot" id="connectionDot"></span> <span id="connectionStatus">Conectando ao Firebase...</span> <strong>Luciana Cristina</strong><button class="avatar" aria-label="Menu do usuário">LC</button></div>
+    <div class="user-area"><span class="online-dot" id="connectionDot"></span> <span id="connectionStatus">Aguardando acesso</span> <strong>Equipe APFlow</strong><button class="avatar" id="logoutButton" aria-label="Sair do sistema" title="Sair">↪</button></div>
   </header>
 
   <nav class="ribbon" aria-label="Navegação principal">
@@ -83,6 +84,25 @@
     </form>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
+    <form class="login-card" id="loginForm">
+      <span class="login-mark">✚</span>
+      <p class="eyebrow">ACESSO INTERNO</p>
+      <h1 id="loginTitle">Entrar no APFlow</h1>
+      <p>Digite o código de acesso com seis letras.</p>
+      <div class="code-inputs" aria-label="Código de acesso">
+        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 1" required>
+        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 2" required>
+        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 3" required>
+        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 4" required>
+        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 5" required>
+        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 6" required>
+      </div>
+      <p class="login-error" id="loginError" role="alert"></p>
+      <button class="login-button" type="submit">Entrar</button>
+      <small>Acesso restrito à equipe da clínica</small>
+    </form>
+  </section>
   <script type="module" src="script.js"></script>
 </body>
 </html>
