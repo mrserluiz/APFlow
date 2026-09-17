@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAnalytics, isSupported } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js';
-import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
+import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, setPersistence, signInWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
 import { addDoc, collection, doc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
 const firebaseConfig={
@@ -99,6 +99,7 @@ loginForm.addEventListener('submit',async event=>{
  event.preventDefault();const data=new FormData(loginForm);const button=loginForm.querySelector('button');const error=document.querySelector('#loginError');
  error.textContent='';button.disabled=true;button.textContent='Entrando...';
  try{
+   await setPersistence(auth,data.get('remember')?browserLocalPersistence:browserSessionPersistence);
    await signInWithEmailAndPassword(auth,internalEmail(data.get('username')),data.get('password'));
  }catch(reason){error.textContent=firebaseMessage(reason)}
  finally{button.disabled=false;button.textContent='Entrar'}
@@ -119,7 +120,8 @@ registerForm.addEventListener('submit',async event=>{
  finally{button.disabled=false;button.textContent='Criar conta'}
 });
 
-switchAuth.addEventListener('click',()=>{const registering=registerForm.classList.toggle('hidden')===false;loginForm.classList.toggle('hidden',registering);document.querySelector('#loginTitle').textContent=registering?'Criar nova conta':'Entrar no APFlow';switchAuth.textContent=registering?'Voltar para o login':'Criar uma nova conta';document.querySelector('#loginError').textContent='';document.querySelector('#registerError').textContent='';setTimeout(()=>registering?registerForm.elements.fullName.focus():loginForm.elements.username.focus(),50)});
+switchAuth.addEventListener('click',()=>{const registering=registerForm.classList.toggle('hidden')===false;loginForm.classList.toggle('hidden',registering);document.querySelector('#loginTitle').textContent=registering?'Criar nova conta':'Acesso ao sistema';switchAuth.textContent=registering?'Voltar para o login':'Criar uma nova conta';document.querySelector('#forgotPassword').hidden=registering;document.querySelector('#loginError').textContent='';document.querySelector('#registerError').textContent='';setTimeout(()=>registering?registerForm.elements.fullName.focus():loginForm.elements.username.focus(),50)});
+document.querySelector('#forgotPassword').addEventListener('click',()=>showToast('Procure o administrador da clínica para redefinir sua senha.'));
 document.querySelector('#logoutButton').addEventListener('click',async()=>{await signOut(auth);location.reload()});
 onAuthStateChanged(auth,user=>{if(user)revealApp(user);else showLogin()});
 
