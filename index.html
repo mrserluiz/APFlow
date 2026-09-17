@@ -8,6 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
+  <link rel="stylesheet" href="app-pages.css">
 </head>
 <body>
   <header class="app-header">
@@ -16,10 +17,10 @@
   </header>
 
   <nav class="ribbon" aria-label="Navegação principal">
-    <button class="tool active" data-view="dashboard"><span>⌂</span>Visão geral</button>
-    <button class="tool" data-view="solicitacoes"><span>▤</span>Solicitações</button>
-    <button class="tool" data-view="confeccao"><span>✎</span>Confecção</button>
-    <button class="tool" data-view="prontos"><span>✓</span>Prontos</button>
+    <button class="tool" data-view="inicio"><span>⌂</span>Início</button>
+    <button class="tool" data-view="agendas"><span>▦</span>Agendas</button>
+    <button class="tool active" data-view="relatorio"><span>▤</span>Relatório</button>
+    <button class="tool" data-view="financeiro"><span>◈</span>Financeiro</button>
     <div class="ribbon-separator"></div>
     <button class="tool" id="newRequestTop"><span>＋</span>Novo pedido</button>
     <button class="tool"><span>⌕</span>Localizar</button>
@@ -30,8 +31,8 @@
 
   <main class="app-shell">
     <aside class="sidebar">
-      <section class="mini-calendar" aria-label="Calendário de setembro de 2026">
-        <div class="calendar-head"><button aria-label="Mês anterior">‹</button><strong>Setembro 2026</strong><button aria-label="Próximo mês">›</button></div>
+      <section class="mini-calendar" aria-label="Calendário">
+        <div class="calendar-head"><button id="previousMonth" aria-label="Mês anterior">‹</button><strong id="calendarTitle"></strong><button id="nextMonth" aria-label="Próximo mês">›</button></div>
         <div class="weekdays"><span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span></div>
         <div class="days" id="calendarDays"></div>
       </section>
@@ -46,9 +47,31 @@
       <section class="team-list"><h2>Fisioterapia</h2><div id="therapistList"><p class="empty-mini">Nenhum profissional cadastrado.</p></div></section>
     </aside>
 
-    <section class="workspace">
+    <section class="workspace page-view" data-page="inicio" hidden>
+      <div class="workspace-head"><div><p class="eyebrow">PAINEL GERAL</p><h1>Início</h1><p data-selected-date></p></div></div>
+      <div class="home-overview">
+        <article><span>▦</span><div><strong>Agenda do dia</strong><p>Nenhum atendimento cadastrado.</p></div></article>
+        <article><span>▤</span><div><strong>Relatórios pendentes</strong><p><b id="homePending">0</b> solicitações aguardando.</p></div></article>
+        <article><span>◈</span><div><strong>Movimento financeiro</strong><p>Sem lançamentos nesta data.</p></div></article>
+      </div>
+      <section class="day-panel"><h2>Resumo do dia</h2><p class="large-empty">Selecione uma área acima para começar.</p></section>
+    </section>
+
+    <section class="workspace page-view" data-page="agendas" hidden>
+      <div class="workspace-head"><div><p class="eyebrow">ATENDIMENTOS</p><h1>Agendas</h1><p data-selected-date></p></div><button class="primary" type="button">＋ Novo agendamento</button></div>
+      <div class="agenda-toolbar"><button class="secondary" id="todayButton">Hoje</button><strong data-selected-date></strong><select aria-label="Profissional da agenda"><option>Todos os profissionais</option></select></div>
+      <section class="agenda-day"><div class="time-column"><span>08:00</span><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span><span>15:00</span><span>16:00</span><span>17:00</span></div><div class="agenda-empty"><strong>Agenda livre</strong><p>Nenhum atendimento cadastrado para esta data.</p></div></section>
+    </section>
+
+    <section class="workspace page-view" data-page="financeiro" hidden>
+      <div class="workspace-head"><div><p class="eyebrow">CONTROLE FINANCEIRO</p><h1>Financeiro</h1><p data-selected-date></p></div><button class="primary" type="button">＋ Novo lançamento</button></div>
+      <div class="finance-summary"><article><span>Entradas</span><strong>R$ 0,00</strong></article><article><span>Saídas</span><strong>R$ 0,00</strong></article><article><span>Saldo do dia</span><strong>R$ 0,00</strong></article></div>
+      <section class="day-panel"><h2>Lançamentos</h2><p class="large-empty">Nenhum lançamento financeiro nesta data.</p></section>
+    </section>
+
+    <section class="workspace page-view" data-page="relatorio">
       <div class="workspace-head">
-        <div><p class="eyebrow">RELATÓRIOS CLÍNICOS</p><h1>Fluxo de solicitações</h1><p id="todayLabel">Quinta-feira, 17 de setembro de 2026</p></div>
+        <div><p class="eyebrow">RELATÓRIOS CLÍNICOS</p><h1>Fluxo de solicitações</h1><p id="todayLabel" data-selected-date></p></div>
         <button class="primary" id="newRequest">＋ Nova solicitação</button>
       </div>
 
