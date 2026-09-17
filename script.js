@@ -20,6 +20,18 @@ isSupported().then(supported=>{if(supported)getAnalytics(firebaseApp)}).catch(()
 
 let reports=[];
 let therapists=[];
+const defaultProfessionals=[
+ {id:'vanessa',name:'Dra. Vanessa',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:4,isDefault:true},
+ {id:'camila',name:'Dra. Camila',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:4,isDefault:true},
+ {id:'tamires',name:'Dra. Tamires',profession:'Fisioterapeuta',scheduleGroup:'Eletro Manhã',agendaColumns:5,isDefault:true},
+ {id:'fernanda',name:'Dra. Fernanda',profession:'Fisioterapeuta',scheduleGroup:'Eletro Manhã',agendaColumns:5,isDefault:true},
+ {id:'nadia',name:'Dra. Nadia',profession:'Fisioterapeuta',scheduleGroup:'Eletro Manhã',agendaColumns:5,isDefault:true},
+ {id:'mirian',name:'Dra. Mirian',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Tarde',agendaColumns:4,isDefault:true},
+ {id:'julliane',name:'Dra. Julliane',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Tarde',agendaColumns:4,isDefault:true},
+ {id:'alex',name:'Dr. Alex',profession:'Fisioterapeuta',scheduleGroup:'Eletro Tarde',agendaColumns:5,isDefault:true},
+ {id:'larissa',name:'Dra. Larissa',profession:'Fisioterapeuta',scheduleGroup:'Eletro Tarde',agendaColumns:5,isDefault:true},
+ {id:'marcia',name:'Dra. Marcia',profession:'Fisioterapeuta',scheduleGroup:'Eletro Tarde',agendaColumns:5,isDefault:true}
+];
 let selectedDate=new Date();
 let calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);
 const agendaSlots={manha:['08:00','08:40','09:20','10:00','10:40','11:20'],tarde:['13:00','13:40','14:20','15:00','15:40','16:20','17:00','17:40','18:20']};
@@ -47,8 +59,9 @@ function render(){
 }
 function renderTherapistCounts(){
  const groups=['Médico','Fisioterapeuta','Pilates','RPG'];
- groups.forEach(group=>{const list=document.querySelector(`[data-profession-list="${group}"]`);const people=therapists.filter(person=>(person.profession||'Fisioterapeuta')===group);list.innerHTML=people.length?'':'<p class="empty-mini">Nenhum profissional.</p>';people.forEach(person=>{const link=document.createElement('button');link.type='button';link.className='professional-link';link.innerHTML=`<span>${person.name}</span><b>›</b>`;link.addEventListener('click',()=>openProfessionalAgenda(person.name));list.append(link)})});
+ groups.forEach(group=>{const list=document.querySelector(`[data-profession-list="${group}"]`);const people=therapists.filter(person=>(person.profession||'Fisioterapeuta')===group);list.innerHTML=people.length?'':'<p class="empty-mini">Nenhum profissional.</p>';if(group==='Fisioterapeuta'){['Cinesio Manhã','Eletro Manhã','Cinesio Tarde','Eletro Tarde'].forEach(scheduleGroup=>{const members=people.filter(person=>person.scheduleGroup===scheduleGroup);if(!members.length)return;const heading=document.createElement('p');heading.className='directory-subgroup';heading.textContent=scheduleGroup;list.append(heading);members.forEach(person=>appendProfessionalLink(list,person))});people.filter(person=>!person.scheduleGroup).forEach(person=>appendProfessionalLink(list,person))}else people.forEach(person=>appendProfessionalLink(list,person))});
 }
+function appendProfessionalLink(list,person){const link=document.createElement('button');link.type='button';link.className='professional-link';link.innerHTML=`<span>${person.name}</span><b>›</b>`;link.addEventListener('click',()=>openProfessionalAgenda(person.name));list.append(link)}
 function renderTherapists(){
  const filter=document.querySelector('#therapistFilter');const request=document.querySelector('#requestTherapist');const agenda=document.querySelector('#agendaProfessional');
  const selectedFilter=filter.value;const selectedRequest=request.value;const selectedAgenda=agenda.value;
@@ -59,7 +72,7 @@ function renderTherapists(){
  renderTherapistCounts();
  const adminList=document.querySelector('#adminTherapistList');
  adminList.innerHTML=therapists.length?'':'<p class="empty-mini">Nenhum profissional cadastrado.</p>';
- therapists.forEach(person=>{const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${person.name}</strong><small>${person.profession||'Fisioterapeuta'}</small></div><label class="column-setting">Agenda <select aria-label="Colunas da agenda de ${person.name}"><option value="4" ${(person.agendaColumns||4)===4?'selected':''}>4 colunas</option><option value="5" ${person.agendaColumns===5?'selected':''}>5 colunas</option></select></label>`;row.querySelector('select').addEventListener('change',async event=>{event.target.disabled=true;try{await updateDoc(doc(db,'profissionais',person.id),{agendaColumns:Number(event.target.value),updatedAt:serverTimestamp()});showToast('Formato da agenda atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar a agenda.')}finally{event.target.disabled=false}});adminList.append(row)});
+ therapists.forEach(person=>{const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${person.name}</strong><small>${person.scheduleGroup||person.profession||'Fisioterapeuta'}</small></div><label class="column-setting">Agenda <select aria-label="Colunas da agenda de ${person.name}" ${person.isDefault?'disabled title="Profissional da lista inicial"':''}><option value="4" ${(person.agendaColumns||4)===4?'selected':''}>4 colunas</option><option value="5" ${person.agendaColumns===5?'selected':''}>5 colunas</option></select></label>`;const select=row.querySelector('select');if(!person.isDefault)select.addEventListener('change',async event=>{event.target.disabled=true;try{await updateDoc(doc(db,'profissionais',person.id),{agendaColumns:Number(event.target.value),updatedAt:serverTimestamp()});showToast('Formato da agenda atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar a agenda.')}finally{event.target.disabled=false}});adminList.append(row)});
  renderAgenda();
 }
 function switchPage(view){document.querySelectorAll('.tool[data-view]').forEach(item=>item.classList.toggle('active',item.dataset.view===view));document.querySelectorAll('.page-view').forEach(page=>page.hidden=page.dataset.page!==view)}
@@ -192,7 +205,7 @@ document.querySelector('#logoutButton').addEventListener('click',async()=>{await
 onAuthStateChanged(auth,user=>{if(user)revealApp(user);else showLogin()});
 
 function connectTherapists(){
- onSnapshot(query(collection(db,'profissionais'),orderBy('name')),snapshot=>{therapists=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.active!==false);renderTherapists()},error=>{console.error(error);showToast('Não foi possível carregar os fisioterapeutas.')});
+ onSnapshot(query(collection(db,'profissionais'),orderBy('name')),snapshot=>{const saved=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.active!==false);const savedNames=new Set(saved.map(person=>person.name.toLowerCase()));therapists=[...defaultProfessionals.filter(person=>!savedNames.has(person.name.toLowerCase())),...saved].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));renderTherapists()},error=>{console.error(error);therapists=[...defaultProfessionals];renderTherapists();showToast('Lista padrão carregada; Firebase indisponível.')});
 }
 function connectAdminUsers(){
  if(usersConnected)return;usersConnected=true;
