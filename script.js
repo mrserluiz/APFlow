@@ -30,8 +30,8 @@ const filters={search:document.querySelector('#searchInput'),therapist:document.
 
 function render(){
  Object.values(lists).forEach(list=>list.innerHTML='');
- const term=filters.search.value.trim().toLowerCase();
- const visible=reports.filter(r=>(!term||r.patient.toLowerCase().includes(term)||r.code.includes(term))&&(!filters.therapist.value||r.therapist===filters.therapist.value)&&(!filters.agreement.value||r.agreement===filters.agreement.value));
+ const term=filters.search.value.trim().toLowerCase();const compactTerm=term.replace(/\D/g,'');
+ const visible=reports.filter(r=>{const birthBr=r.birthDate?r.birthDate.split('-').reverse().join('/'):'';const textFields=[r.patient,r.code,r.birthDate,birthBr,r.phone,r.cpf,r.rg,r.insuranceCard].filter(Boolean).map(value=>String(value).toLowerCase());const textMatch=!term||textFields.some(value=>value.includes(term));const digitMatch=compactTerm&&textFields.some(value=>value.replace(/\D/g,'').includes(compactTerm));return(textMatch||digitMatch)&&(!filters.therapist.value||r.therapist===filters.therapist.value)&&(!filters.agreement.value||r.agreement===filters.agreement.value)});
  visible.filter(r=>lists[r.status]).forEach(r=>{
    const card=document.createElement('article'); card.className='report-card'; card.style.setProperty('--accent',colors[r.status]);
    card.innerHTML=`<div class="card-top"><div><h3>${r.patient}</h3><span class="code">Nº ${r.code}</span></div><span class="due ${r.due<='18/09/2026'?'urgent':''}">${r.due}</span></div><p>${r.agreement} • ${r.purpose}</p><div class="card-footer"><span class="badge">${labels[r.status]}</span><span class="therapist">${r.therapist}</span></div>`;
@@ -87,7 +87,7 @@ document.querySelectorAll('#closeDialog,#cancelDialog').forEach(b=>b.addEventLis
 document.querySelectorAll('[name="purpose"]').forEach(r=>r.addEventListener('change',()=>{const field=document.querySelector('#otherPurpose');field.disabled=r.value!=='Outro';if(!field.disabled)field.focus()}));
 document.querySelector('#requestForm').addEventListener('submit',async e=>{
  e.preventDefault();const form=e.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
- const report={patient:data.get('patient').trim(),code:data.get('code').trim(),agreement:data.get('agreement'),purpose:data.get('purpose')==='Outro'?(data.get('otherPurpose').trim()||'Outro'):data.get('purpose'),therapist:data.get('therapist'),requestDate:dateKey(selectedDate),due:data.get('dueDate'),status:'aguardando',createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+ const report={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate:data.get('birthDate'),phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),insuranceCard:data.get('insuranceCard').trim(),agreement:data.get('agreement'),purpose:data.get('purpose')==='Outro'?(data.get('otherPurpose').trim()||'Outro'):data.get('purpose'),therapist:data.get('therapist'),requestDate:dateKey(selectedDate),due:data.get('dueDate'),status:'aguardando',createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
  submit.disabled=true;submit.textContent='Enviando...';
  try{await addDoc(collection(db,'relatorios'),report);form.reset();dialog.close();showToast('Solicitação salva no APFlow.')}catch(error){console.error(error);showToast('Não foi possível salvar. Ative o Firestore e confira as regras.')}finally{submit.disabled=false;submit.textContent='Enviar pedido'}
 });
