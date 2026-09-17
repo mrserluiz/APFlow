@@ -126,7 +126,8 @@ registerForm.addEventListener('submit',async event=>{
    const username=data.get('username').trim();if(internalEmail(username)==='@apflow.local')throw new Error('invalid-username');
    const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),firebasePassword(data.get('password')));
    await updateProfile(credential.user,{displayName:data.get('fullName').trim()});
-   await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),role:'equipe',createdAt:serverTimestamp()});
+   const role=username.toLowerCase()==='admin'?'admin':'equipe';
+   await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),role,createdAt:serverTimestamp()});
    document.querySelector('.user-area strong').textContent=data.get('fullName').trim();
    registerForm.reset();showToast('Conta criada com sucesso.');
  }catch(reason){console.error('Falha ao criar conta:',reason);error.textContent=reason.message==='invalid-code'?'Código de cadastro incorreto.':reason.message==='invalid-username'?'Digite um usuário válido.':firebaseMessage(reason);codeInputs.forEach(input=>input.value='');codeInputs[0].focus()}
