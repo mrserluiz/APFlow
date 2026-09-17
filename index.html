@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#315f7d">
+  <title>APFlow — Relatórios clínicos</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="window-title"><span class="brand-mark">✚</span><strong>APFlow</strong><span>Gestão de processos clínicos</span></div>
+    <div class="user-area"><span class="online-dot"></span> Sistema online <strong>Luciana Cristina</strong><button class="avatar" aria-label="Menu do usuário">LC</button></div>
+  </header>
+
+  <nav class="ribbon" aria-label="Navegação principal">
+    <button class="tool active" data-view="dashboard"><span>⌂</span>Visão geral</button>
+    <button class="tool" data-view="solicitacoes"><span>▤</span>Solicitações</button>
+    <button class="tool" data-view="confeccao"><span>✎</span>Confecção</button>
+    <button class="tool" data-view="prontos"><span>✓</span>Prontos</button>
+    <div class="ribbon-separator"></div>
+    <button class="tool" id="newRequestTop"><span>＋</span>Novo pedido</button>
+    <button class="tool"><span>⌕</span>Localizar</button>
+    <button class="tool"><span>▣</span>Imprimir</button>
+    <button class="tool"><span>▥</span>Relatórios</button>
+  </nav>
+
+  <main class="app-shell">
+    <aside class="sidebar">
+      <section class="mini-calendar" aria-label="Calendário de setembro de 2026">
+        <div class="calendar-head"><button aria-label="Mês anterior">‹</button><strong>Setembro 2026</strong><button aria-label="Próximo mês">›</button></div>
+        <div class="weekdays"><span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span></div>
+        <div class="days" id="calendarDays"></div>
+      </section>
+
+      <section class="filters">
+        <h2>Filtros</h2>
+        <label>Buscar paciente<input id="searchInput" type="search" placeholder="Nome ou código"></label>
+        <label>Fisioterapeuta<select id="therapistFilter"><option value="">Todas</option><option>Alex Sandro</option><option>Camila</option><option>Fernanda</option><option>Vanessa</option></select></label>
+        <label>Convênio<select id="agreementFilter"><option value="">Todos</option><option>IAMSPE</option><option>Outros</option></select></label>
+        <button class="secondary wide" id="clearFilters">Limpar filtros</button>
+      </section>
+      <section class="team-list"><h2>Fisioterapia</h2><button>Alex Sandro <b>3</b></button><button>Camila <b>2</b></button><button>Fernanda <b>4</b></button><button>Vanessa <b>2</b></button></section>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace-head">
+        <div><p class="eyebrow">RELATÓRIOS CLÍNICOS</p><h1>Fluxo de solicitações</h1><p id="todayLabel">Quinta-feira, 17 de setembro de 2026</p></div>
+        <button class="primary" id="newRequest">＋ Nova solicitação</button>
+      </div>
+
+      <div class="summary" aria-label="Resumo do fluxo">
+        <button class="metric amber" data-filter="aguardando"><span>Aguardando</span><strong id="waitingCount">3</strong><small>pedidos na fila</small></button>
+        <button class="metric blue" data-filter="confeccao"><span>Em confecção</span><strong id="draftCount">2</strong><small>relatórios em preparo</small></button>
+        <button class="metric green" data-filter="pronto"><span>Prontos</span><strong id="readyCount">2</strong><small>aguardam entrega</small></button>
+        <button class="metric gray" data-filter="entregue"><span>Entregues</span><strong id="deliveredCount">1</strong><small>nesta semana</small></button>
+      </div>
+
+      <div class="board" id="board">
+        <section class="lane" data-status="aguardando"><header><span class="status-dot amber-bg"></span><h2>Solicitações</h2><b class="lane-count">3</b></header><div class="card-list" id="waitingList"></div></section>
+        <section class="lane" data-status="confeccao"><header><span class="status-dot blue-bg"></span><h2>Em confecção</h2><b class="lane-count">2</b></header><div class="card-list" id="draftList"></div></section>
+        <section class="lane" data-status="pronto"><header><span class="status-dot green-bg"></span><h2>Prontos para entrega</h2><b class="lane-count">2</b></header><div class="card-list" id="readyList"></div></section>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>APFlow • Relatórios clínicos</span><span id="footerSummary">8 registros • 3 aguardando • 2 prontos</span><span>Sincronizado agora</span></footer>
+
+  <dialog id="requestDialog">
+    <form id="requestForm" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">ETAPA 1 — RECEPÇÃO</p><h2>Nova solicitação</h2></div><button class="icon-button" type="button" id="closeDialog" aria-label="Fechar">×</button></div>
+      <div class="form-grid">
+        <label class="full">Nome do paciente *<input name="patient" required autocomplete="off" placeholder="Digite o nome completo"></label>
+        <label>Código *<input name="code" required inputmode="numeric" placeholder="Ex.: 104598"></label>
+        <fieldset><legend>Convênio *</legend><label class="choice"><input type="radio" name="agreement" value="IAMSPE" checked> IAMSPE</label><label class="choice"><input type="radio" name="agreement" value="Outros"> Outros</label></fieldset>
+        <fieldset class="full"><legend>Finalidade do relatório *</legend><div class="choices"><label class="choice"><input type="radio" name="purpose" value="Perícia do INSS" checked> Perícia do INSS</label><label class="choice"><input type="radio" name="purpose" value="Perícia de seguro"> Perícia de seguro</label><label class="choice"><input type="radio" name="purpose" value="Retorno médico"> Retorno médico</label><label class="choice"><input type="radio" name="purpose" value="Outro"> Outro</label></div><textarea name="otherPurpose" id="otherPurpose" rows="2" placeholder="Descreva a outra finalidade" disabled></textarea></fieldset>
+        <label>Fisioterapeuta responsável *<select name="therapist" required><option value="">Selecione</option><option>Alex Sandro</option><option>Camila</option><option>Fernanda</option><option>Vanessa</option></select></label>
+        <label>Data prevista para entrega<input name="dueDate" id="dueDate" readonly></label>
+      </div>
+      <p class="deadline-note">O prazo é calculado automaticamente em 3 dias úteis. Sábados, domingos e feriados não entram na contagem.</p>
+      <div class="dialog-actions"><button type="button" class="secondary" id="cancelDialog">Cancelar</button><button class="primary" type="submit">Enviar pedido</button></div>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="script.js"></script>
+</body>
+</html>
