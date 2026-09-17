@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAnalytics, isSupported } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js';
-import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
-import { addDoc, collection, getFirestore, onSnapshot, orderBy, query, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
+import { addDoc, collection, doc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
 const firebaseConfig={
  apiKey:'AIzaSyCoRrH2gCwMvqPgFNEWpr8vlEAgNyOdWfc',
@@ -76,11 +76,18 @@ function connectFirestore(){
 }
 const loginScreen=document.querySelector('#loginScreen');
 const loginForm=document.querySelector('#loginForm');
+const registerForm=document.querySelector('#registerForm');
+const switchAuth=document.querySelector('#switchAuth');
 const codeInputs=[...document.querySelectorAll('.code-inputs input')];
 let firestoreConnected=false;
 
-function revealApp(){loginScreen.classList.add('hidden');setConnection(true,'Firebase conectado');if(!firestoreConnected){firestoreConnected=true;connectFirestore()}}
-function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>codeInputs[0].focus(),50)}
+function internalEmail(username){return `${username.trim().toLowerCase().replace(/[^a-z0-9._-]/g,'')}@apflow.local`}
+function firebaseMessage(reason){
+ const messages={'auth/email-already-in-use':'Este usuário já existe.','auth/invalid-credential':'Usuário ou senha incorretos.','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.','auth/invalid-email':'Use um nome de usuário válido.','auth/operation-not-allowed':'Ative o provedor E-mail/senha no Firebase Authentication.'};
+ return messages[reason.code]||'Não foi possível concluir. Tente novamente.';
+}
+function revealApp(user){loginScreen.classList.add('hidden');document.querySelector('.user-area strong').textContent=user.displayName||'Equipe APFlow';setConnection(true,'Firebase conectado');if(!firestoreConnected){firestoreConnected=true;connectFirestore()}}
+function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
 
 codeInputs.forEach((input,index)=>{
  input.addEventListener('input',()=>{input.value=input.value.replace(/[^a-z]/gi,'').toUpperCase();if(input.value&&codeInputs[index+1])codeInputs[index+1].focus()});
@@ -89,16 +96,31 @@ codeInputs.forEach((input,index)=>{
 });
 
 loginForm.addEventListener('submit',async event=>{
- event.preventDefault();const button=loginForm.querySelector('button');const error=document.querySelector('#loginError');const code=codeInputs.map(input=>input.value).join('').toUpperCase();
- error.textContent='';button.disabled=true;button.textContent='Verificando...';
+ event.preventDefault();const data=new FormData(loginForm);const button=loginForm.querySelector('button');const error=document.querySelector('#loginError');
+ error.textContent='';button.disabled=true;button.textContent='Entrando...';
  try{
-   if(await hashText(code)!==accessCodeHash)throw new Error('invalid-code');
-   await signInAnonymously(auth);sessionStorage.setItem('apflowAccess','granted');revealApp();codeInputs.forEach(input=>input.value='');
- }catch(reason){error.textContent=reason.message==='invalid-code'?'Código incorreto. Tente novamente.':'Ative o acesso anônimo no Firebase Authentication.';codeInputs.forEach(input=>input.value='');codeInputs[0].focus()}
+   await signInWithEmailAndPassword(auth,internalEmail(data.get('username')),data.get('password'));
+ }catch(reason){error.textContent=firebaseMessage(reason)}
  finally{button.disabled=false;button.textContent='Entrar'}
 });
 
-document.querySelector('#logoutButton').addEventListener('click',async()=>{sessionStorage.removeItem('apflowAccess');await signOut(auth);location.reload()});
-onAuthStateChanged(auth,async user=>{if(user&&sessionStorage.getItem('apflowAccess')==='granted')revealApp();else{if(user)await signOut(auth);showLogin()}});
+registerForm.addEventListener('submit',async event=>{
+ event.preventDefault();const data=new FormData(registerForm);const button=registerForm.querySelector('button');const error=document.querySelector('#registerError');const code=codeInputs.map(input=>input.value).join('').toUpperCase();
+ error.textContent='';button.disabled=true;button.textContent='Criando conta...';
+ try{
+   if(await hashText(code)!==accessCodeHash)throw new Error('invalid-code');
+   const username=data.get('username').trim();if(internalEmail(username)==='@apflow.local')throw new Error('invalid-username');
+   const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),data.get('password'));
+   await updateProfile(credential.user,{displayName:data.get('fullName').trim()});
+   await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),role:'equipe',createdAt:serverTimestamp()});
+   document.querySelector('.user-area strong').textContent=data.get('fullName').trim();
+   registerForm.reset();showToast('Conta criada com sucesso.');
+ }catch(reason){error.textContent=reason.message==='invalid-code'?'Código de cadastro incorreto.':reason.message==='invalid-username'?'Digite um usuário válido.':firebaseMessage(reason);codeInputs.forEach(input=>input.value='');codeInputs[0].focus()}
+ finally{button.disabled=false;button.textContent='Criar conta'}
+});
+
+switchAuth.addEventListener('click',()=>{const registering=registerForm.classList.toggle('hidden')===false;loginForm.classList.toggle('hidden',registering);document.querySelector('#loginTitle').textContent=registering?'Criar nova conta':'Entrar no APFlow';switchAuth.textContent=registering?'Voltar para o login':'Criar uma nova conta';document.querySelector('#loginError').textContent='';document.querySelector('#registerError').textContent='';setTimeout(()=>registering?registerForm.elements.fullName.focus():loginForm.elements.username.focus(),50)});
+document.querySelector('#logoutButton').addEventListener('click',async()=>{await signOut(auth);location.reload()});
+onAuthStateChanged(auth,user=>{if(user)revealApp(user);else showLogin()});
 
 buildCalendar();render();
