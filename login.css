@@ -31,7 +31,7 @@
 
 .brand-line { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .login-brand h1 { margin: 0; font-size: 34px; line-height: 1; font-weight: 600; letter-spacing: -.03em; }
-.login-brand p { margin: 10px 0 0; color: #e5f4fb; font-size: 13px; }
+.login-brand p { margin: 10px 0 0; color: #fff; font-size: 15px; font-weight: 500; text-shadow: 0 1px 2px #17445f70; }
 
 .login-mark {
   display: grid;
@@ -56,23 +56,25 @@
 }
 
 .login-body h2 { margin: 0; height: 0; overflow: hidden; opacity: 0; }
-.login-field { height: 48px; display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 0 13px; border: 1px solid #c8d0d6; border-radius: 7px; background: #fff; color: #53646f; text-align: left; }
+.login-field { height: 52px; display: flex; align-items: center; gap: 11px; margin: 0 0 15px; padding: 0 14px; border: 1px solid #b7c3ca; border-radius: 8px; background: #fff; color: #3f535f; text-align: left; }
 .login-field:focus-within { border-color: #358bbb; box-shadow: 0 0 0 3px #358bbb1d; }
-.login-field > span { width: 17px; flex: 0 0 17px; font-size: 18px; text-align: center; }
-.login-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #273842; font: inherit; }
-.login-field input::placeholder { color: #697781; opacity: 1; }
-.remember { display: flex; align-items: center; gap: 7px; width: max-content; margin: 2px 0 4px; color: #495963; font-size: 12px; }
+.login-field > span { width: 19px; flex: 0 0 19px; font-size: 20px; text-align: center; }
+.login-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #1d303b; font-size: 16px; font-weight: 500; }
+.login-field input::placeholder { color: #566872; opacity: 1; }
+.remember { display: flex; align-items: center; gap: 8px; width: max-content; margin: 3px 0 5px; color: #354a56; font-size: 14px; }
 .remember input { width: 16px; height: 16px; margin: 0; accent-color: #358bbb; }
-.code-label { display: block; margin: 4px 0 8px; color: #495963; text-align: left; font-size: 12px; font-weight: 600; }
+.code-label { display: block; margin: 5px 0 9px; color: #354a56; text-align: left; font-size: 14px; font-weight: 600; }
 .code-inputs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; }
 .code-inputs input { width: 100%; aspect-ratio: 1; border: 1px solid #b8c8d3; border-radius: 7px; background: #fff; text-align: center; text-transform: uppercase; font-size: 21px; font-weight: 700; color: #276e96; outline: none; }
 .code-inputs input:focus { border-color: #358bbb; box-shadow: 0 0 0 3px #358bbb1d; }
-.login-error { min-height: 18px; margin: 7px 0 3px; color: #b33939; font-size: 12px; }
-.login-button { width: 100%; border: 0; border-radius: 24px; padding: 12px; background: linear-gradient(90deg, #3694c6, #3286b3); color: #fff; box-shadow: 0 3px 7px #286c9138; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform .15s, filter .15s; }
+.login-error { min-height: 20px; margin: 8px 0 4px; color: #a92f2f; font-size: 13px; font-weight: 500; }
+.login-button { width: 100%; border: 0; border-radius: 24px; padding: 13px; background: linear-gradient(90deg, #3694c6, #3286b3); color: #fff; box-shadow: 0 3px 7px #286c9138; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform .15s, filter .15s; }
 .login-button:hover { transform: translateY(-1px); filter: brightness(1.04); }
 .login-button:disabled { opacity: .6; cursor: wait; transform: none; }
-.switch-auth { margin-top: 14px; border: 0; background: transparent; color: #2f81ad; font-size: 12px; font-weight: 700; cursor: pointer; }
-.forgot-password { margin-top: 16px; border: 0; background: transparent; color: #60717c; font-size: 12px; cursor: pointer; }
+.switch-auth { margin-top: 16px; border: 0; background: transparent; color: #246f98; font-size: 14px; font-weight: 700; cursor: pointer; }
+.forgot-password { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 11px; border: 1px solid #d4e6f0; border-radius: 9px; padding: 10px 12px; background: #eff7fb; color: #3f687e; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s; }
+.forgot-password:hover { border-color: #a9cfdf; background: #e4f2f8; }
+.forgot-password span { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid currentColor; border-radius: 50%; font-size: 12px; font-weight: 800; }
 
 @media (max-width: 480px) {
   .login-screen { align-items: start; padding-top: 8vh; }
