@@ -59,7 +59,7 @@
     <section class="workspace page-view" data-page="agendas" hidden>
       <div class="workspace-head"><div><p class="eyebrow">ATENDIMENTOS</p><h1>Agendas</h1><div class="head-date-row"><p data-selected-date></p><button class="header-filter" type="button">⌕ Filtro</button></div></div><button class="primary" type="button">＋ Novo agendamento</button></div>
       <div class="agenda-toolbar"><button class="secondary" id="todayButton">Hoje</button><strong data-selected-date></strong><select id="agendaProfessional" aria-label="Profissional da agenda"><option value="">Todos os profissionais</option></select></div>
-      <section class="agenda-day"><div class="time-column"><span>08:00</span><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span><span>15:00</span><span>16:00</span><span>17:00</span></div><div class="agenda-empty"><strong>Agenda livre</strong><p>Nenhum atendimento cadastrado para esta data.</p></div></section>
+      <section class="physio-schedule" id="agendaSchedule" aria-live="polite"></section>
     </section>
 
     <section class="workspace page-view" data-page="financeiro" hidden>
@@ -133,6 +133,7 @@
           <form id="therapistForm" class="inline-form">
             <label>Nome completo<input name="name" required placeholder="Nome do profissional"></label>
             <label>Setor<select name="profession" required><option>Médico</option><option>Fisioterapeuta</option><option>Pilates</option><option>RPG</option></select></label>
+            <label>Colunas da agenda<select name="agendaColumns" required><option value="4">4 colunas</option><option value="5">5 colunas</option></select></label>
             <button class="primary" type="submit">Adicionar</button>
           </form>
           <div class="admin-list" id="adminTherapistList"></div>
