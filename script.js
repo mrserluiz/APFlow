@@ -1,5 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAnalytics, isSupported } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js';
+import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
 import { addDoc, collection, getFirestore, onSnapshot, orderBy, query, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
 const firebaseConfig={
@@ -13,6 +14,8 @@ const firebaseConfig={
 };
 const firebaseApp=initializeApp(firebaseConfig);
 const db=getFirestore(firebaseApp);
+const auth=getAuth(firebaseApp);
+const accessCodeHash='aa856b786ce69faea3a86585ad904714bf6e3ff66ac9c5e139b1396e5dc7bebe';
 isSupported().then(supported=>{if(supported)getAnalytics(firebaseApp)}).catch(()=>{});
 
 const demoReports=[
@@ -48,6 +51,7 @@ function addBusinessDays(start,days){const date=new Date(start);let added=0;whil
 function brDate(date){return new Intl.DateTimeFormat('pt-BR').format(date)}
 function showToast(message){const toast=document.querySelector('#toast');toast.textContent=message;toast.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove('show'),2600)}
 function setConnection(online,message){document.querySelector('#connectionStatus').textContent=message;document.querySelector('#connectionDot').style.background=online?'#20a36d':'#c88313'}
+async function hashText(value){const bytes=new TextEncoder().encode(value);const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('')}
 const dialog=document.querySelector('#requestDialog');
 function openDialog(){document.querySelector('#dueDate').value=brDate(addBusinessDays(new Date(),3));dialog.showModal();setTimeout(()=>document.querySelector('[name="patient"]').focus(),50)}
 document.querySelectorAll('#newRequest,#newRequestTop').forEach(b=>b.addEventListener('click',openDialog));
@@ -70,4 +74,31 @@ function connectFirestore(){
    setConnection(true,snapshot.empty?'Firebase conectado • dados de demonstração':'Firebase conectado');render();
  },error=>{console.error(error);reports=[...demoReports];setConnection(false,'Firebase requer configuração');render();showToast('Firestore indisponível. Exibindo dados de demonstração.')});
 }
-buildCalendar();render();connectFirestore();
+const loginScreen=document.querySelector('#loginScreen');
+const loginForm=document.querySelector('#loginForm');
+const codeInputs=[...document.querySelectorAll('.code-inputs input')];
+let firestoreConnected=false;
+
+function revealApp(){loginScreen.classList.add('hidden');setConnection(true,'Firebase conectado');if(!firestoreConnected){firestoreConnected=true;connectFirestore()}}
+function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>codeInputs[0].focus(),50)}
+
+codeInputs.forEach((input,index)=>{
+ input.addEventListener('input',()=>{input.value=input.value.replace(/[^a-z]/gi,'').toUpperCase();if(input.value&&codeInputs[index+1])codeInputs[index+1].focus()});
+ input.addEventListener('keydown',event=>{if(event.key==='Backspace'&&!input.value&&codeInputs[index-1])codeInputs[index-1].focus()});
+ input.addEventListener('paste',event=>{event.preventDefault();const pasted=event.clipboardData.getData('text').replace(/[^a-z]/gi,'').toUpperCase().slice(0,6);[...pasted].forEach((char,i)=>{if(codeInputs[i])codeInputs[i].value=char});codeInputs[Math.min(pasted.length,5)].focus()});
+});
+
+loginForm.addEventListener('submit',async event=>{
+ event.preventDefault();const button=loginForm.querySelector('button');const error=document.querySelector('#loginError');const code=codeInputs.map(input=>input.value).join('').toUpperCase();
+ error.textContent='';button.disabled=true;button.textContent='Verificando...';
+ try{
+   if(await hashText(code)!==accessCodeHash)throw new Error('invalid-code');
+   await signInAnonymously(auth);sessionStorage.setItem('apflowAccess','granted');revealApp();codeInputs.forEach(input=>input.value='');
+ }catch(reason){error.textContent=reason.message==='invalid-code'?'Código incorreto. Tente novamente.':'Ative o acesso anônimo no Firebase Authentication.';codeInputs.forEach(input=>input.value='');codeInputs[0].focus()}
+ finally{button.disabled=false;button.textContent='Entrar'}
+});
+
+document.querySelector('#logoutButton').addEventListener('click',async()=>{sessionStorage.removeItem('apflowAccess');await signOut(auth);location.reload()});
+onAuthStateChanged(auth,async user=>{if(user&&sessionStorage.getItem('apflowAccess')==='granted')revealApp();else{if(user)await signOut(auth);showLogin()}});
+
+buildCalendar();render();
