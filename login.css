@@ -76,6 +76,24 @@
 .forgot-password:hover { border-color: #a9cfdf; background: #e4f2f8; }
 .forgot-password span { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid currentColor; border-radius: 50%; font-size: 12px; font-weight: 800; }
 .empty-state { margin: 18px 8px; padding: 20px 10px; border: 1px dashed #c6d3db; border-radius: 7px; color: #71828c; background: #f7fafb; text-align: center; font-size: 13px; }
+.empty-mini { margin: 8px 0; color: #778892; font-size: 12px; }
+.admin-only[hidden] { display: none; }
+.admin-dialog { width: min(960px, calc(100% - 24px)); max-height: calc(100vh - 30px); padding: 0; border: 0; border-radius: 12px; }
+.admin-panel { padding: 22px; background: #f7fafc; }
+.admin-grid { display: grid; grid-template-columns: minmax(260px, .75fr) minmax(380px, 1.25fr); gap: 14px; }
+.admin-section { padding: 17px; border: 1px solid #d5e0e7; border-radius: 9px; background: #fff; }
+.admin-section h3 { margin: 0 0 4px; color: #294f66; font-size: 17px; }
+.admin-section > p { margin: 0 0 15px; color: #647680; font-size: 13px; }
+.inline-form { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; margin-bottom: 14px; }
+.inline-form label { color: #415763; font-size: 13px; font-weight: 600; }
+.inline-form input { width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #c5d2da; border-radius: 7px; font: inherit; }
+.inline-form .primary { background: #315f7d; color: #fff; }
+.admin-list { display: flex; flex-direction: column; gap: 7px; max-height: 360px; overflow: auto; }
+.admin-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(145px, auto); align-items: center; gap: 10px; padding: 10px; border: 1px solid #dde5ea; border-radius: 7px; background: #f9fbfc; }
+.admin-row strong, .admin-row small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-row small { margin-top: 2px; color: #71818a; }
+.admin-row select { width: 100%; padding: 8px; border: 1px solid #c5d2da; border-radius: 6px; background: #fff; }
+@media (max-width: 760px) { .admin-grid { grid-template-columns: 1fr; } .admin-dialog { max-height: calc(100vh - 16px); } .admin-panel { padding: 15px; } }
 
 @media (max-width: 480px) {
   .login-screen { align-items: start; padding-top: 8vh; }
