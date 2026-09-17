@@ -84,8 +84,20 @@ let firestoreConnected=false;
 function internalEmail(username){return `${username.trim().toLowerCase().replace(/[^a-z0-9._-]/g,'')}@apflow.local`}
 function firebasePassword(password){return `AP:${password}`}
 function firebaseMessage(reason){
- const messages={'auth/email-already-in-use':'Este usuário já existe.','auth/invalid-credential':'Usuário ou senha incorretos.','auth/weak-password':'A senha precisa ter pelo menos 4 caracteres.','auth/invalid-email':'Use um nome de usuário válido.','auth/operation-not-allowed':'Ative o provedor E-mail/senha no Firebase Authentication.'};
- return messages[reason.code]||'Não foi possível concluir. Tente novamente.';
+ const messages={
+  'auth/email-already-in-use':'Este usuário já existe. Volte ao login para entrar.',
+  'auth/invalid-credential':'Usuário ou senha incorretos.',
+  'auth/weak-password':'A senha precisa ter pelo menos 4 caracteres.',
+  'auth/invalid-email':'Use um nome de usuário válido.',
+  'auth/operation-not-allowed':'Ative o método E-mail/senha no Firebase Authentication.',
+  'auth/configuration-not-found':'O Firebase Authentication ainda não foi configurado.',
+  'auth/unauthorized-domain':'Este endereço do APFlow precisa ser adicionado aos domínios autorizados do Firebase.',
+  'auth/network-request-failed':'Falha de conexão com o Firebase. Confira a internet e tente novamente.',
+  'auth/too-many-requests':'Muitas tentativas seguidas. Aguarde alguns minutos.',
+  'permission-denied':'A conta foi criada, mas as regras do Firestore precisam ser publicadas.',
+  'firestore/permission-denied':'A conta foi criada, mas as regras do Firestore precisam ser publicadas.'
+ };
+ return messages[reason.code]||`Erro no cadastro (${reason.code||'desconhecido'}).`;
 }
 function revealApp(user){loginScreen.classList.add('hidden');document.querySelector('.user-area strong').textContent=user.displayName||'Equipe APFlow';setConnection(true,'Firebase conectado');if(!firestoreConnected){firestoreConnected=true;connectFirestore()}}
 function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
@@ -117,7 +129,7 @@ registerForm.addEventListener('submit',async event=>{
    await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),role:'equipe',createdAt:serverTimestamp()});
    document.querySelector('.user-area strong').textContent=data.get('fullName').trim();
    registerForm.reset();showToast('Conta criada com sucesso.');
- }catch(reason){error.textContent=reason.message==='invalid-code'?'Código de cadastro incorreto.':reason.message==='invalid-username'?'Digite um usuário válido.':firebaseMessage(reason);codeInputs.forEach(input=>input.value='');codeInputs[0].focus()}
+ }catch(reason){console.error('Falha ao criar conta:',reason);error.textContent=reason.message==='invalid-code'?'Código de cadastro incorreto.':reason.message==='invalid-username'?'Digite um usuário válido.':firebaseMessage(reason);codeInputs.forEach(input=>input.value='');codeInputs[0].focus()}
  finally{button.disabled=false;button.textContent='Criar conta'}
 });
 
