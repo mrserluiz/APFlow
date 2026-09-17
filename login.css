@@ -75,6 +75,7 @@
 .forgot-password { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 11px; border: 1px solid #d4e6f0; border-radius: 9px; padding: 10px 12px; background: #eff7fb; color: #3f687e; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s; }
 .forgot-password:hover { border-color: #a9cfdf; background: #e4f2f8; }
 .forgot-password span { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid currentColor; border-radius: 50%; font-size: 12px; font-weight: 800; }
+.empty-state { margin: 18px 8px; padding: 20px 10px; border: 1px dashed #c6d3db; border-radius: 7px; color: #71828c; background: #f7fafb; text-align: center; font-size: 13px; }
 
 @media (max-width: 480px) {
   .login-screen { align-items: start; padding-top: 8vh; }
