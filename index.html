@@ -85,23 +85,35 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
-    <form class="login-card" id="loginForm">
+    <div class="login-card">
       <span class="login-mark">✚</span>
       <p class="eyebrow">ACESSO INTERNO</p>
       <h1 id="loginTitle">Entrar no APFlow</h1>
-      <p>Digite o código de acesso com seis letras.</p>
-      <div class="code-inputs" aria-label="Código de acesso">
-        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 1" required>
-        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 2" required>
-        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 3" required>
-        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 4" required>
-        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 5" required>
-        <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 6" required>
-      </div>
-      <p class="login-error" id="loginError" role="alert"></p>
-      <button class="login-button" type="submit">Entrar</button>
+      <form id="loginForm">
+        <label class="login-field">Usuário<input name="username" autocomplete="username" required></label>
+        <label class="login-field">Senha<input name="password" type="password" autocomplete="current-password" required></label>
+        <p class="login-error" id="loginError" role="alert"></p>
+        <button class="login-button" type="submit">Entrar</button>
+      </form>
+      <form id="registerForm" class="hidden">
+        <label class="login-field">Nome completo<input name="fullName" autocomplete="name" required></label>
+        <label class="login-field">Criar usuário<input name="username" autocomplete="username" minlength="3" required></label>
+        <label class="login-field">Criar senha<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
+        <label class="code-label">Código para criar a conta</label>
+        <div class="code-inputs" aria-label="Código para criar a conta">
+          <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 1" required>
+          <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 2" required>
+          <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 3" required>
+          <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 4" required>
+          <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 5" required>
+          <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 6" required>
+        </div>
+        <p class="login-error" id="registerError" role="alert"></p>
+        <button class="login-button" type="submit">Criar conta</button>
+      </form>
+      <button class="switch-auth" id="switchAuth" type="button">Criar uma nova conta</button>
       <small>Acesso restrito à equipe da clínica</small>
-    </form>
+    </div>
   </section>
   <script type="module" src="script.js"></script>
 </body>
