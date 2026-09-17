@@ -22,6 +22,7 @@ let reports=[];
 let therapists=[];
 let selectedDate=new Date();
 let calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);
+const agendaSlots={manha:['08:00','08:40','09:20','10:00','10:40','11:20'],tarde:['13:00','13:40','14:20','15:00','15:40','16:20','17:00','17:40','18:20']};
 const roles=['Admin','Financeiro','Gerente','Atendente','Fisioterapeuta','Médico','Enfermagem','Técnico'];
 const colors={aguardando:'#c88313',confeccao:'#377ea7',pronto:'#2f8a68'};
 const labels={aguardando:'Aguardando',confeccao:'Em confecção',pronto:'Pronto'};
@@ -57,10 +58,19 @@ function renderTherapists(){
  if(therapists.some(t=>t.name===selectedFilter))filter.value=selectedFilter;if(therapists.some(t=>t.name===selectedRequest))request.value=selectedRequest;if(therapists.some(t=>t.name===selectedAgenda))agenda.value=selectedAgenda;
  renderTherapistCounts();
  const adminList=document.querySelector('#adminTherapistList');
- adminList.innerHTML=therapists.length?therapists.map(t=>`<div class="admin-row"><div><strong>${t.name}</strong><small>${t.profession||'Fisioterapeuta'}</small></div><span>Ativo</span></div>`).join(''):'<p class="empty-mini">Nenhum profissional cadastrado.</p>';
+ adminList.innerHTML=therapists.length?'':'<p class="empty-mini">Nenhum profissional cadastrado.</p>';
+ therapists.forEach(person=>{const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${person.name}</strong><small>${person.profession||'Fisioterapeuta'}</small></div><label class="column-setting">Agenda <select aria-label="Colunas da agenda de ${person.name}"><option value="4" ${(person.agendaColumns||4)===4?'selected':''}>4 colunas</option><option value="5" ${person.agendaColumns===5?'selected':''}>5 colunas</option></select></label>`;row.querySelector('select').addEventListener('change',async event=>{event.target.disabled=true;try{await updateDoc(doc(db,'profissionais',person.id),{agendaColumns:Number(event.target.value),updatedAt:serverTimestamp()});showToast('Formato da agenda atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar a agenda.')}finally{event.target.disabled=false}});adminList.append(row)});
+ renderAgenda();
 }
 function switchPage(view){document.querySelectorAll('.tool[data-view]').forEach(item=>item.classList.toggle('active',item.dataset.view===view));document.querySelectorAll('.page-view').forEach(page=>page.hidden=page.dataset.page!==view)}
-function openProfessionalAgenda(name){switchPage('agendas');const agenda=document.querySelector('#agendaProfessional');agenda.value=name;showToast(`Agenda de ${name}`)}
+function openProfessionalAgenda(name){switchPage('agendas');const agenda=document.querySelector('#agendaProfessional');agenda.value=name;renderAgenda();showToast(`Agenda de ${name}`)}
+function renderAgenda(){
+ const root=document.querySelector('#agendaSchedule');const selectedName=document.querySelector('#agendaProfessional').value;const professional=therapists.find(person=>person.name===selectedName);const columns=professional?.agendaColumns===5?5:4;
+ root.style.setProperty('--agenda-columns',columns);root.innerHTML='';
+ if(!selectedName){root.innerHTML='<div class="agenda-welcome"><strong>Selecione um profissional</strong><p>Escolha uma agenda para visualizar os horários da manhã e da tarde.</p></div>';return}
+ const header=document.createElement('div');header.className='schedule-row schedule-columns';header.innerHTML='<div class="time-heading">Horário</div>'+Array.from({length:columns},(_,index)=>`<div>Agenda ${index+1}</div>`).join('');root.append(header);
+ Object.entries(agendaSlots).forEach(([period,slots])=>{const divider=document.createElement('div');divider.className='period-divider';divider.textContent=period==='manha'?'Bloco da manhã':'Bloco da tarde';root.append(divider);slots.forEach(time=>{const row=document.createElement('div');row.className='schedule-row';row.innerHTML=`<time>${time.replace(':','h')}</time>`+Array.from({length:columns},(_,index)=>`<button class="appointment-slot" type="button" data-time="${time}" data-column="${index+1}" aria-label="Agendar às ${time}, agenda ${index+1}"><span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty">＋</span></button>`).join('');row.querySelectorAll('.appointment-slot').forEach(slot=>slot.addEventListener('click',()=>showToast(`Horário ${slot.dataset.time} — Agenda ${slot.dataset.column}`)));root.append(row)})});
+}
 function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
 function longDate(date){const value=new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);return value.charAt(0).toUpperCase()+value.slice(1)}
 function dateKey(date){const year=date.getFullYear();const month=String(date.getMonth()+1).padStart(2,'0');const day=String(date.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
@@ -101,6 +111,7 @@ document.querySelectorAll('.header-filter').forEach(button=>button.addEventListe
 document.querySelector('#previousMonth').addEventListener('click',()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()});
 document.querySelector('#nextMonth').addEventListener('click',()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()});
 document.querySelector('#todayButton').addEventListener('click',()=>{selectedDate=new Date();calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);updateSelectedDate();renderCalendar()});
+document.querySelector('#agendaProfessional').addEventListener('change',renderAgenda);
 function connectFirestore(){
  const reportsQuery=query(collection(db,'relatorios'),orderBy('createdAt','desc'));
  onSnapshot(reportsQuery,snapshot=>{
@@ -195,6 +206,6 @@ const adminDialog=document.querySelector('#adminDialog');
 document.querySelector('#adminButton').addEventListener('click',()=>adminDialog.showModal());
 document.querySelector('#sidebarAddProfessional').addEventListener('click',()=>adminDialog.showModal());
 document.querySelector('#closeAdmin').addEventListener('click',()=>adminDialog.close());
-document.querySelector('#therapistForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const name=data.get('name').trim();const profession=data.get('profession');const button=form.querySelector('button');if(!name)return;button.disabled=true;try{await addDoc(collection(db,'profissionais'),{name,profession,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});form.reset();showToast(`${profession} adicionado.`)}catch(error){console.error(error);showToast('Não foi possível adicionar o profissional.')}finally{button.disabled=false}});
+document.querySelector('#therapistForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const name=data.get('name').trim();const profession=data.get('profession');const agendaColumns=Number(data.get('agendaColumns'));const button=form.querySelector('button');if(!name)return;button.disabled=true;try{await addDoc(collection(db,'profissionais'),{name,profession,agendaColumns,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});form.reset();showToast(`${profession} adicionado.`)}catch(error){console.error(error);showToast('Não foi possível adicionar o profissional.')}finally{button.disabled=false}});
 
-updateSelectedDate();renderCalendar();render();
+updateSelectedDate();renderCalendar();renderAgenda();render();
