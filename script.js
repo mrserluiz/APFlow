@@ -20,6 +20,8 @@ isSupported().then(supported=>{if(supported)getAnalytics(firebaseApp)}).catch(()
 
 let reports=[];
 let therapists=[];
+let selectedDate=new Date();
+let calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);
 const roles=['Admin','Financeiro','Gerente','Atendente','Fisioterapeuta','Médico','Enfermagem','Técnico'];
 const colors={aguardando:'#c88313',confeccao:'#377ea7',pronto:'#2f8a68'};
 const labels={aguardando:'Aguardando',confeccao:'Em confecção',pronto:'Pronto'};
@@ -39,6 +41,7 @@ function render(){
  ['aguardando','confeccao','pronto','entregue'].forEach((s,i)=>document.querySelectorAll('.metric strong')[i].textContent=reports.filter(r=>r.status===s).length);
  Object.entries(lists).forEach(([status,list])=>{if(!visible.some(r=>r.status===status))list.innerHTML='<p class="empty-state">Nenhum relatório nesta etapa.</p>'});
  document.querySelector('#footerSummary').textContent=`${reports.length} registros • ${reports.filter(r=>r.status==='aguardando').length} aguardando • ${reports.filter(r=>r.status==='pronto').length} prontos`;
+ const homePending=document.querySelector('#homePending');if(homePending)homePending.textContent=reports.filter(r=>r.status==='aguardando').length;
  renderTherapistCounts();
 }
 function renderTherapistCounts(){
@@ -55,27 +58,43 @@ function renderTherapists(){
  const adminList=document.querySelector('#adminTherapistList');
  adminList.innerHTML=therapists.length?therapists.map(t=>`<div class="admin-row"><div><strong>${t.name}</strong><small>Fisioterapeuta</small></div><span>Ativo</span></div>`).join(''):'<p class="empty-mini">Nenhum fisioterapeuta cadastrado.</p>';
 }
-function buildCalendar(){const root=document.querySelector('#calendarDays');for(let i=0;i<2;i++)root.insertAdjacentHTML('beforeend','<button class="muted">'+(30+i)+'</button>');for(let d=1;d<=30;d++)root.insertAdjacentHTML('beforeend',`<button class="${d===17?'today':''}">${d}</button>`)}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
+function longDate(date){const value=new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);return value.charAt(0).toUpperCase()+value.slice(1)}
+function dateKey(date){const year=date.getFullYear();const month=String(date.getMonth()+1).padStart(2,'0');const day=String(date.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
+function updateSelectedDate(){document.querySelectorAll('[data-selected-date]').forEach(element=>element.textContent=longDate(selectedDate))}
+function renderCalendar(){
+ const root=document.querySelector('#calendarDays');const title=document.querySelector('#calendarTitle');const today=new Date();
+ title.textContent=new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(calendarMonth).replace(/^./,letter=>letter.toUpperCase());root.innerHTML='';
+ const firstCell=new Date(calendarMonth);firstCell.setDate(1-firstCell.getDay());
+ for(let offset=0;offset<42;offset++){
+  const date=new Date(firstCell);date.setDate(firstCell.getDate()+offset);const button=document.createElement('button');button.type='button';button.textContent=date.getDate();button.setAttribute('aria-label',longDate(date));
+  if(date.getMonth()!==calendarMonth.getMonth())button.classList.add('muted');if(sameDay(date,today))button.classList.add('today');if(sameDay(date,selectedDate))button.classList.add('selected');
+  button.addEventListener('click',()=>{selectedDate=new Date(date);calendarMonth=new Date(date.getFullYear(),date.getMonth(),1);updateSelectedDate();renderCalendar()});root.append(button);
+ }
+}
 function addBusinessDays(start,days){const date=new Date(start);let added=0;while(added<days){date.setDate(date.getDate()+1);if(date.getDay()!==0&&date.getDay()!==6)added++}return date}
 function brDate(date){return new Intl.DateTimeFormat('pt-BR').format(date)}
 function showToast(message){const toast=document.querySelector('#toast');toast.textContent=message;toast.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove('show'),2600)}
 function setConnection(online,message){document.querySelector('#connectionStatus').textContent=message;document.querySelector('#connectionDot').style.background=online?'#20a36d':'#c88313'}
 async function hashText(value){const bytes=new TextEncoder().encode(value);const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('')}
 const dialog=document.querySelector('#requestDialog');
-function openDialog(){document.querySelector('#dueDate').value=brDate(addBusinessDays(new Date(),3));dialog.showModal();setTimeout(()=>document.querySelector('[name="patient"]').focus(),50)}
+function openDialog(){document.querySelector('#dueDate').value=brDate(addBusinessDays(selectedDate,3));dialog.showModal();setTimeout(()=>document.querySelector('[name="patient"]').focus(),50)}
 document.querySelectorAll('#newRequest,#newRequestTop').forEach(b=>b.addEventListener('click',openDialog));
 document.querySelectorAll('#closeDialog,#cancelDialog').forEach(b=>b.addEventListener('click',()=>dialog.close()));
 document.querySelectorAll('[name="purpose"]').forEach(r=>r.addEventListener('change',()=>{const field=document.querySelector('#otherPurpose');field.disabled=r.value!=='Outro';if(!field.disabled)field.focus()}));
 document.querySelector('#requestForm').addEventListener('submit',async e=>{
  e.preventDefault();const form=e.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
- const report={patient:data.get('patient').trim(),code:data.get('code').trim(),agreement:data.get('agreement'),purpose:data.get('purpose')==='Outro'?(data.get('otherPurpose').trim()||'Outro'):data.get('purpose'),therapist:data.get('therapist'),due:data.get('dueDate'),status:'aguardando',createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+ const report={patient:data.get('patient').trim(),code:data.get('code').trim(),agreement:data.get('agreement'),purpose:data.get('purpose')==='Outro'?(data.get('otherPurpose').trim()||'Outro'):data.get('purpose'),therapist:data.get('therapist'),requestDate:dateKey(selectedDate),due:data.get('dueDate'),status:'aguardando',createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
  submit.disabled=true;submit.textContent='Enviando...';
  try{await addDoc(collection(db,'relatorios'),report);form.reset();dialog.close();showToast('Solicitação salva no APFlow.')}catch(error){console.error(error);showToast('Não foi possível salvar. Ative o Firestore e confira as regras.')}finally{submit.disabled=false;submit.textContent='Enviar pedido'}
 });
 Object.values(filters).forEach(el=>el.addEventListener('input',render));
 document.querySelector('#clearFilters').addEventListener('click',()=>{Object.values(filters).forEach(el=>el.value='');render()});
 document.querySelectorAll('.metric').forEach(metric=>metric.addEventListener('click',()=>{document.querySelectorAll('.metric').forEach(m=>m.classList.remove('selected'));metric.classList.add('selected');const lane=document.querySelector(`.lane[data-status="${metric.dataset.filter}"]`);if(lane)lane.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})}));
-document.querySelectorAll('.tool[data-view]').forEach(tool=>tool.addEventListener('click',()=>{document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active'));tool.classList.add('active');showToast(`${tool.textContent.trim()} selecionado`)}));
+document.querySelectorAll('.tool[data-view]').forEach(tool=>tool.addEventListener('click',()=>{const view=tool.dataset.view;document.querySelectorAll('.tool[data-view]').forEach(item=>item.classList.toggle('active',item===tool));document.querySelectorAll('.page-view').forEach(page=>page.hidden=page.dataset.page!==view)}));
+document.querySelector('#previousMonth').addEventListener('click',()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()});
+document.querySelector('#nextMonth').addEventListener('click',()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()});
+document.querySelector('#todayButton').addEventListener('click',()=>{selectedDate=new Date();calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);updateSelectedDate();renderCalendar()});
 function connectFirestore(){
  const reportsQuery=query(collection(db,'relatorios'),orderBy('createdAt','desc'));
  onSnapshot(reportsQuery,snapshot=>{
@@ -171,4 +190,4 @@ document.querySelector('#adminButton').addEventListener('click',()=>adminDialog.
 document.querySelector('#closeAdmin').addEventListener('click',()=>adminDialog.close());
 document.querySelector('#therapistForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const name=new FormData(form).get('name').trim();const button=form.querySelector('button');if(!name)return;button.disabled=true;try{await addDoc(collection(db,'profissionais'),{name,profession:'Fisioterapeuta',active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});form.reset();showToast('Fisioterapeuta adicionado.')}catch(error){console.error(error);showToast('Não foi possível adicionar o fisioterapeuta.')}finally{button.disabled=false}});
 
-buildCalendar();render();
+updateSelectedDate();renderCalendar();render();
