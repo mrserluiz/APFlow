@@ -7,6 +7,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /usuarios/{userId} {
+      allow create, read, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
