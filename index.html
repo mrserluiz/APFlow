@@ -11,7 +11,7 @@
 <body>
   <header class="app-header">
     <div class="window-title"><span class="brand-mark">✚</span><strong>APFlow</strong><span>Gestão de processos clínicos</span></div>
-    <div class="user-area"><span class="online-dot"></span> Sistema online <strong>Luciana Cristina</strong><button class="avatar" aria-label="Menu do usuário">LC</button></div>
+    <div class="user-area"><span class="online-dot" id="connectionDot"></span> <span id="connectionStatus">Conectando ao Firebase...</span> <strong>Luciana Cristina</strong><button class="avatar" aria-label="Menu do usuário">LC</button></div>
   </header>
 
   <nav class="ribbon" aria-label="Navegação principal">
@@ -83,6 +83,6 @@
     </form>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
