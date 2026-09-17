@@ -18,17 +18,7 @@ const auth=getAuth(firebaseApp);
 const accessCodeHash='aa856b786ce69faea3a86585ad904714bf6e3ff66ac9c5e139b1396e5dc7bebe';
 isSupported().then(supported=>{if(supported)getAnalytics(firebaseApp)}).catch(()=>{});
 
-const demoReports=[
- {id:1,patient:'Rosimeire Aparecida Mota',code:'42780',agreement:'IAMSPE',purpose:'Retorno médico',therapist:'Alex Sandro',due:'21/09/2026',status:'aguardando'},
- {id:2,patient:'Jennifer Barbosa Calirio Okawa',code:'104598',agreement:'Outros',purpose:'Perícia do INSS',therapist:'Camila',due:'21/09/2026',status:'aguardando'},
- {id:3,patient:'Maria das Graças Barbosa Godoy',code:'89369',agreement:'IAMSPE',purpose:'Perícia de seguro',therapist:'Fernanda',due:'22/09/2026',status:'aguardando'},
- {id:4,patient:'Claudia Regina Gonçalves',code:'35525',agreement:'IAMSPE',purpose:'Retorno médico',therapist:'Vanessa',due:'18/09/2026',status:'confeccao'},
- {id:5,patient:'Wellington da Silva Cabral',code:'78399',agreement:'Outros',purpose:'Perícia do INSS',therapist:'Fernanda',due:'21/09/2026',status:'confeccao'},
- {id:6,patient:'Marcelo Buim',code:'2973',agreement:'IAMSPE',purpose:'Retorno médico',therapist:'Alex Sandro',due:'17/09/2026',status:'pronto'},
- {id:7,patient:'Elisabete Lopes Pereira',code:'103119',agreement:'Outros',purpose:'Perícia de seguro',therapist:'Camila',due:'18/09/2026',status:'pronto'},
- {id:8,patient:'Alice Budim Oliveira',code:'104448',agreement:'IAMSPE',purpose:'Retorno médico',therapist:'Vanessa',due:'16/09/2026',status:'entregue'}
-];
-let reports=[...demoReports];
+let reports=[];
 const colors={aguardando:'#c88313',confeccao:'#377ea7',pronto:'#2f8a68'};
 const labels={aguardando:'Aguardando',confeccao:'Em confecção',pronto:'Pronto'};
 const lists={aguardando:document.querySelector('#waitingList'),confeccao:document.querySelector('#draftList'),pronto:document.querySelector('#readyList')};
@@ -45,6 +35,8 @@ function render(){
  });
  document.querySelectorAll('.lane').forEach(lane=>lane.querySelector('.lane-count').textContent=visible.filter(r=>r.status===lane.dataset.status).length);
  ['aguardando','confeccao','pronto','entregue'].forEach((s,i)=>document.querySelectorAll('.metric strong')[i].textContent=reports.filter(r=>r.status===s).length);
+ Object.entries(lists).forEach(([status,list])=>{if(!visible.some(r=>r.status===status))list.innerHTML='<p class="empty-state">Nenhum relatório nesta etapa.</p>'});
+ document.querySelector('#footerSummary').textContent=`${reports.length} registros • ${reports.filter(r=>r.status==='aguardando').length} aguardando • ${reports.filter(r=>r.status==='pronto').length} prontos`;
 }
 function buildCalendar(){const root=document.querySelector('#calendarDays');for(let i=0;i<2;i++)root.insertAdjacentHTML('beforeend','<button class="muted">'+(30+i)+'</button>');for(let d=1;d<=30;d++)root.insertAdjacentHTML('beforeend',`<button class="${d===17?'today':''}">${d}</button>`)}
 function addBusinessDays(start,days){const date=new Date(start);let added=0;while(added<days){date.setDate(date.getDate()+1);if(date.getDay()!==0&&date.getDay()!==6)added++}return date}
@@ -70,9 +62,9 @@ document.querySelectorAll('.tool[data-view]').forEach(tool=>tool.addEventListene
 function connectFirestore(){
  const reportsQuery=query(collection(db,'relatorios'),orderBy('createdAt','desc'));
  onSnapshot(reportsQuery,snapshot=>{
-   reports=snapshot.empty?[...demoReports]:snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
-   setConnection(true,snapshot.empty?'Firebase conectado • dados de demonstração':'Firebase conectado');render();
- },error=>{console.error(error);reports=[...demoReports];setConnection(false,'Firebase requer configuração');render();showToast('Firestore indisponível. Exibindo dados de demonstração.')});
+   reports=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+   setConnection(true,'Firebase conectado');render();
+ },error=>{console.error(error);reports=[];setConnection(false,'Firebase requer configuração');render();showToast('Não foi possível carregar os relatórios.')});
 }
 const loginScreen=document.querySelector('#loginScreen');
 const loginForm=document.querySelector('#loginForm');
