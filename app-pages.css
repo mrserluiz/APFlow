@@ -11,7 +11,7 @@
 #appointmentForm { padding: 20px; }#appointmentForm .dialog-actions { margin-top: 18px; }#appointmentForm .primary { background: #315f7d; color: #fff; }
 .finance-summary article { display: block; }.finance-summary span { display: block; color: #71818a; font-size: 13px; }.finance-summary strong { display: block; margin-top: 7px; color: #2e607b; font-size: 23px; }
 .days button.selected { background: #315f7d; color: #fff; box-shadow: 0 0 0 2px #315f7d2c; }.days button.today:not(.selected) { color: #1d668e; background: #dcecf5; font-weight: 700; }
-.professional-directory { overflow: hidden; border: 1px solid #d1dce4; border-radius: 9px; background: #fff; box-shadow: 0 2px 7px #18324618; }
+.professional-directory { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; border: 1px solid #d1dce4; border-radius: 9px; background: #fff; box-shadow: 0 2px 7px #18324618; scrollbar-width: thin; scrollbar-color: #9db2bf #edf3f6; }
 .professional-directory details + details { border-top: 1px solid #dce4e9; }
 .professional-directory summary { display: flex; justify-content: space-between; align-items: center; padding: 13px 12px; color: #3d5969; font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; list-style: none; }
 .professional-directory summary::-webkit-details-marker { display: none; }.professional-directory details[open] summary span { transform: rotate(180deg); }
@@ -23,5 +23,5 @@
 .filter-panel { padding: 20px; }.filter-panel .dialog-actions { margin-top: 18px; }.filter-panel .primary { background: #315f7d; color: #fff; }
 .inline-form select { width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #c5d2da; border-radius: 7px; background: #fff; font: inherit; }.inline-form { grid-template-columns: 1fr 140px 130px auto; }.column-setting { display: flex; align-items: center; gap: 7px; font-size: 12px; }.column-setting select { padding: 6px; border: 1px solid #c8d4dc; border-radius: 5px; background: #fff; }
 @media (max-width: 800px) { .home-overview, .finance-summary { grid-template-columns: 1fr; }.agenda-toolbar { flex-wrap: wrap; }.agenda-toolbar strong { order: -1; flex-basis: 100%; }.agenda-day { min-height: 470px; } }
-@media (max-width: 900px) { .mini-calendar { display: block; }.professional-directory { min-width: 0; }.page-view[data-page="agendas"] { overflow-x: auto; } }
+@media (max-width: 900px) { .mini-calendar { display: block; }.professional-directory { min-width: 0; max-height: 55vh; }.page-view[data-page="agendas"] { overflow-x: auto; } }
 @media (max-width: 540px) { .head-date-row { align-items: flex-start; flex-direction: column; gap: 5px; }.inline-form { grid-template-columns: 1fr; } }
