@@ -58,6 +58,9 @@
 
     <section class="workspace page-view" data-page="agendas" hidden>
       <div class="workspace-head"><div><p class="eyebrow">ATENDIMENTOS</p><h1>Agendas</h1><div class="head-date-row"><p data-selected-date></p><button class="header-filter" type="button">⌕ Filtro</button></div></div><button class="primary" type="button">＋ Novo agendamento</button></div>
+      <nav class="agenda-actions" aria-label="Ações da agenda">
+        <button data-agenda-action="agendar"><span>◎</span>Agendar</button><button data-agenda-action="desmarcar"><span>⊘</span>Desmarcar</button><button data-agenda-action="encaixar"><span>◌</span>Encaixar</button><button data-agenda-action="remarcar"><span>⟳</span>Remarcar</button><button data-agenda-action="travar"><span>♙</span>Travar</button><button data-agenda-action="travar-dia"><span>▦</span>Travar dia</button><button data-agenda-action="confirmar"><span>✓</span>Confirmar</button><button data-agenda-action="cadastro"><span>✓</span>Cadastro</button><button data-agenda-action="localizar"><span>⌕</span>Localizar</button><button data-agenda-action="visualizacao"><span>▦</span>Visualização</button><button data-agenda-action="cobranca"><span>♨</span>Cobrança</button><button data-agenda-action="imprimir"><span>▤</span>Imprimir</button>
+      </nav>
       <div class="agenda-toolbar"><button class="secondary" id="todayButton">Hoje</button><strong data-selected-date></strong><select id="agendaProfessional" aria-label="Profissional da agenda"><option value="">Todos os profissionais</option></select></div>
       <section class="physio-schedule" id="agendaSchedule" aria-live="polite"></section>
     </section>
