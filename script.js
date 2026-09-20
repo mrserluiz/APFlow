@@ -171,7 +171,7 @@ function createAgendaSlot(time,column,appointment,emptyLabel){
  if(appointment?.locked){slot.classList.add('locked');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty"><b>🔒 HORÁRIO TRAVADO</b></span>`}
  else if(appointment){slot.classList.add('occupied');if(moveSource?.id===appointment.id)slot.classList.add('move-source');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="patient-name">${appointment.patient}</span><small>${appointment.agreement||''}</small><small>${appointment.treatment||''}</small><small>Nº ${appointment.code||''}</small><span class="patient-actions">${appointment.billed?'💼':''} ${appointment.present?'✅':''}</span>`}
  else slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty">${emptyLabel}</span>`;
- slot.addEventListener('click',()=>handleSlotClick(slot,appointment));slot.addEventListener('dblclick',event=>{if(!agendaMode&&!appointment?.locked){event.preventDefault();openAppointment(slot,appointment,'agendar')}});return slot;
+ slot.addEventListener('click',()=>handleSlotClick(slot,appointment));slot.addEventListener('dblclick',event=>{if(appointment?.locked)return;event.preventDefault();if(appointment)openPatientRecord(appointment);else openAppointment(slot,null,'agendar')});return slot;
 }
 function renderAgenda(){
  const root=document.querySelector('#agendaSchedule');const selectedName=document.querySelector('#agendaProfessional').value;const professional=therapists.find(person=>person.name===selectedName);const columns=professional?.agendaColumns===5?5:4;
