@@ -27,3 +27,34 @@
 @media (max-width: 800px) { .home-overview, .finance-summary { grid-template-columns: 1fr; }.agenda-toolbar { flex-wrap: wrap; }.agenda-toolbar strong { order: -1; flex-basis: 100%; }.agenda-day { min-height: 470px; } }
 @media (max-width: 900px) { .mini-calendar { display: block; }.professional-directory { min-width: 0; max-height: 55vh; }.page-view[data-page="agendas"] { overflow-x: auto; } }
 @media (max-width: 540px) { .head-date-row { align-items: flex-start; flex-direction: column; gap: 5px; }.inline-form { grid-template-columns: 1fr; } }
+
+
+/* Autorizações e navegador interno */
+.authorization-shortcuts { display: flex; align-items: stretch; gap: 8px; min-height: 82px; padding: 8px 14px; overflow-x: auto; background: #f8fafb; border-bottom: 1px solid #d4dee4; }
+.authorization-card { position: relative; min-width: 112px; max-width: 150px; border: 1px solid #cbd7de; border-radius: 8px; background: #fff; color: #244c67; padding: 8px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; box-shadow: 0 1px 3px #18324612; }
+.authorization-card:hover, .authorization-card.active { background: #dce9f1; border-color: #7ba4bb; transform: translateY(-1px); }
+.authorization-card img { width: 34px; height: 34px; object-fit: contain; }
+.authorization-card .portal-initial { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 7px; background: #315f7d; color: #fff; font-size: 16px; font-weight: 800; }
+.authorization-card strong { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; font-size: 12px; }
+.authorization-card small { color: #6a7c87; font-size: 10px; }
+.portal-delete { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border: 0; border-radius: 50%; background: #edf2f5; color: #6a2525; cursor: pointer; line-height: 1; }
+.authorization-empty { margin: auto 0; color: #778892; }
+.internal-browser { margin: 8px; border: 1px solid #aebdc7; border-radius: 8px; overflow: hidden; background: #fff; min-height: 520px; }
+.internal-browser > header { min-height: 48px; padding: 7px 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #e7eef3; border-bottom: 1px solid #c8d4dc; }
+.internal-browser > header > div { display: flex; align-items: center; gap: 8px; }
+.browser-status { width: 9px; height: 9px; border-radius: 50%; background: #20a36d; box-shadow: 0 0 0 3px #20a36d20; }
+.browser-controls { display: flex; align-items: center; }
+.browser-notice { margin: 0; padding: 7px 12px; background: #fff8df; border-bottom: 1px solid #eadca9; color: #665927; font-size: 11px; }
+#authorizationFrame { display: block; width: 100%; height: calc(100vh - 330px); min-height: 460px; border: 0; background: #fff; }
+#portalForm { padding: 20px; }
+#portalForm .dialog-actions { margin-top: 18px; }
+#portalForm .primary { background: #315f7d; color: #fff; }
+
+@media (max-width: 700px) {
+  .authorization-shortcuts { padding: 7px; }
+  .authorization-card { min-width: 96px; }
+  .internal-browser { margin: 5px; }
+  .internal-browser > header { align-items: flex-start; }
+  .browser-controls .secondary { font-size: 11px; padding: 8px; }
+  #authorizationFrame { height: 70vh; min-height: 430px; }
+}
