@@ -85,3 +85,24 @@
 /* Controles da agenda sempre visíveis durante a rolagem dos horários */
 .agenda-sticky-controls { position: sticky; top: 0; z-index: 12; background: #f8fafb; box-shadow: 0 3px 8px #17324418; }
 .agenda-sticky-controls .agenda-actions, .agenda-sticky-controls .agenda-toolbar { position: static; }
+
+
+/* Painel administrativo */
+.admin-dashboard-grid { display: grid; grid-template-columns: repeat(2,minmax(280px,1fr)); gap: 14px; padding: 16px; }
+.admin-dashboard-card { min-height: 230px; display: grid; grid-template-columns: 52px 1fr; grid-template-rows: 1fr auto; gap: 10px 14px; padding: 18px; border: 1px solid #ced9df; border-radius: 10px; background: #fff; box-shadow: 0 3px 10px #17324414; }
+.admin-dashboard-card > .ui-icon { width: 46px; height: 46px; margin: 0; }
+.admin-dashboard-card > div { min-width: 0; }
+.admin-dashboard-card p { margin: 0 0 4px; color: #69808e; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.admin-dashboard-card h2 { margin: 0 0 8px; color: #244c67; font-size: 20px; }
+.admin-dashboard-card strong, .admin-dashboard-card small { display: block; }
+.admin-dashboard-card strong { margin-bottom: 7px; color: #315f7d; }
+.admin-dashboard-card small { color: #667985; line-height: 1.45; }
+.admin-dashboard-card > button { grid-column: 1/-1; justify-self: start; background: #315f7d; color: #fff; }
+.admin-security-note { margin: 0 16px 18px; padding: 14px 16px; border-left: 5px solid #2f8a68; border-radius: 7px; background: #eef8f4; color: #315e50; }
+.admin-security-note p { margin: 4px 0 0; }
+
+@media (max-width: 760px) {
+ .admin-dashboard-grid { grid-template-columns: 1fr; padding: 10px; }
+ .admin-dashboard-card { min-height: 205px; }
+ .admin-security-note { margin: 0 10px 14px; }
+}
