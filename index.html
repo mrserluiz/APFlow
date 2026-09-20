@@ -24,7 +24,7 @@
     <button class="tool" data-view="financeiro"><span class="ui-icon icon-financeiro"></span>Financeiro</button>
     <button class="tool" data-view="autorizacoes"><span class="ui-icon icon-visualizacao"></span>Autorizações</button>
     <div class="ribbon-separator"></div>
-    <button class="tool admin-only" id="adminButton" hidden><span class="ui-icon icon-configuracoes"></span>Administração</button>
+    <button class="tool admin-only" id="adminButton" data-view="administracao" hidden><span class="ui-icon icon-configuracoes"></span>Administração</button>
   </nav>
 
   <main class="app-shell">
@@ -115,6 +115,37 @@
         <section class="lane" data-status="confeccao"><header><span class="status-dot blue-bg"></span><h2>Em confecção</h2><b class="lane-count">0</b></header><div class="card-list" id="draftList"></div></section>
         <section class="lane" data-status="pronto"><header><span class="status-dot green-bg"></span><h2>Prontos para entrega</h2><b class="lane-count">0</b></header><div class="card-list" id="readyList"></div></section>
       </div>
+    </section>
+    <section class="workspace page-view admin-dashboard" data-page="administracao" hidden>
+      <div class="workspace-head">
+        <div><p class="eyebrow">ÁREA RESTRITA</p><h1>Painel Administrativo</h1><p>Gerencie os acessos, profissionais e configurações do APFlow.</p></div>
+      </div>
+      <div class="admin-dashboard-grid">
+        <article class="admin-dashboard-card">
+          <span class="ui-icon icon-cadastro"></span>
+          <div><p>CONTAS DO SISTEMA</p><h2>Usuários e cargos</h2><strong id="adminUserCount">0 usuários cadastrados</strong><small>Defina cargos e acompanhe as contas da equipe.</small></div>
+          <button class="primary" type="button" data-admin-open="users">Gerenciar usuários</button>
+        </article>
+        <article class="admin-dashboard-card">
+          <span class="ui-icon icon-agenda"></span>
+          <div><p>EQUIPE CLÍNICA</p><h2>Profissionais e agendas</h2><strong id="adminProfessionalCount">0 profissionais</strong><small>Cadastre profissionais, setores e quantidade de colunas.</small></div>
+          <button class="primary" type="button" data-admin-open="professionals">Gerenciar profissionais</button>
+        </article>
+        <article class="admin-dashboard-card">
+          <span class="ui-icon icon-visualizacao"></span>
+          <div><p>CONVÊNIOS</p><h2>Portais de autorização</h2><strong id="adminPortalCount">0 portais cadastrados</strong><small>Adicione os links oficiais utilizados pela recepção.</small></div>
+          <button class="primary" type="button" data-admin-open="portals">Gerenciar portais</button>
+        </article>
+        <article class="admin-dashboard-card">
+          <span class="ui-icon icon-configuracoes"></span>
+          <div><p>CONTROLE DE ACESSO</p><h2>Permissões por cargo</h2><strong>8 cargos disponíveis</strong><small>Admin, Financeiro, Gerente, Atendente e equipe clínica.</small></div>
+          <button class="primary" type="button" data-admin-open="permissions">Configurar permissões</button>
+        </article>
+      </div>
+      <section class="admin-security-note">
+        <strong>Administração protegida</strong>
+        <p>Somente contas com cargo Admin conseguem abrir esta área e alterar configurações.</p>
+      </section>
     </section>
   </main>
 
