@@ -110,6 +110,7 @@ function renderTherapists(){
 function switchPage(view){const available=[...document.querySelectorAll('.tool[data-view]')].map(item=>item.dataset.view);const target=available.includes(view)?view:'inicio';document.querySelectorAll('.tool[data-view]').forEach(item=>item.classList.toggle('active',item.dataset.view===target));document.querySelectorAll('.page-view').forEach(page=>page.hidden=page.dataset.page!==target);localStorage.setItem('apflow.activePage',target)}
 function openProfessionalAgenda(name){switchPage('agendas');const agenda=document.querySelector('#agendaProfessional');agenda.value=name;connectAppointments();showToast(`Agenda de ${name}`)}
 function setAgendaMode(mode){
+ if((mode==='travar'||mode==='destravar')&&agendaMode===mode){resetAgendaMode();showToast('Modo Agendar reativado.');return}
  agendaMode=mode;if(agendaMode!=='remarcar')moveSource=null;
  document.querySelectorAll('[data-agenda-action]').forEach(button=>{const active=button.dataset.agendaAction===agendaMode;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});
  renderAgenda();
@@ -125,7 +126,7 @@ async function handleSlotClick(slot,appointment){
  if(!agendaMode)return;
  if(appointment?.locked){
   if(agendaMode!=='destravar'){showToast('Este horário está travado. Use Destravar.');return}
-  try{await updateDoc(doc(db,'agendamentos',appointment.id),{locked:false,updatedAt:serverTimestamp()});showToast('Horário destravado.');resetAgendaMode()}catch(error){console.error(error);showToast('Não foi possível destravar o horário.')}return;
+  try{await updateDoc(doc(db,'agendamentos',appointment.id),{locked:false,updatedAt:serverTimestamp()});showToast('Horário destravado. Selecione outro horário ou outra função.')}catch(error){console.error(error);showToast('Não foi possível destravar o horário.')}return;
  }
  if(agendaMode==='destravar'){showToast('Selecione uma célula com cadeado.');return}
  if(agendaMode==='agendar'||agendaMode==='encaixar'){
@@ -134,25 +135,33 @@ async function handleSlotClick(slot,appointment){
  }
  if(agendaMode==='travar'){
   if(appointment){showToast('Somente horários vazios podem ser travados.');return}
-  try{await addDoc(collection(db,'agendamentos'),{professional:document.querySelector('#agendaProfessional').value,date:dateKey(selectedDate),time:slot.dataset.time,column:Number(slot.dataset.column),locked:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});showToast('Horário travado.');resetAgendaMode()}catch(error){console.error(error);showToast('Não foi possível travar o horário.')}return;
+  try{await addDoc(collection(db,'agendamentos'),{professional:document.querySelector('#agendaProfessional').value,date:dateKey(selectedDate),time:slot.dataset.time,column:Number(slot.dataset.column),locked:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});showToast('Horário travado. Selecione outro horário ou outra função.')}catch(error){console.error(error);showToast('Não foi possível travar o horário.')}return;
  }
  if(agendaMode==='confirmar'){
   if(!appointment){showToast('Selecione um paciente agendado.');return}
   if(appointment.present){showToast('O paciente já está marcado como presente.');return}
-  try{await updateDoc(doc(db,'agendamentos',appointment.id),{present:true,updatedAt:serverTimestamp()});showToast('Presença do paciente confirmada.');resetAgendaMode()}catch(error){console.error(error);showToast('Não foi possível confirmar a presença.')}return;
+  pendingScheduleAction={type:'confirmar',appointment};document.querySelector('#scheduleActionTitle').textContent='Confirmar presença';document.querySelector('#schedulePatientSummary').innerHTML=`<strong>${appointment.patient}</strong><span>${slot.dataset.time.replace(':','h')} • ${appointment.agreement||'Sem convênio'}</span><small>Nº ${appointment.code||'—'} • ${appointment.treatment||'Sem tratamento informado'}</small>`;document.querySelector('#scheduleActionMessage').textContent='Tem certeza de que este paciente está no local?';document.querySelector('#confirmScheduleAction').textContent='Confirmar presença';document.querySelector('#scheduleActionDialog').dataset.action='confirmar';document.querySelector('#scheduleActionDialog').showModal();return;
  }
  if(agendaMode==='desmarcar'){
   if(!appointment){showToast('Selecione um paciente agendado.');return}
-  pendingScheduleAction={type:'desmarcar',appointment};document.querySelector('#scheduleActionTitle').textContent='Desmarcar paciente';document.querySelector('#schedulePatientSummary').innerHTML=`<strong>${appointment.patient}</strong><span>${slot.dataset.time.replace(':','h')} • ${appointment.agreement||'Sem convênio'}</span><small>Nº ${appointment.code||'—'} • ${appointment.treatment||'Sem tratamento informado'}</small>`;document.querySelector('#scheduleActionMessage').textContent='Deseja cancelar este agendamento e liberar a célula?';document.querySelector('#scheduleActionDialog').showModal();return;
+  pendingScheduleAction={type:'desmarcar',appointment};document.querySelector('#scheduleActionTitle').textContent='Desmarcar paciente';document.querySelector('#confirmScheduleAction').textContent='Desmarcar';document.querySelector('#scheduleActionDialog').dataset.action='desmarcar';document.querySelector('#schedulePatientSummary').innerHTML=`<strong>${appointment.patient}</strong><span>${slot.dataset.time.replace(':','h')} • ${appointment.agreement||'Sem convênio'}</span><small>Nº ${appointment.code||'—'} • ${appointment.treatment||'Sem tratamento informado'}</small>`;document.querySelector('#scheduleActionMessage').textContent='Deseja cancelar este agendamento e liberar a célula?';document.querySelector('#scheduleActionDialog').showModal();return;
  }
  if(agendaMode==='remarcar'){
   if(!moveSource){
    if(!appointment){showToast('Primeiro selecione o paciente que será remarcado.');return}
+   if(appointment.present){showToast('Pacientes confirmados não podem ser remarcados.');return}
    moveSource={...appointment};renderAgenda();showToast('Agora selecione uma célula vazia em qualquer agenda.');return;
   }
   if(appointment){showToast('O novo destino precisa ser uma célula vazia.');return}
   try{await updateDoc(doc(db,'agendamentos',moveSource.id),{professional:document.querySelector('#agendaProfessional').value,date:dateKey(selectedDate),time:slot.dataset.time,column:Number(slot.dataset.column),updatedAt:serverTimestamp()});showToast('Paciente remarcado com sucesso.');resetAgendaMode();connectAppointments()}catch(error){console.error(error);showToast('Não foi possível remarcar o paciente.')}
  }
+}
+function createAgendaSlot(time,column,appointment,emptyLabel){
+ const slot=document.createElement('button');slot.className=`appointment-slot column-${column}`;slot.type='button';slot.dataset.time=time;slot.dataset.column=column;
+ if(appointment?.locked){slot.classList.add('locked');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty"><b>🔒 HORÁRIO TRAVADO</b></span>`}
+ else if(appointment){slot.classList.add('occupied');if(moveSource?.id===appointment.id)slot.classList.add('move-source');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="patient-name">${appointment.patient}</span><small>${appointment.agreement||''}</small><small>${appointment.treatment||''}</small><small>Nº ${appointment.code||''}</small><span class="patient-actions">${appointment.billed?'💼':''} ${appointment.present?'✅':''}</span>`}
+ else slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty">${emptyLabel}</span>`;
+ slot.addEventListener('click',()=>handleSlotClick(slot,appointment));slot.addEventListener('dblclick',event=>{if(!agendaMode&&!appointment?.locked){event.preventDefault();openAppointment(slot,appointment,'agendar')}});return slot;
 }
 function renderAgenda(){
  const root=document.querySelector('#agendaSchedule');const selectedName=document.querySelector('#agendaProfessional').value;const professional=therapists.find(person=>person.name===selectedName);const columns=professional?.agendaColumns===5?5:4;
@@ -160,7 +169,16 @@ function renderAgenda(){
  if(!selectedName){root.innerHTML='<div class="agenda-welcome"><strong>Selecione um profissional</strong><p>Escolha uma agenda para visualizar os horários da manhã e da tarde.</p></div>';return}
  const allowedPeriods=professional?.scheduleGroup?.includes('Manhã')?['manha']:professional?.scheduleGroup?.includes('Tarde')?['tarde']:['manha','tarde'];
  const activeAppointments=appointments.filter(item=>item.cancelled!==true&&item.locked!==false);
- Object.entries(agendaSlots).filter(([period])=>allowedPeriods.includes(period)).forEach(([period,slots])=>{const divider=document.createElement('div');divider.className='period-divider';divider.textContent=period==='manha'?'Bloco da manhã':'Bloco da tarde';root.append(divider);const markers=document.createElement('div');markers.className='column-markers';markers.innerHTML=Array.from({length:columns},(_,index)=>`<span class="column-${index+1}"></span>`).join('');root.append(markers);slots.forEach(time=>{const row=document.createElement('div');row.className='schedule-row';for(let column=1;column<=columns;column++){const appointment=activeAppointments.find(item=>item.time===time&&Number(item.column)===column);const slot=document.createElement('button');slot.className=`appointment-slot column-${column}`;slot.type='button';slot.dataset.time=time;slot.dataset.column=column;if(appointment?.locked){slot.classList.add('locked');if(agendaMode==='encaixar')slot.classList.add('mode-hidden');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty"><b>🔒 HORÁRIO TRAVADO</b></span>`}else if(appointment){slot.classList.add('occupied');if(agendaMode==='encaixar')slot.classList.add('mode-hidden');if(moveSource?.id===appointment.id)slot.classList.add('move-source');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="patient-name">${appointment.patient}</span><small>${appointment.agreement||''}</small><small>${appointment.treatment||''}</small><small>Nº ${appointment.code||''}</small><span class="patient-actions">${appointment.billed?'💼':''} ${appointment.present?'✅':''}</span>`}else slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty">${agendaMode?'Clique para selecionar':'Dois cliques para agendar'}</span>`;slot.addEventListener('click',()=>handleSlotClick(slot,appointment));slot.addEventListener('dblclick',event=>{if(!agendaMode&&!appointment?.locked){event.preventDefault();openAppointment(slot,appointment,'agendar')}});row.append(slot)}root.append(row)})});
+ Object.entries(agendaSlots).filter(([period])=>allowedPeriods.includes(period)).forEach(([period,slots])=>{
+  const divider=document.createElement('div');divider.className='period-divider';divider.textContent=period==='manha'?'Bloco da manhã':'Bloco da tarde';root.append(divider);
+  const markers=document.createElement('div');markers.className='column-markers';markers.innerHTML=Array.from({length:columns},(_,index)=>`<span class="column-${index+1}"></span>`).join('');root.append(markers);
+  if(agendaMode==='encaixar'){
+   const fitGrid=document.createElement('div');fitGrid.className='fit-grid';let emptyCount=0;
+   for(let column=1;column<=columns;column++){let compactRow=1;slots.forEach(time=>{const appointment=activeAppointments.find(item=>item.time===time&&Number(item.column)===column);if(appointment)return;const slot=createAgendaSlot(time,column,null,'Clique para encaixar');slot.style.gridColumn=column;slot.style.gridRow=compactRow++;fitGrid.append(slot);emptyCount++})}
+   if(emptyCount)root.append(fitGrid);else{const empty=document.createElement('p');empty.className='fit-empty';empty.textContent='Não há células vazias neste período.';root.append(empty)}return;
+  }
+  slots.forEach(time=>{const row=document.createElement('div');row.className='schedule-row';for(let column=1;column<=columns;column++){const appointment=activeAppointments.find(item=>item.time===time&&Number(item.column)===column);row.append(createAgendaSlot(time,column,appointment,agendaMode?'Clique para selecionar':'Dois cliques para agendar'))}root.append(row)});
+ });
 }
 function connectAppointments(){const professional=document.querySelector('#agendaProfessional').value;if(stopAppointments)stopAppointments();appointments=[];if(!professional){renderAgenda();return}stopAppointments=onSnapshot(query(collection(db,'agendamentos'),where('professional','==',professional),where('date','==',dateKey(selectedDate))),snapshot=>{appointments=snapshot.docs.map(item=>({id:item.id,...item.data()}));renderAgenda()},error=>{console.error(error);appointments=[];renderAgenda();showToast('Publique as regras do Firestore para usar a agenda.')})}
 const appointmentDialog=document.querySelector('#appointmentDialog');const appointmentForm=document.querySelector('#appointmentForm');
@@ -223,7 +241,7 @@ document.querySelector('#closeInternalBrowser').addEventListener('click',()=>{do
 document.querySelector('#scheduleActionForm').addEventListener('submit',async event=>{
  event.preventDefault();if(event.submitter?.id!=='confirmScheduleAction'){document.querySelector('#scheduleActionDialog').close();return}
  const action=pendingScheduleAction;const button=document.querySelector('#confirmScheduleAction');if(!action)return;button.disabled=true;
- try{if(action.type==='desmarcar'){await updateDoc(doc(db,'agendamentos',action.appointment.id),{cancelled:true,cancelledAt:serverTimestamp(),updatedAt:serverTimestamp()});showToast('Agendamento desmarcado e célula liberada.');resetAgendaMode()}document.querySelector('#scheduleActionDialog').close();pendingScheduleAction=null}catch(error){console.error(error);showToast('Não foi possível concluir a ação.')}finally{button.disabled=false}
+ try{if(action.type==='desmarcar'){await updateDoc(doc(db,'agendamentos',action.appointment.id),{cancelled:true,cancelledAt:serverTimestamp(),updatedAt:serverTimestamp()});showToast('Agendamento desmarcado e célula liberada.');resetAgendaMode()}else if(action.type==='confirmar'){await updateDoc(doc(db,'agendamentos',action.appointment.id),{present:true,updatedAt:serverTimestamp()});showToast('Presença do paciente confirmada.');resetAgendaMode()}document.querySelector('#scheduleActionDialog').close();pendingScheduleAction=null}catch(error){console.error(error);showToast('Não foi possível concluir a ação.')}finally{button.disabled=false}
 });
 document.querySelectorAll('#closeAppointment,#cancelAppointment').forEach(button=>button.addEventListener('click',()=>appointmentDialog.close()));
 appointmentForm.addEventListener('submit',async event=>{event.preventDefault();const data=new FormData(appointmentForm);const id=data.get('appointmentId');const previous=appointments.find(item=>item.id===id);const payload={professional:document.querySelector('#agendaProfessional').value,date:dateKey(selectedDate),time:data.get('time'),column:Number(data.get('column')),patient:data.get('patient').trim(),code:data.get('code').trim(),agreement:data.get('agreement'),treatment:data.get('treatment').trim(),billed:data.get('billed')==='on',present:previous?.present===true,fit:appointmentContext==='encaixar'||previous?.fit===true,updatedAt:serverTimestamp()};const button=appointmentForm.querySelector('[type="submit"]');button.disabled=true;try{if(id)await updateDoc(doc(db,'agendamentos',id),payload);else await addDoc(collection(db,'agendamentos'),{...payload,createdAt:serverTimestamp()});appointmentDialog.close();showToast(appointmentContext==='encaixar'?'Encaixe salvo.':'Agendamento salvo.');resetAgendaMode()}catch(error){console.error(error);showToast('Não foi possível salvar. Publique as regras do Firestore.')}finally{button.disabled=false}});
