@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260920-12">
+  <link rel="stylesheet" href="app-pages.css?v=20260920-13">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -290,6 +290,16 @@
           <p>Defina quais áreas cada usuário poderá acessar.</p>
           <div class="admin-list" id="userRoleList"><p class="empty-mini">Carregando usuários...</p></div>
         </section>
+        <section class="admin-section admin-system-tools">
+          <h3>Demonstração e manutenção</h3>
+          <p>Gere pacientes fictícios na data selecionada ou zere somente as agendas do APFlow.</p>
+          <div class="admin-maintenance-actions">
+            <button class="primary" type="button" id="generateDemoSchedule">Gerar demonstração</button>
+            <button class="danger-button" type="button" id="clearAllSchedules">Limpar sistema</button>
+          </div>
+          <small>A limpeza remove todos os agendamentos, inclusive históricos, faltas e horários travados. Usuários, profissionais, relatórios e portais não serão apagados.</small>
+        </section>
+
       </div>
     </div>
   </dialog>
@@ -325,6 +335,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260920-13"></script>
+  <script type="module" src="script.js?v=20260920-14"></script>
 </body>
 </html>
