@@ -183,3 +183,13 @@
 .danger-button:hover { background: #812727; }
 .admin-system-tools > small { display: block; color: #7e5757; line-height: 1.45; }
 .admin-maintenance-actions button:disabled { cursor: wait; opacity: .6; }
+
+
+/* Manutenção visível diretamente no Painel Administrativo */
+.maintenance-dashboard-card { grid-column: 1/-1; min-height: 175px; border-color: #b9cbd5; background: linear-gradient(135deg,#fff,#f2f8fb); }
+.admin-dashboard-actions { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; }
+.admin-dashboard-actions button { min-width: 190px; padding: 11px 16px; border-radius: 7px; font-weight: 800; cursor: pointer; }
+.admin-dashboard-actions .primary { border: 1px solid #315f7d; color: #fff; background: #315f7d; }
+.admin-dashboard-actions .danger-button { border: 1px solid #9d3535; color: #fff; background: #9d3535; }
+.admin-dashboard-actions button:disabled { cursor: wait; opacity: .6; }
+@media (max-width:760px) { .maintenance-dashboard-card { min-height: 210px; } .admin-dashboard-actions { display: grid; } .admin-dashboard-actions button { width: 100%; min-width: 0; } }
