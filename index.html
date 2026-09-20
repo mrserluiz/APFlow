@@ -14,7 +14,7 @@
 <body>
   <header class="app-header">
     <div class="window-title"><span class="brand-mark">✚</span><strong>APFlow</strong><span>Gestão de processos clínicos</span></div>
-    <div class="user-area"><span class="online-dot" id="connectionDot"></span> <span id="connectionStatus">Aguardando acesso</span> <strong>Equipe APFlow</strong><button class="avatar" id="logoutButton" aria-label="Sair do sistema" title="Sair">↪</button></div>
+    <div class="user-area"><span class="online-dot" id="connectionDot"></span> <span id="connectionStatus">Aguardando acesso</span> <strong>Equipe APFlow</strong><button class="admin-mode-switch" id="adminModeToggle" type="button" hidden>Visualizar como usuário comum</button><button class="avatar" id="logoutButton" aria-label="Sair do sistema" title="Sair">↪</button></div>
   </header>
 
   <nav class="ribbon" aria-label="Navegação principal">
@@ -141,6 +141,11 @@
           <div><p>CONTROLE DE ACESSO</p><h2>Permissões por cargo</h2><strong>8 cargos disponíveis</strong><small>Admin, Financeiro, Gerente, Atendente e equipe clínica.</small></div>
           <button class="primary" type="button" data-admin-open="permissions">Configurar permissões</button>
         </article>
+      </div>
+      <div class="admin-preview-control">
+        <span class="ui-icon icon-visualizacao"></span>
+        <div><h2>Visualização como usuário comum</h2><p>Oculte temporariamente as ferramentas administrativas para testar a experiência da equipe. Seu cargo Admin não será alterado.</p></div>
+        <button class="primary" id="adminPreviewButton" type="button">Ativar modo usuário comum</button>
       </div>
       <section class="admin-security-note">
         <strong>Administração protegida</strong>
