@@ -123,3 +123,28 @@
  .admin-preview-control { grid-template-columns: 42px 1fr; margin: 0 10px 12px; }
  .admin-preview-control > button { grid-column: 1/-1; justify-self: start; }
 }
+
+
+/* Cadastro, localização, cobrança e bloqueio diário */
+.day-lock-panel, .patient-record-panel, .patient-search-panel, .charge-panel { padding: 20px; }
+.day-lock-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.day-lock-actions .primary { background: #315f7d; color: #fff; }
+.patient-record-dialog, .patient-search-dialog { width: min(760px,calc(100% - 24px)); }
+.charge-dialog, #dayLockDialog { width: min(560px,calc(100% - 24px)); }
+.patient-record-grid { display: grid; grid-template-columns: repeat(2,minmax(200px,1fr)); gap: 10px; margin-bottom: 15px; }
+.patient-record-grid > div { display: grid; gap: 4px; padding: 11px; border: 1px solid #d5dee4; border-radius: 7px; background: #f7fafb; }
+.patient-record-grid span { color: #71838e; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.patient-record-grid strong { color: #263f4d; }
+.patient-search-field { display: block; margin-bottom: 12px; color: #425b69; font-weight: 700; }
+.patient-search-field input { width: 100%; margin-top: 6px; padding: 11px; border: 1px solid #becdd6; border-radius: 7px; font: inherit; }
+.patient-search-results { max-height: 420px; overflow: auto; border: 1px solid #d4dee4; border-radius: 8px; background: #f5f8fa; }
+.patient-result { width: 100%; display: grid; gap: 4px; padding: 12px 14px; border: 0; border-bottom: 1px solid #d9e2e7; background: #fff; color: #263f4d; text-align: left; cursor: pointer; }
+.patient-result:hover { background: #e8f2f7; }
+.patient-result strong { color: #244c67; }
+.patient-result span { color: #667985; font-size: 12px; }
+.charge-panel .primary { background: #2f8a68; color: #fff; }
+.charge-panel .primary:disabled { background: #98aaa3; cursor: not-allowed; }
+
+@media (max-width: 620px) {
+ .day-lock-actions, .patient-record-grid { grid-template-columns: 1fr; }
+}
