@@ -179,7 +179,7 @@ function createAgendaSlot(time,column,appointment,emptyLabel){
 }
 function renderAgenda(){
  const root=document.querySelector('#agendaSchedule');const selectedName=document.querySelector('#agendaProfessional').value;const professional=therapists.find(person=>person.name===selectedName);const columns=professional?.agendaColumns===5?5:4;
- root.style.setProperty('--agenda-columns',columns);root.innerHTML='';
+ root.style.setProperty('--agenda-columns',columns);root.dataset.columns=String(columns);root.innerHTML='';
  if(!selectedName){root.innerHTML='<div class="agenda-welcome"><strong>Selecione um profissional</strong><p>Escolha uma agenda para visualizar os horários da manhã e da tarde.</p></div>';return}
  const allowedPeriods=professional?.scheduleGroup?.includes('Manhã')?['manha']:professional?.scheduleGroup?.includes('Tarde')?['tarde']:['manha','tarde'];
  const activeAppointments=appointments.filter(item=>item.cancelled!==true&&item.locked!==false);
