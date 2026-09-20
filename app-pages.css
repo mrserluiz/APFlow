@@ -148,3 +148,28 @@
 @media (max-width: 620px) {
  .day-lock-actions, .patient-record-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Visualização do histórico de agendamentos do paciente */
+.appointment-history-dialog { width: min(1180px,calc(100% - 24px)); max-height: calc(100vh - 30px); }
+.appointment-history-panel { padding: 20px; }
+.history-patient-meta { display: block; margin-top: 4px; color: #69808d; font-weight: 700; }
+.history-columns { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin-top: 18px; }
+.history-group { min-width: 0; overflow: hidden; border: 1px solid #d5dee4; border-radius: 9px; background: #f6f9fb; }
+.history-group h3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; padding: 12px 14px; color: #fff; font-size: 14px; }
+.history-group.past h3 { background: #315f7d; }
+.history-group.missed h3 { background: #9d3b3b; }
+.history-group.future h3 { background: #2f8a68; }
+.history-group h3 span { min-width: 25px; padding: 3px 7px; border-radius: 20px; background: #ffffff2b; text-align: center; }
+.history-list { display: grid; align-content: start; gap: 8px; max-height: 480px; min-height: 130px; padding: 10px; overflow: auto; }
+.history-item { display: flex; justify-content: space-between; gap: 10px; padding: 11px; border: 1px solid #d6e0e6; border-radius: 7px; background: #fff; box-shadow: 0 2px 5px #17324410; }
+.history-item div { display: grid; gap: 4px; min-width: 0; }
+.history-item strong { color: #244c67; font-size: 13px; text-transform: capitalize; }
+.history-item span { color: #627784; font-size: 12px; }
+.history-item small { align-self: start; flex: 0 0 auto; padding: 4px 7px; border-radius: 12px; font-size: 10px; font-weight: 800; }
+.history-item small.present { color: #1e6c4f; background: #dcefe7; }
+.history-item small.cancelled { color: #8b3030; background: #f4dddd; }
+.history-item small.scheduled { color: #315f7d; background: #dce8ef; }
+.history-empty { margin: auto; padding: 24px 10px; color: #8497a2; text-align: center; }
+.history-error { color: #9d3b3b; }
+@media (max-width:900px) { .history-columns { grid-template-columns: 1fr; } .history-list { max-height: 240px; min-height: 80px; } }
