@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAnalytics, isSupported } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js';
 import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, setPersistence, signInWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
-import { addDoc, collection, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
 const firebaseConfig={
  apiKey:'AIzaSyCoRrH2gCwMvqPgFNEWpr8vlEAgNyOdWfc',
@@ -21,6 +21,7 @@ isSupported().then(supported=>{if(supported)getAnalytics(firebaseApp)}).catch(()
 let reports=[];
 let therapists=[];
 let appointments=[];let stopAppointments=null;
+let portals=[];let portalsConnected=false;let currentUserIsAdmin=false;let currentPortalUrl='';
 const defaultProfessionals=[
  {id:'vanessa',name:'Dra. Vanessa',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
  {id:'camila',name:'Dra. Camila',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
@@ -57,6 +58,35 @@ function render(){
  document.querySelector('#footerSummary').textContent=`${reports.length} registros • ${reports.filter(r=>r.status==='aguardando').length} aguardando • ${reports.filter(r=>r.status==='pronto').length} prontos`;
  const homePending=document.querySelector('#homePending');if(homePending)homePending.textContent=reports.filter(r=>r.status==='aguardando').length;
  renderTherapistCounts();
+}
+function normalizePortalUrl(value){
+ const url=new URL(value);
+ if(url.protocol!=='https:')throw new Error('Somente endereços HTTPS são permitidos.');
+ return url.href;
+}
+function renderPortals(){
+ const root=document.querySelector('#portalList');if(!root)return;root.innerHTML='';
+ if(!portals.length){root.innerHTML='<p class="authorization-empty">Nenhum portal cadastrado. O administrador pode adicionar os endereços oficiais dos convênios.</p>';return}
+ portals.forEach(portal=>{
+  const card=document.createElement('article');card.className='authorization-card';card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',`Abrir portal ${portal.name}`);
+  if(portal.iconUrl){const image=document.createElement('img');image.src=portal.iconUrl;image.alt='';image.addEventListener('error',()=>{image.replaceWith(createPortalInitial(portal.name))});card.append(image)}else card.append(createPortalInitial(portal.name));
+  const name=document.createElement('strong');name.textContent=portal.name;const mode=document.createElement('small');mode.textContent=portal.openMode==='external'?'Nova aba':'Abrir internamente';card.append(name,mode);
+  const open=()=>openPortal(portal);card.addEventListener('click',open);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open()}});
+  if(currentUserIsAdmin){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
+  root.append(card);
+ });
+}
+function createPortalInitial(name){const initial=document.createElement('span');initial.className='portal-initial';initial.textContent=(name||'?').trim().charAt(0).toUpperCase();return initial}
+function openPortal(portal){
+ currentPortalUrl=portal.url;
+ if(portal.openMode==='external'){window.open(portal.url,'_blank','noopener,noreferrer');return}
+ document.querySelectorAll('.authorization-card').forEach(card=>card.classList.toggle('active',card.querySelector('strong')?.textContent===portal.name));
+ document.querySelector('#browserTitle').textContent=portal.name;document.querySelector('#authorizationFrame').src=portal.url;document.querySelector('#internalBrowser').hidden=false;
+ document.querySelector('#internalBrowser').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function connectPortals(){
+ if(portalsConnected)return;portalsConnected=true;
+ onSnapshot(query(collection(db,'portais'),orderBy('order')),snapshot=>{portals=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.active!==false);renderPortals()},error=>{console.error(error);portals=[];renderPortals();showToast('Não foi possível carregar os portais de autorização.')});
 }
 function renderTherapistCounts(){
  const groups=['Médico','Fisioterapeuta','Pilates','RPG'];
@@ -130,6 +160,19 @@ document.querySelector('#nextMonth').addEventListener('click',()=>{calendarMonth
 document.querySelector('#todayButton').addEventListener('click',()=>{selectedDate=new Date();calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);updateSelectedDate();renderCalendar();connectAppointments()});
 document.querySelector('#agendaProfessional').addEventListener('change',connectAppointments);
 document.querySelectorAll('[data-agenda-action]').forEach(button=>button.addEventListener('click',()=>{const action=button.dataset.agendaAction;if(action==='agendar'){const empty=document.querySelector('.appointment-slot:not(.occupied)');if(empty){empty.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});empty.classList.add('attention');setTimeout(()=>empty.classList.remove('attention'),1500);showToast('Dê dois cliques no horário desejado.')}else showToast('Selecione primeiro um profissional.')}else if(action==='imprimir')window.print();else showToast(`${button.textContent.trim()}: selecione um paciente na agenda.`)}));
+const portalDialog=document.querySelector('#portalDialog');
+document.querySelector('#addPortalButton').addEventListener('click',()=>portalDialog.showModal());
+document.querySelectorAll('#closePortalDialog,#cancelPortal').forEach(button=>button.addEventListener('click',()=>portalDialog.close()));
+document.querySelector('#portalForm').addEventListener('submit',async event=>{
+ event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const button=form.querySelector('[type="submit"]');button.disabled=true;
+ try{
+  const url=normalizePortalUrl(data.get('url').trim());const rawIcon=data.get('iconUrl').trim();const iconUrl=rawIcon?normalizePortalUrl(rawIcon):'';
+  await addDoc(collection(db,'portais'),{name:data.get('name').trim(),url,iconUrl,openMode:data.get('openMode'),active:true,order:Date.now(),createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
+  form.reset();portalDialog.close();showToast('Portal adicionado às Autorizações.');
+ }catch(error){console.error(error);showToast(error.message||'Não foi possível salvar o portal.')}finally{button.disabled=false}
+});
+document.querySelector('#openPortalExternal').addEventListener('click',()=>{if(currentPortalUrl)window.open(currentPortalUrl,'_blank','noopener,noreferrer')});
+document.querySelector('#closeInternalBrowser').addEventListener('click',()=>{document.querySelector('#authorizationFrame').src='about:blank';document.querySelector('#internalBrowser').hidden=true;currentPortalUrl='';document.querySelectorAll('.authorization-card').forEach(card=>card.classList.remove('active'))});
 document.querySelectorAll('#closeAppointment,#cancelAppointment').forEach(button=>button.addEventListener('click',()=>appointmentDialog.close()));
 appointmentForm.addEventListener('submit',async event=>{event.preventDefault();const data=new FormData(appointmentForm);const payload={professional:document.querySelector('#agendaProfessional').value,date:dateKey(selectedDate),time:data.get('time'),column:Number(data.get('column')),patient:data.get('patient').trim(),code:data.get('code').trim(),agreement:data.get('agreement'),treatment:data.get('treatment').trim(),billed:data.get('billed')==='on',present:data.get('present')==='on',updatedAt:serverTimestamp()};const id=data.get('appointmentId');const button=appointmentForm.querySelector('[type="submit"]');button.disabled=true;try{if(id)await updateDoc(doc(db,'agendamentos',id),payload);else await addDoc(collection(db,'agendamentos'),{...payload,createdAt:serverTimestamp()});appointmentDialog.close();showToast('Agendamento salvo.')}catch(error){console.error(error);showToast('Não foi possível salvar. Publique as regras do Firestore.')}finally{button.disabled=false}});
 function connectFirestore(){
@@ -170,7 +213,8 @@ async function revealApp(user){
  loginScreen.classList.add('hidden');document.querySelector('.user-area strong').textContent=user.displayName||'Equipe APFlow';setConnection(true,'Firebase conectado');
  if(!firestoreConnected){firestoreConnected=true;connectFirestore()}
  if(!therapistsConnected){therapistsConnected=true;connectTherapists()}
- try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){document.querySelectorAll('.admin-only').forEach(element=>element.hidden=false);connectAdminUsers()}}catch(error){console.error('Perfil indisponível:',error)}
+ connectPortals();
+ try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){currentUserIsAdmin=true;document.querySelectorAll('.admin-only').forEach(element=>element.hidden=false);connectAdminUsers();renderPortals()}}catch(error){console.error('Perfil indisponível:',error)}
 }
 function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
 
