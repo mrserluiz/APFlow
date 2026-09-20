@@ -432,9 +432,9 @@ function demoSlotsFor(person){
 async function commitBatches(operations){
  for(let start=0;start<operations.length;start+=400){const batch=writeBatch(db);operations.slice(start,start+400).forEach(operation=>operation(batch));await batch.commit()}
 }
-async function generateDemoSchedule(){
+async function generateDemoSchedule(event){
  if(!currentUserIsAdmin||!adminFunctionsEnabled){showToast('Somente o administrador pode gerar a demonstração.');return}
- const button=document.querySelector('#generateDemoSchedule');const date=dateKey(selectedDate);
+ const button=event?.currentTarget||document.querySelector('#generateDemoSchedule');const date=dateKey(selectedDate);
  if(!confirm(`Criar pacientes fictícios nas células vazias de ${longDate(selectedDate)}?`))return;
  button.disabled=true;button.textContent='Gerando...';
  try{
@@ -444,10 +444,10 @@ async function generateDemoSchedule(){
   await commitBatches(operations);showToast(`${operations.length} agendamentos fictícios criados.`);adminDialog.close();connectAppointments()
  }catch(error){console.error(error);showToast('Não foi possível gerar a agenda de demonstração.')}finally{button.disabled=false;button.textContent='Gerar demonstração'}
 }
-async function clearAllSchedules(){
+async function clearAllSchedules(event){
  if(!currentUserIsAdmin||!adminFunctionsEnabled){showToast('Somente o administrador pode limpar as agendas.');return}
  const confirmation=prompt('Esta ação apagará TODAS as agendas e seus históricos. Digite LIMPAR para confirmar:');if(confirmation!=='LIMPAR')return;
- const button=document.querySelector('#clearAllSchedules');button.disabled=true;button.textContent='Limpando...';
+ const button=event?.currentTarget||document.querySelector('#clearAllSchedules');button.disabled=true;button.textContent='Limpando...';
  try{const snapshot=await getDocs(collection(db,'agendamentos'));const operations=snapshot.docs.map(item=>batch=>batch.delete(item.ref));await commitBatches(operations);showToast(`${snapshot.size} registros de agenda removidos.`);adminDialog.close();appointments=[];connectAppointments()}catch(error){console.error(error);showToast('Não foi possível limpar as agendas. Confira as permissões.')}finally{button.disabled=false;button.textContent='Limpar sistema'}
 }
 
@@ -465,8 +465,8 @@ document.querySelectorAll('[data-admin-open]').forEach(button=>button.addEventLi
 }));
 document.querySelector('#sidebarAddProfessional').addEventListener('click',()=>adminDialog.showModal());
 document.querySelector('#closeAdmin').addEventListener('click',()=>adminDialog.close());
-document.querySelector('#generateDemoSchedule').addEventListener('click',generateDemoSchedule);
-document.querySelector('#clearAllSchedules').addEventListener('click',clearAllSchedules);
+document.querySelectorAll('#generateDemoSchedule,#generateDemoSchedulePage').forEach(button=>button.addEventListener('click',generateDemoSchedule));
+document.querySelectorAll('#clearAllSchedules,#clearAllSchedulesPage').forEach(button=>button.addEventListener('click',clearAllSchedules));
 document.querySelector('#therapistForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const name=data.get('name').trim();const profession=data.get('profession');const agendaColumns=Number(data.get('agendaColumns'));const button=form.querySelector('button');if(!name)return;button.disabled=true;try{await addDoc(collection(db,'profissionais'),{name,profession,agendaColumns,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});form.reset();showToast(`${profession} adicionado.`)}catch(error){console.error(error);showToast('Não foi possível adicionar o profissional.')}finally{button.disabled=false}});
 
 updateSelectedDate();renderCalendar();resetAgendaMode();render();switchPage(localStorage.getItem('apflow.activePage')||'inicio',false);
