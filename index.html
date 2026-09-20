@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260920-13">
+  <link rel="stylesheet" href="app-pages.css?v=20260920-14">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -140,6 +140,14 @@
           <span class="ui-icon icon-configuracoes"></span>
           <div><p>CONTROLE DE ACESSO</p><h2>Permissões por cargo</h2><strong>8 cargos disponíveis</strong><small>Admin, Financeiro, Gerente, Atendente e equipe clínica.</small></div>
           <button class="primary" type="button" data-admin-open="permissions">Configurar permissões</button>
+        </article>
+        <article class="admin-dashboard-card maintenance-dashboard-card">
+          <span class="ui-icon icon-agenda"></span>
+          <div><p>DEMONSTRAÇÃO E MANUTENÇÃO</p><h2>Dados das agendas</h2><strong>Ferramentas exclusivas do administrador</strong><small>Preencha a data selecionada com pacientes fictícios ou remova definitivamente todos os registros das agendas.</small></div>
+          <div class="admin-dashboard-actions">
+            <button class="primary" type="button" id="generateDemoSchedulePage">Gerar demonstração</button>
+            <button class="danger-button" type="button" id="clearAllSchedulesPage">Limpar sistema</button>
+          </div>
         </article>
       </div>
       <div class="admin-preview-control">
@@ -335,6 +343,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260920-15"></script>
+  <script type="module" src="script.js?v=20260920-16"></script>
 </body>
 </html>
