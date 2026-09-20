@@ -173,3 +173,13 @@
 .history-empty { margin: auto; padding: 24px 10px; color: #8497a2; text-align: center; }
 .history-error { color: #9d3b3b; }
 @media (max-width:900px) { .history-columns { grid-template-columns: 1fr; } .history-list { max-height: 240px; min-height: 80px; } }
+
+
+/* Ferramentas administrativas de demonstração e limpeza */
+.admin-system-tools { grid-column: 1/-1; border-color: #d8c5c5; background: linear-gradient(135deg,#fbfdfe,#fff8f8); }
+.admin-maintenance-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 10px; }
+.admin-maintenance-actions button { min-width: 180px; padding: 11px 16px; border-radius: 7px; font-weight: 800; cursor: pointer; }
+.danger-button { border: 1px solid #9d3535; color: #fff; background: #9d3535; box-shadow: 0 3px 8px #7c202025; }
+.danger-button:hover { background: #812727; }
+.admin-system-tools > small { display: block; color: #7e5757; line-height: 1.45; }
+.admin-maintenance-actions button:disabled { cursor: wait; opacity: .6; }
