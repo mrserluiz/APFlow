@@ -80,3 +80,8 @@
 .fit-grid .appointment-slot { min-height: 118px; }
 .fit-empty { margin: 8px 0 18px; padding: 18px; border: 1px dashed #c7d3da; border-radius: 7px; color: #71838e; background: #f3f7f9; }
 .schedule-action-dialog[data-action="confirmar"] #confirmScheduleAction { background: #2f8a68; }
+
+
+/* Controles da agenda sempre visíveis durante a rolagem dos horários */
+.agenda-sticky-controls { position: sticky; top: 0; z-index: 12; background: #f8fafb; box-shadow: 0 3px 8px #17324418; }
+.agenda-sticky-controls .agenda-actions, .agenda-sticky-controls .agenda-toolbar { position: static; }
