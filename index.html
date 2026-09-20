@@ -23,10 +23,6 @@
     <button class="tool active" data-view="relatorio"><span class="ui-icon icon-relatorio"></span>Relatório</button>
     <button class="tool" data-view="financeiro"><span class="ui-icon icon-financeiro"></span>Financeiro</button>
     <div class="ribbon-separator"></div>
-    <button class="tool" id="newRequestTop"><span class="ui-icon icon-generico"></span>Novo pedido</button>
-    <button class="tool"><span class="ui-icon icon-localizar"></span>Localizar</button>
-    <button class="tool"><span class="ui-icon icon-imprimir"></span>Imprimir</button>
-    <button class="tool"><span class="ui-icon icon-relatorio"></span>Relatórios</button>
     <button class="tool admin-only" id="adminButton" hidden><span class="ui-icon icon-configuracoes"></span>Administração</button>
   </nav>
 
@@ -75,8 +71,13 @@
     <section class="workspace page-view" data-page="relatorio">
       <div class="workspace-head">
         <div><p class="eyebrow">RELATÓRIOS CLÍNICOS</p><h1>Fluxo de solicitações</h1><div class="head-date-row"><p id="todayLabel" data-selected-date></p><button class="header-filter" type="button">⌕ Filtro</button></div></div>
-        <button class="primary" id="newRequest">＋ Nova solicitação</button>
       </div>
+      <nav class="agenda-actions report-actions" aria-label="Ações dos relatórios">
+        <button id="newRequestTop"><span class="ui-icon icon-generico"></span>Novo pedido</button>
+        <button data-report-action="localizar"><span class="ui-icon icon-localizar"></span>Localizar</button>
+        <button data-report-action="imprimir"><span class="ui-icon icon-imprimir"></span>Imprimir</button>
+        <button data-report-action="relatorios"><span class="ui-icon icon-relatorio"></span>Relatórios</button>
+      </nav>
 
       <div class="summary" aria-label="Resumo do fluxo">
         <button class="metric amber" data-filter="aguardando"><span>Aguardando</span><strong id="waitingCount">0</strong><small>pedidos na fila</small></button>
