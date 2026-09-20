@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAnalytics, isSupported } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js';
 import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, setPersistence, signInWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
-import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
 const firebaseConfig={
  apiKey:'AIzaSyCoRrH2gCwMvqPgFNEWpr8vlEAgNyOdWfc',
@@ -116,7 +116,7 @@ function setAgendaMode(mode){
  agendaMode=mode;if(agendaMode!=='remarcar')moveSource=null;
  document.querySelectorAll('[data-agenda-action]').forEach(button=>{const active=button.dataset.agendaAction===agendaMode;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});
  renderAgenda();
- const instructions={agendar:'Selecione uma célula vazia para abrir o agendamento.',desmarcar:'Selecione o paciente que deseja desmarcar.',remarcar:'Selecione o paciente que será transferido.',encaixar:'Selecione uma das células vazias exibidas.',confirmar:'Selecione o paciente que está no local.',cadastro:'Selecione o paciente para abrir o cadastro.',cobranca:'Selecione o paciente que deseja cobrar.',travar:'Selecione a célula que deseja bloquear.',destravar:'Selecione uma célula com horário travado.'};
+ const instructions={agendar:'Selecione uma célula vazia para abrir o agendamento.',desmarcar:'Selecione o paciente que deseja desmarcar.',remarcar:'Selecione o paciente que será transferido.',encaixar:'Selecione uma das células vazias exibidas.',confirmar:'Selecione o paciente que está no local.',cadastro:'Selecione o paciente para abrir o cadastro.',cobranca:'Selecione o paciente que deseja cobrar.',visualizacao:'Selecione o paciente para consultar seu histórico.',travar:'Selecione a célula que deseja bloquear.',destravar:'Selecione uma célula com horário travado.'};
  if(agendaMode)showToast(instructions[agendaMode]||'Selecione uma célula da agenda.');
 }
 function resetAgendaMode(){
@@ -151,6 +151,10 @@ async function handleSlotClick(slot,appointment){
  if(agendaMode==='cadastro'){
   if(!appointment){showToast('Selecione uma célula com paciente.');return}
   openPatientRecord(appointment);resetAgendaMode();return;
+ }
+ if(agendaMode==='visualizacao'){
+  if(!appointment){showToast('Selecione uma célula com paciente.');return}
+  openAppointmentHistory(appointment);resetAgendaMode();return;
  }
  if(agendaMode==='cobranca'){
   if(!appointment){showToast('Selecione uma célula com paciente.');return}
@@ -234,7 +238,7 @@ document.querySelector('#previousMonth').addEventListener('click',()=>{calendarM
 document.querySelector('#nextMonth').addEventListener('click',()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()});
 document.querySelector('#todayButton').addEventListener('click',()=>{selectedDate=new Date();calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);updateSelectedDate();renderCalendar();connectAppointments()});
 document.querySelector('#agendaProfessional').addEventListener('change',connectAppointments);
-document.querySelectorAll('[data-agenda-action]').forEach(button=>button.addEventListener('click',()=>{const action=button.dataset.agendaAction;if(action==='imprimir'){showToast('A impressão da ficha do paciente será adicionada futuramente.');return}if(action==='localizar'){openPatientSearch();return}if(action==='travar-dia'){if(!document.querySelector('#agendaProfessional').value){showToast('Selecione primeiro um profissional.');return}const locked=appointments.filter(item=>item.locked===true&&item.locked!==false).length;document.querySelector('#dayLockDescription').textContent=`Agenda de ${document.querySelector('#agendaProfessional').value}: ${locked} célula(s) travada(s).`;document.querySelector('#dayLockDialog').showModal();return}if(['agendar','desmarcar','remarcar','encaixar','confirmar','travar','destravar','cadastro','cobranca'].includes(action)){if(!document.querySelector('#agendaProfessional').value){showToast('Selecione primeiro um profissional.');return}setAgendaMode(action);return}showToast(`${button.textContent.trim()}: função em preparação.`)}));
+document.querySelectorAll('[data-agenda-action]').forEach(button=>button.addEventListener('click',()=>{const action=button.dataset.agendaAction;if(action==='imprimir'){showToast('A impressão da ficha do paciente será adicionada futuramente.');return}if(action==='localizar'){openPatientSearch();return}if(action==='travar-dia'){if(!document.querySelector('#agendaProfessional').value){showToast('Selecione primeiro um profissional.');return}const locked=appointments.filter(item=>item.locked===true&&item.locked!==false).length;document.querySelector('#dayLockDescription').textContent=`Agenda de ${document.querySelector('#agendaProfessional').value}: ${locked} célula(s) travada(s).`;document.querySelector('#dayLockDialog').showModal();return}if(['agendar','desmarcar','remarcar','encaixar','confirmar','travar','destravar','cadastro','visualizacao','cobranca'].includes(action)){if(!document.querySelector('#agendaProfessional').value){showToast('Selecione primeiro um profissional.');return}setAgendaMode(action);return}showToast(`${button.textContent.trim()}: função em preparação.`)}));
 const portalDialog=document.querySelector('#portalDialog');
 document.querySelector('#addPortalButton').addEventListener('click',()=>portalDialog.showModal());
 document.querySelectorAll('#closePortalDialog,#cancelPortal').forEach(button=>button.addEventListener('click',()=>portalDialog.close()));
@@ -255,6 +259,29 @@ function openPatientRecord(record){
  const patient=patientData(record);document.querySelector('#patientRecordTitle').textContent=patient.patient||'Paciente';
  const fields=[['Nome',patient.patient],['Código',patient.code],['Nascimento',patient.birthDate?patient.birthDate.split('-').reverse().join('/'):''],['Telefone',patient.phone],['CPF',patient.cpf],['RG',patient.rg],['Carteirinha',patient.insuranceCard],['Convênio',patient.agreement],['Tratamento',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]];
  const root=document.querySelector('#patientRecordContent');root.innerHTML='';fields.forEach(([label,value])=>{const item=document.createElement('div');const title=document.createElement('span');title.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(title,content);root.append(item)});document.querySelector('#patientRecordDialog').showModal();
+}
+function appointmentMoment(item){return new Date(`${item.date||'1970-01-01'}T${item.time||'00:00'}:00`)}
+function formatAppointmentDate(item){const date=new Date(`${item.date||'1970-01-01'}T12:00:00`);return new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'}).format(date)}
+function appendHistoryItems(root,items,emptyMessage){
+ root.innerHTML='';if(!items.length){const empty=document.createElement('p');empty.className='history-empty';empty.textContent=emptyMessage;root.append(empty);return}
+ items.forEach(item=>{const card=document.createElement('article');card.className='history-item';const main=document.createElement('div');const title=document.createElement('strong');title.textContent=`${formatAppointmentDate(item)} às ${String(item.time||'--:--').replace(':','h')}`;const detail=document.createElement('span');detail.textContent=`${item.professional||'Profissional não informado'} • ${item.treatment||'Tratamento não informado'}`;main.append(title,detail);const status=document.createElement('small');status.className=item.cancelled?'cancelled':item.present?'present':'scheduled';status.textContent=item.cancelled?'Cancelado':item.present?'Compareceu':'Agendado';card.append(main,status);root.append(card)})
+}
+async function openAppointmentHistory(record){
+ const patient=patientData(record);const dialog=document.querySelector('#appointmentHistoryDialog');document.querySelector('#historyPatientTitle').textContent=patient.patient||'Paciente';document.querySelector('#historyPatientMeta').textContent=`Código: ${patient.code||'não informado'}`;
+ ['historyPast','historyMissed','historyFuture'].forEach(id=>document.querySelector('#'+id).innerHTML='<p class="history-empty">Carregando...</p>');dialog.showModal();
+ try{
+  const searches=[];if(patient.code)searches.push(getDocs(query(collection(db,'agendamentos'),where('code','==',String(patient.code)))));
+  if(patient.patient)searches.push(getDocs(query(collection(db,'agendamentos'),where('patient','==',patient.patient))));
+  const snapshots=await Promise.all(searches);const records=new Map();snapshots.forEach(snapshot=>snapshot.docs.forEach(item=>records.set(item.id,{id:item.id,...item.data()})));
+  const now=new Date();const all=[...records.values()].filter(item=>!item.locked).sort((a,b)=>appointmentMoment(b)-appointmentMoment(a));
+  const missed=all.filter(item=>appointmentMoment(item)<now&&!item.present&&!item.cancelled);
+  const past=all.filter(item=>appointmentMoment(item)<now&&!missed.includes(item));
+  const future=all.filter(item=>appointmentMoment(item)>=now&&!item.cancelled).sort((a,b)=>appointmentMoment(a)-appointmentMoment(b));
+  appendHistoryItems(document.querySelector('#historyPast'),past,'Nenhum agendamento passado.');
+  appendHistoryItems(document.querySelector('#historyMissed'),missed,'Nenhuma falta registrada.');
+  appendHistoryItems(document.querySelector('#historyFuture'),future,'Nenhum agendamento futuro.');
+  document.querySelector('#historyPastCount').textContent=past.length;document.querySelector('#historyMissedCount').textContent=missed.length;document.querySelector('#historyFutureCount').textContent=future.length;
+ }catch(error){console.error(error);['historyPast','historyMissed','historyFuture'].forEach(id=>document.querySelector('#'+id).innerHTML='<p class="history-empty history-error">Não foi possível carregar os agendamentos.</p>');showToast('Não foi possível carregar o histórico do paciente.')}
 }
 function patientCandidates(){
  const map=new Map();[...reports,...appointments.filter(item=>item.patient)].forEach(item=>{const key=String(item.code||item.patient||'').toLowerCase();if(!key)return;map.set(key,{...(map.get(key)||{}),...item})});return[...map.values()];
@@ -283,6 +310,7 @@ document.querySelector('#scheduleActionForm').addEventListener('submit',async ev
 document.querySelector('#patientGlobalSearch').addEventListener('input',renderPatientSearch);
 document.querySelector('#closePatientSearch').addEventListener('click',()=>document.querySelector('#patientSearchDialog').close());
 document.querySelector('#closePatientRecord').addEventListener('click',()=>document.querySelector('#patientRecordDialog').close());
+document.querySelector('#closeAppointmentHistory').addEventListener('click',()=>document.querySelector('#appointmentHistoryDialog').close());
 document.querySelectorAll('#closeChargeDialog,#cancelCharge').forEach(button=>button.addEventListener('click',()=>document.querySelector('#chargeDialog').close()));
 document.querySelector('#confirmCharge').addEventListener('click',async()=>{if(!pendingChargeAppointment||pendingChargeAppointment.billed)return;const button=document.querySelector('#confirmCharge');button.disabled=true;try{await updateDoc(doc(db,'agendamentos',pendingChargeAppointment.id),{billed:true,billedAt:serverTimestamp(),updatedAt:serverTimestamp()});document.querySelector('#chargeDialog').close();pendingChargeAppointment=null;resetAgendaMode();showToast('Atendimento marcado como cobrado/faturado.')}catch(error){console.error(error);showToast('Não foi possível registrar a cobrança.')}finally{button.disabled=false}});
 document.querySelector('#lockWholeDay').addEventListener('click',async()=>{try{await setWholeDayLock(true)}catch(error){console.error(error);showToast('Não foi possível travar o dia.')}});
