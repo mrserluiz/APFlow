@@ -14,22 +14,22 @@
   height: 34px;
 }
 
-.icon-generico { background-image: url("assets/icons/generico.png"); }
-.icon-agendar { background-image: url("assets/icons/agendar.png"); }
-.icon-desmarcar { background-image: url("assets/icons/desmarcar.png"); }
-.icon-remarcar { background-image: url("assets/icons/remarcar.png"); }
-.icon-encaixar { background-image: url("assets/icons/encaixar.png"); }
-.icon-confirmar { background-image: url("assets/icons/confirmar.png"); }
-.icon-travar { background-image: url("assets/icons/travar.png"); }
-.icon-destravar { background-image: url("assets/icons/destravar.png"); }
-.icon-travar-dia { background-image: url("assets/icons/travar-dia.png"); }
-.icon-cadastro { background-image: url("assets/icons/cadastro.png"); }
-.icon-localizar { background-image: url("assets/icons/localizar.png"); }
-.icon-imprimir { background-image: url("assets/icons/imprimir.png"); }
-.icon-visualizacao { background-image: url("assets/icons/visualizacao.png"); }
-.icon-cobranca { background-image: url("assets/icons/cobranca.png"); }
-.icon-home { background-image: url("assets/icons/home.png"); }
-.icon-agenda { background-image: url("assets/icons/agenda.png"); }
-.icon-relatorio { background-image: url("assets/icons/relatorio.png"); }
-.icon-financeiro { background-image: url("assets/icons/financeiro.png"); }
-.icon-configuracoes { background-image: url("assets/icons/configuracoes.png"); }
+.icon-generico { background-image: url("assets/icons/generico.png?v=20260920-2"); }
+.icon-agendar { background-image: url("assets/icons/agendar.png?v=20260920-2"); }
+.icon-desmarcar { background-image: url("assets/icons/desmarcar.png?v=20260920-2"); }
+.icon-remarcar { background-image: url("assets/icons/remarcar.png?v=20260920-2"); }
+.icon-encaixar { background-image: url("assets/icons/encaixar.png?v=20260920-2"); }
+.icon-confirmar { background-image: url("assets/icons/confirmar.png?v=20260920-2"); }
+.icon-travar { background-image: url("assets/icons/travar.png?v=20260920-2"); }
+.icon-destravar { background-image: url("assets/icons/destravar.png?v=20260920-2"); }
+.icon-travar-dia { background-image: url("assets/icons/travar-dia.png?v=20260920-2"); }
+.icon-cadastro { background-image: url("assets/icons/cadastro.png?v=20260920-2"); }
+.icon-localizar { background-image: url("assets/icons/localizar.png?v=20260920-2"); }
+.icon-imprimir { background-image: url("assets/icons/imprimir.png?v=20260920-2"); }
+.icon-visualizacao { background-image: url("assets/icons/visualizacao.png?v=20260920-2"); }
+.icon-cobranca { background-image: url("assets/icons/cobranca.png?v=20260920-2"); }
+.icon-home { background-image: url("assets/icons/home.png?v=20260920-2"); }
+.icon-agenda { background-image: url("assets/icons/agenda.png?v=20260920-2"); }
+.icon-relatorio { background-image: url("assets/icons/relatorio.png?v=20260920-2"); }
+.icon-financeiro { background-image: url("assets/icons/financeiro.png?v=20260920-2"); }
+.icon-configuracoes { background-image: url("assets/icons/configuracoes.png?v=20260920-2"); }
