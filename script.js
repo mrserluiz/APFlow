@@ -418,6 +418,39 @@ function connectAdminUsers(){
   snapshot.docs.forEach(item=>{const user=item.data();const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${user.name||user.username}</strong><small>@${user.username}</small></div><select aria-label="Cargo de ${user.name||user.username}">${roles.map(role=>`<option value="${role.toLowerCase()}" ${user.role===role.toLowerCase()?'selected':''}>${role}</option>`).join('')}</select>`;row.querySelector('select').addEventListener('change',async event=>{const select=event.target;const previous=user.role||'equipe';const next=select.value;if(next==='admin'&&previous!=='admin'&&!confirm(`Tornar ${user.name||user.username} administrador? Esta conta terá acesso a todas as configurações do APFlow.`)){select.value=previous;return}select.disabled=true;try{await updateDoc(doc(db,'usuarios',item.id),{role:next,updatedAt:serverTimestamp()});showToast(next==='admin'?'Usuário promovido a administrador.':'Cargo atualizado.')}catch(error){console.error(error);select.value=previous;showToast('Não foi possível atualizar o cargo.')}finally{select.disabled=false}});list.append(row)});
  },error=>{console.error(error);document.querySelector('#userRoleList').innerHTML='<p class="empty-mini">Sem permissão para visualizar usuários.</p>'});
 }
+
+const demoPatients=[
+ ['Ana Paula Ribeiro','10231','IAMSPE','Fisioterapia'],['Bruno Henrique Lima','10245','Outros','Ortopedia'],['Carla Mendes Silva','10258','IAMSPE','Cinesioterapia'],['Daniel Oliveira Santos','10264','IAMSPE','Reabilitação'],
+ ['Eliane Costa Souza','10277','Outros','Pós-operatório'],['Fábio Martins Rocha','10283','IAMSPE','Fisioterapia'],['Gabriela Nunes Alves','10296','IAMSPE','Traumatologia'],['Henrique Ferreira Reis','10302','Outros','Fortalecimento'],
+ ['Isabela Moraes Pinto','10315','IAMSPE','Cinesioterapia'],['João Carlos Barros','10329','IAMSPE','Ortopedia'],['Larissa Gomes Freitas','10334','Outros','Reabilitação'],['Marcos Vinícius Dias','10348','IAMSPE','Fisioterapia'],
+ ['Natália Rodrigues Melo','10351','IAMSPE','Pós-operatório'],['Otávio Almeida Cruz','10367','Outros','Traumatologia'],['Patrícia Lopes Vieira','10372','IAMSPE','Cinesioterapia'],['Rafael Teixeira Campos','10389','IAMSPE','Fortalecimento'],
+ ['Sandra Regina Moura','10395','Outros','Fisioterapia'],['Tiago Cardoso Neves','10407','IAMSPE','Reabilitação'],['Valéria Cristina Prado','10412','IAMSPE','Ortopedia'],['Wesley Araújo Farias','10426','Outros','Cinesioterapia']
+];
+function demoSlotsFor(person){
+ const periods=person.scheduleGroup?.includes('Manhã')?['manha']:person.scheduleGroup?.includes('Tarde')?['tarde']:['manha','tarde'];return periods.flatMap(period=>agendaSlots[period])
+}
+async function commitBatches(operations){
+ for(let start=0;start<operations.length;start+=400){const batch=writeBatch(db);operations.slice(start,start+400).forEach(operation=>operation(batch));await batch.commit()}
+}
+async function generateDemoSchedule(){
+ if(!currentUserIsAdmin||!adminFunctionsEnabled){showToast('Somente o administrador pode gerar a demonstração.');return}
+ const button=document.querySelector('#generateDemoSchedule');const date=dateKey(selectedDate);
+ if(!confirm(`Criar pacientes fictícios nas células vazias de ${longDate(selectedDate)}?`))return;
+ button.disabled=true;button.textContent='Gerando...';
+ try{
+  const existingSnapshot=await getDocs(query(collection(db,'agendamentos'),where('date','==',date)));const occupied=new Set(existingSnapshot.docs.map(item=>{const value=item.data();return `${value.professional}|${value.time}|${value.column}`}));
+  const people=therapists.filter(person=>person.active!==false);const operations=[];let patientIndex=Math.floor(Math.random()*demoPatients.length);
+  people.forEach(person=>{const columns=person.agendaColumns===5?5:4;demoSlotsFor(person).forEach(time=>{for(let column=1;column<=columns;column++){const key=`${person.name}|${time}|${column}`;if(occupied.has(key)||Math.random()>0.42)continue;const fake=demoPatients[patientIndex++%demoPatients.length];const reference=doc(collection(db,'agendamentos'));operations.push(batch=>batch.set(reference,{professional:person.name,date,time,column,patient:fake[0],code:fake[1],agreement:fake[2],treatment:fake[3],present:Math.random()<0.22,billed:Math.random()<0.18,cancelled:false,demo:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp()}))}})});
+  await commitBatches(operations);showToast(`${operations.length} agendamentos fictícios criados.`);adminDialog.close();connectAppointments()
+ }catch(error){console.error(error);showToast('Não foi possível gerar a agenda de demonstração.')}finally{button.disabled=false;button.textContent='Gerar demonstração'}
+}
+async function clearAllSchedules(){
+ if(!currentUserIsAdmin||!adminFunctionsEnabled){showToast('Somente o administrador pode limpar as agendas.');return}
+ const confirmation=prompt('Esta ação apagará TODAS as agendas e seus históricos. Digite LIMPAR para confirmar:');if(confirmation!=='LIMPAR')return;
+ const button=document.querySelector('#clearAllSchedules');button.disabled=true;button.textContent='Limpando...';
+ try{const snapshot=await getDocs(collection(db,'agendamentos'));const operations=snapshot.docs.map(item=>batch=>batch.delete(item.ref));await commitBatches(operations);showToast(`${snapshot.size} registros de agenda removidos.`);adminDialog.close();appointments=[];connectAppointments()}catch(error){console.error(error);showToast('Não foi possível limpar as agendas. Confira as permissões.')}finally{button.disabled=false;button.textContent='Limpar sistema'}
+}
+
 const adminDialog=document.querySelector('#adminDialog');
 document.querySelector('#adminModeToggle').addEventListener('click',()=>applyAdminPreviewMode(adminFunctionsEnabled));
 document.querySelector('#adminPreviewButton').addEventListener('click',()=>applyAdminPreviewMode(adminFunctionsEnabled));
@@ -432,6 +465,8 @@ document.querySelectorAll('[data-admin-open]').forEach(button=>button.addEventLi
 }));
 document.querySelector('#sidebarAddProfessional').addEventListener('click',()=>adminDialog.showModal());
 document.querySelector('#closeAdmin').addEventListener('click',()=>adminDialog.close());
+document.querySelector('#generateDemoSchedule').addEventListener('click',generateDemoSchedule);
+document.querySelector('#clearAllSchedules').addEventListener('click',clearAllSchedules);
 document.querySelector('#therapistForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const name=data.get('name').trim();const profession=data.get('profession');const agendaColumns=Number(data.get('agendaColumns'));const button=form.querySelector('button');if(!name)return;button.disabled=true;try{await addDoc(collection(db,'profissionais'),{name,profession,agendaColumns,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});form.reset();showToast(`${profession} adicionado.`)}catch(error){console.error(error);showToast('Não foi possível adicionar o profissional.')}finally{button.disabled=false}});
 
 updateSelectedDate();renderCalendar();resetAgendaMode();render();switchPage(localStorage.getItem('apflow.activePage')||'inicio',false);
