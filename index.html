@@ -174,9 +174,17 @@
         <label>Convênio<select name="agreement"><option>IAMSPE</option><option>Outros</option></select></label>
         <label class="full">Tipo de tratamento<input name="treatment" required placeholder="Ex.: Fisioterapia, trauma ou ortopedia"></label>
         <label class="choice"><input name="billed" type="checkbox"> 💼 Cobrado/faturado</label>
-        <label class="choice"><input name="present" type="checkbox"> ✅ Paciente no local</label>
+        
       </div>
       <div class="dialog-actions"><button class="secondary" type="button" id="cancelAppointment">Cancelar</button><button class="primary" type="submit">Salvar agendamento</button></div>
+    </form>
+  </dialog>
+  <dialog id="scheduleActionDialog" class="schedule-action-dialog">
+    <form method="dialog" id="scheduleActionForm">
+      <div class="dialog-head"><div><p class="eyebrow">AÇÃO DA AGENDA</p><h2 id="scheduleActionTitle">Confirmar ação</h2></div><button class="icon-button" value="cancel" aria-label="Fechar">×</button></div>
+      <div class="schedule-patient-summary" id="schedulePatientSummary"></div>
+      <p id="scheduleActionMessage"></p>
+      <div class="dialog-actions"><button class="secondary" value="cancel">Cancelar</button><button class="primary" id="confirmScheduleAction" value="default">Confirmar</button></div>
     </form>
   </dialog>
   <dialog id="adminDialog" class="admin-dialog">
