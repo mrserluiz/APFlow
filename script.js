@@ -458,9 +458,9 @@ document.querySelectorAll('[data-admin-open]').forEach(button=>button.addEventLi
  const action=button.dataset.adminOpen;
  if(action==='portals'){switchPage('autorizacoes');showToast('Use “Adicionar portal” para cadastrar um novo acesso.');return}
  adminDialog.showModal();
- const sections=[...adminDialog.querySelectorAll('.admin-section')];
- if(action==='users'||action==='permissions')setTimeout(()=>sections[1]?.scrollIntoView({behavior:'smooth',block:'start'}),60);
- else setTimeout(()=>sections[0]?.scrollIntoView({behavior:'smooth',block:'start'}),60);
+ adminDialog.scrollTop=0;
+ if(action==='users'||action==='permissions')setTimeout(()=>document.querySelector('#adminUsersSection')?.scrollIntoView({behavior:'smooth',block:'start'}),60);
+ else if(action==='professionals')setTimeout(()=>document.querySelector('#adminProfessionalsSection')?.scrollIntoView({behavior:'smooth',block:'start'}),60);
  if(action==='permissions')showToast('Selecione o cargo desejado para cada usuário.');
 }));
 document.querySelector('#sidebarAddProfessional').addEventListener('click',()=>adminDialog.showModal());
