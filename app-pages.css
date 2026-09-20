@@ -106,3 +106,20 @@
  .admin-dashboard-card { min-height: 205px; }
  .admin-security-note { margin: 0 10px 14px; }
 }
+
+
+/* Alternância entre modo Admin e visualização comum */
+.admin-mode-switch { border: 1px solid #9fb6c4; border-radius: 6px; padding: 6px 10px; background: #f7fafc; color: #315f7d; font-size: 11px; font-weight: 700; cursor: pointer; }
+.admin-mode-switch:hover { background: #e7f0f5; }
+.admin-mode-switch.preview-active { border-color: #c88313; background: #fff4df; color: #86580e; }
+.admin-preview-control { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 14px; margin: 0 16px 14px; padding: 16px; border: 1px solid #cbd8df; border-radius: 9px; background: #f7fafc; }
+.admin-preview-control > .ui-icon { width: 42px; height: 42px; margin: 0; }
+.admin-preview-control h2 { margin: 0 0 5px; color: #244c67; font-size: 17px; }
+.admin-preview-control p { margin: 0; color: #637480; }
+.admin-preview-control .primary { background: #315f7d; color: #fff; white-space: nowrap; }
+
+@media (max-width: 760px) {
+ .admin-mode-switch { max-width: 115px; padding: 5px 7px; font-size: 9px; }
+ .admin-preview-control { grid-template-columns: 42px 1fr; margin: 0 10px 12px; }
+ .admin-preview-control > button { grid-column: 1/-1; justify-self: start; }
+}
