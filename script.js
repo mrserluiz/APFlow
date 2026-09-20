@@ -74,7 +74,8 @@ function renderPortals(){
   if(portal.iconUrl){const image=document.createElement('img');image.src=portal.iconUrl;image.alt='';image.addEventListener('error',()=>{image.replaceWith(createPortalInitial(portal.name))});card.append(image)}else card.append(createPortalInitial(portal.name));
   const name=document.createElement('strong');name.textContent=portal.name;const mode=document.createElement('small');mode.textContent=portal.openMode==='external'?'Nova aba':'Abrir internamente';card.append(name,mode);
   const open=()=>openPortal(portal);card.addEventListener('click',open);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open()}});
-  if(currentUserIsAdmin&&!portal.isDefault){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
+  const portalCount=document.querySelector('#adminPortalCount');if(portalCount)portalCount.textContent=`${portals.length} ${portals.length===1?'portal cadastrado':'portais cadastrados'}`;
+ if(currentUserIsAdmin&&!portal.isDefault){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
   root.append(card);
  });
 }
@@ -103,12 +104,12 @@ function renderTherapists(){
  agenda.innerHTML='<option value="">Todos os profissionais</option>'+therapists.map(t=>`<option>${t.name}</option>`).join('');
  if(therapists.some(t=>t.name===selectedFilter))filter.value=selectedFilter;if(therapists.some(t=>t.name===selectedRequest))request.value=selectedRequest;if(therapists.some(t=>t.name===selectedAgenda))agenda.value=selectedAgenda;
  renderTherapistCounts();
- const adminList=document.querySelector('#adminTherapistList');
+ const adminList=document.querySelector('#adminTherapistList');const professionalCount=document.querySelector('#adminProfessionalCount');if(professionalCount)professionalCount.textContent=`${therapists.length} ${therapists.length===1?'profissional':'profissionais'}`;
  adminList.innerHTML=therapists.length?'':'<p class="empty-mini">Nenhum profissional cadastrado.</p>';
  therapists.forEach(person=>{const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${person.name}</strong><small>${person.scheduleGroup||person.profession||'Fisioterapeuta'}</small></div><label class="column-setting">Agenda <select aria-label="Colunas da agenda de ${person.name}" ${person.isDefault?'disabled title="Profissional da lista inicial"':''}><option value="4" ${(person.agendaColumns||4)===4?'selected':''}>4 colunas</option><option value="5" ${person.agendaColumns===5?'selected':''}>5 colunas</option></select></label>`;const select=row.querySelector('select');if(!person.isDefault)select.addEventListener('change',async event=>{event.target.disabled=true;try{await updateDoc(doc(db,'profissionais',person.id),{agendaColumns:Number(event.target.value),updatedAt:serverTimestamp()});showToast('Formato da agenda atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar a agenda.')}finally{event.target.disabled=false}});adminList.append(row)});
  renderAgenda();
 }
-function switchPage(view){const available=[...document.querySelectorAll('.tool[data-view]')].map(item=>item.dataset.view);const target=available.includes(view)?view:'inicio';document.querySelectorAll('.tool[data-view]').forEach(item=>item.classList.toggle('active',item.dataset.view===target));document.querySelectorAll('.page-view').forEach(page=>page.hidden=page.dataset.page!==target);localStorage.setItem('apflow.activePage',target)}
+function switchPage(view,persist=true){const available=[...document.querySelectorAll('.tool[data-view]')].filter(item=>!item.hidden).map(item=>item.dataset.view);const target=available.includes(view)?view:'inicio';document.querySelectorAll('.tool[data-view]').forEach(item=>item.classList.toggle('active',item.dataset.view===target));document.querySelectorAll('.page-view').forEach(page=>page.hidden=page.dataset.page!==target);if(persist)localStorage.setItem('apflow.activePage',target)}
 function openProfessionalAgenda(name){switchPage('agendas');const agenda=document.querySelector('#agendaProfessional');agenda.value=name;connectAppointments();showToast(`Agenda de ${name}`)}
 function setAgendaMode(mode){
  if((mode==='travar'||mode==='destravar')&&agendaMode===mode){resetAgendaMode();showToast('Modo Agendar reativado.');return}
@@ -285,7 +286,7 @@ async function revealApp(user){
  if(!firestoreConnected){firestoreConnected=true;connectFirestore()}
  if(!therapistsConnected){therapistsConnected=true;connectTherapists()}
  connectPortals();
- try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){currentUserIsAdmin=true;document.querySelectorAll('.admin-only').forEach(element=>element.hidden=false);connectAdminUsers();renderPortals()}}catch(error){console.error('Perfil indisponível:',error)}
+ try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){currentUserIsAdmin=true;document.querySelectorAll('.admin-only').forEach(element=>element.hidden=false);connectAdminUsers();renderPortals();switchPage(localStorage.getItem('apflow.activePage')||'inicio',false)}}catch(error){console.error('Perfil indisponível:',error)}
 }
 function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
 
@@ -332,15 +333,23 @@ function connectTherapists(){
 function connectAdminUsers(){
  if(usersConnected)return;usersConnected=true;
  onSnapshot(query(collection(db,'usuarios'),orderBy('name')),snapshot=>{
-  const list=document.querySelector('#userRoleList');
+  const list=document.querySelector('#userRoleList');const userCount=document.querySelector('#adminUserCount');if(userCount)userCount.textContent=`${snapshot.size} ${snapshot.size===1?'usuário cadastrado':'usuários cadastrados'}`;
   list.innerHTML=snapshot.empty?'<p class="empty-mini">Nenhum usuário cadastrado.</p>':'';
   snapshot.docs.forEach(item=>{const user=item.data();const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${user.name||user.username}</strong><small>@${user.username}</small></div><select aria-label="Cargo de ${user.name||user.username}">${roles.map(role=>`<option value="${role.toLowerCase()}" ${user.role===role.toLowerCase()?'selected':''}>${role}</option>`).join('')}</select>`;row.querySelector('select').addEventListener('change',async event=>{event.target.disabled=true;try{await updateDoc(doc(db,'usuarios',item.id),{role:event.target.value,updatedAt:serverTimestamp()});showToast('Cargo atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar o cargo.')}finally{event.target.disabled=false}});list.append(row)});
  },error=>{console.error(error);document.querySelector('#userRoleList').innerHTML='<p class="empty-mini">Sem permissão para visualizar usuários.</p>'});
 }
 const adminDialog=document.querySelector('#adminDialog');
-document.querySelector('#adminButton').addEventListener('click',()=>adminDialog.showModal());
+document.querySelectorAll('[data-admin-open]').forEach(button=>button.addEventListener('click',()=>{
+ const action=button.dataset.adminOpen;
+ if(action==='portals'){switchPage('autorizacoes');showToast('Use “Adicionar portal” para cadastrar um novo acesso.');return}
+ adminDialog.showModal();
+ const sections=[...adminDialog.querySelectorAll('.admin-section')];
+ if(action==='users'||action==='permissions')setTimeout(()=>sections[1]?.scrollIntoView({behavior:'smooth',block:'start'}),60);
+ else setTimeout(()=>sections[0]?.scrollIntoView({behavior:'smooth',block:'start'}),60);
+ if(action==='permissions')showToast('Selecione o cargo desejado para cada usuário.');
+}));
 document.querySelector('#sidebarAddProfessional').addEventListener('click',()=>adminDialog.showModal());
 document.querySelector('#closeAdmin').addEventListener('click',()=>adminDialog.close());
 document.querySelector('#therapistForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const name=data.get('name').trim();const profession=data.get('profession');const agendaColumns=Number(data.get('agendaColumns'));const button=form.querySelector('button');if(!name)return;button.disabled=true;try{await addDoc(collection(db,'profissionais'),{name,profession,agendaColumns,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});form.reset();showToast(`${profession} adicionado.`)}catch(error){console.error(error);showToast('Não foi possível adicionar o profissional.')}finally{button.disabled=false}});
 
-updateSelectedDate();renderCalendar();resetAgendaMode();render();switchPage(localStorage.getItem('apflow.activePage')||'inicio');
+updateSelectedDate();renderCalendar();resetAgendaMode();render();switchPage(localStorage.getItem('apflow.activePage')||'inicio',false);
