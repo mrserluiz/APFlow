@@ -211,12 +211,45 @@
         <label>Código<input name="code" required></label>
         <label>Convênio<select name="agreement"><option>IAMSPE</option><option>Outros</option></select></label>
         <label class="full">Tipo de tratamento<input name="treatment" required placeholder="Ex.: Fisioterapia, trauma ou ortopedia"></label>
-        <label class="choice"><input name="billed" type="checkbox"> 💼 Cobrado/faturado</label>
+        
         
       </div>
       <div class="dialog-actions"><button class="secondary" type="button" id="cancelAppointment">Cancelar</button><button class="primary" type="submit">Salvar agendamento</button></div>
     </form>
   </dialog>
+  <dialog id="dayLockDialog" class="schedule-action-dialog">
+    <form method="dialog" class="day-lock-panel">
+      <div class="dialog-head"><div><p class="eyebrow">CONTROLE DA AGENDA</p><h2>Travar ou destravar o dia</h2></div><button class="icon-button" value="cancel" aria-label="Fechar">×</button></div>
+      <p id="dayLockDescription">Escolha o que deseja fazer com a agenda selecionada.</p>
+      <div class="day-lock-actions"><button class="primary" id="lockWholeDay" type="button">🔒 Travar células vazias</button><button class="secondary" id="unlockWholeDay" type="button">🔓 Destravar todas</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="patientRecordDialog" class="patient-record-dialog">
+    <div class="patient-record-panel">
+      <div class="dialog-head"><div><p class="eyebrow">CADASTRO DO PACIENTE</p><h2 id="patientRecordTitle">Paciente</h2></div><button class="icon-button" type="button" id="closePatientRecord" aria-label="Fechar">×</button></div>
+      <div class="patient-record-grid" id="patientRecordContent"></div>
+      <p class="deadline-note">Cadastro básico temporário. A ficha clínica completa será criada em uma próxima etapa.</p>
+    </div>
+  </dialog>
+
+  <dialog id="patientSearchDialog" class="patient-search-dialog">
+    <div class="patient-search-panel">
+      <div class="dialog-head"><div><p class="eyebrow">LOCALIZAR PACIENTE</p><h2>Pesquisa de pacientes</h2></div><button class="icon-button" type="button" id="closePatientSearch" aria-label="Fechar">×</button></div>
+      <label class="patient-search-field">Pesquisar<input id="patientGlobalSearch" type="search" autocomplete="off" placeholder="Nome, código, nascimento, RG, CPF ou telefone"></label>
+      <div class="patient-search-results" id="patientSearchResults"><p class="empty-state">Digite uma informação para pesquisar.</p></div>
+    </div>
+  </dialog>
+
+  <dialog id="chargeDialog" class="charge-dialog">
+    <div class="charge-panel">
+      <div class="dialog-head"><div><p class="eyebrow">COBRANÇA DO ATENDIMENTO</p><h2 id="chargePatientName">Paciente</h2></div><button class="icon-button" type="button" id="closeChargeDialog" aria-label="Fechar">×</button></div>
+      <div class="schedule-patient-summary" id="chargePatientSummary"></div>
+      <p>Esta é a primeira versão da área de cobrança. Ao confirmar, o atendimento será marcado como cobrado/faturado.</p>
+      <div class="dialog-actions"><button class="secondary" type="button" id="cancelCharge">Cancelar</button><button class="primary" type="button" id="confirmCharge">💼 Cobrar</button></div>
+    </div>
+  </dialog>
+
   <dialog id="scheduleActionDialog" class="schedule-action-dialog">
     <form method="dialog" id="scheduleActionForm">
       <div class="dialog-head"><div><p class="eyebrow">AÇÃO DA AGENDA</p><h2 id="scheduleActionTitle">Confirmar ação</h2></div><button class="icon-button" value="cancel" aria-label="Fechar">×</button></div>
