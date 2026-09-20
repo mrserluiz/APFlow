@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260920-11">
+  <link rel="stylesheet" href="app-pages.css?v=20260920-12">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -225,6 +225,18 @@
     </form>
   </dialog>
 
+
+  <dialog id="appointmentHistoryDialog" class="appointment-history-dialog">
+    <div class="appointment-history-panel">
+      <div class="dialog-head"><div><p class="eyebrow">VISUALIZAÇÃO DO PACIENTE</p><h2 id="historyPatientTitle">Paciente</h2><span id="historyPatientMeta" class="history-patient-meta"></span></div><button class="icon-button" type="button" id="closeAppointmentHistory" aria-label="Fechar">×</button></div>
+      <div class="history-columns">
+        <section class="history-group past"><h3>Agendamentos passados <span id="historyPastCount">0</span></h3><div class="history-list" id="historyPast"></div></section>
+        <section class="history-group missed"><h3>Faltas <span id="historyMissedCount">0</span></h3><div class="history-list" id="historyMissed"></div></section>
+        <section class="history-group future"><h3>Agendamentos futuros <span id="historyFutureCount">0</span></h3><div class="history-list" id="historyFuture"></div></section>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="patientRecordDialog" class="patient-record-dialog">
     <div class="patient-record-panel">
       <div class="dialog-head"><div><p class="eyebrow">CADASTRO DO PACIENTE</p><h2 id="patientRecordTitle">Paciente</h2></div><button class="icon-button" type="button" id="closePatientRecord" aria-label="Fechar">×</button></div>
@@ -313,6 +325,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260920-12"></script>
+  <script type="module" src="script.js?v=20260920-13"></script>
 </body>
 </html>
