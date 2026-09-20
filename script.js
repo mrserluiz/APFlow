@@ -22,7 +22,8 @@ let reports=[];
 let therapists=[];
 let appointments=[];let stopAppointments=null;
 let agendaMode=null;let moveSource=null;let pendingScheduleAction=null;let appointmentContext='agendar';
-let portals=[];let portalsConnected=false;let currentUserIsAdmin=false;let currentPortalUrl='';
+const defaultAuthorizationPortals=[{id:'orizon-brasil',name:'Orizon Brasil',url:'https://www.orizonbrasil.com.br/acesso-restrito.html',iconUrl:'',openMode:'internal',active:true,order:1,isDefault:true}];
+let portals=[...defaultAuthorizationPortals];let portalsConnected=false;let currentUserIsAdmin=false;let currentPortalUrl='';
 const defaultProfessionals=[
  {id:'vanessa',name:'Dra. Vanessa',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
  {id:'camila',name:'Dra. Camila',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
@@ -73,7 +74,7 @@ function renderPortals(){
   if(portal.iconUrl){const image=document.createElement('img');image.src=portal.iconUrl;image.alt='';image.addEventListener('error',()=>{image.replaceWith(createPortalInitial(portal.name))});card.append(image)}else card.append(createPortalInitial(portal.name));
   const name=document.createElement('strong');name.textContent=portal.name;const mode=document.createElement('small');mode.textContent=portal.openMode==='external'?'Nova aba':'Abrir internamente';card.append(name,mode);
   const open=()=>openPortal(portal);card.addEventListener('click',open);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open()}});
-  if(currentUserIsAdmin){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
+  if(currentUserIsAdmin&&!portal.isDefault){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
   root.append(card);
  });
 }
@@ -87,7 +88,7 @@ function openPortal(portal){
 }
 function connectPortals(){
  if(portalsConnected)return;portalsConnected=true;
- onSnapshot(query(collection(db,'portais'),orderBy('order')),snapshot=>{portals=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.active!==false);renderPortals()},error=>{console.error(error);portals=[];renderPortals();showToast('Não foi possível carregar os portais de autorização.')});
+ onSnapshot(query(collection(db,'portais'),orderBy('order')),snapshot=>{const saved=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.active!==false);const savedKeys=new Set(saved.flatMap(item=>[String(item.name||'').toLowerCase(),String(item.url||'').toLowerCase()]));const defaults=defaultAuthorizationPortals.filter(item=>!savedKeys.has(item.name.toLowerCase())&&!savedKeys.has(item.url.toLowerCase()));portals=[...defaults,...saved].sort((a,b)=>(a.order||0)-(b.order||0));renderPortals()},error=>{console.error(error);portals=[...defaultAuthorizationPortals];renderPortals();showToast('Portal padrão carregado; não foi possível sincronizar outros portais.')});
 }
 function renderTherapistCounts(){
  const groups=['Médico','Fisioterapeuta','Pilates','RPG'];
