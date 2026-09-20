@@ -23,7 +23,7 @@ let therapists=[];
 let appointments=[];let stopAppointments=null;
 let agendaMode=null;let moveSource=null;let pendingScheduleAction=null;let appointmentContext='agendar';
 const defaultAuthorizationPortals=[{id:'orizon-brasil',name:'Orizon Brasil',url:'https://www.orizonbrasil.com.br/acesso-restrito.html',iconUrl:'',openMode:'internal',active:true,order:1,isDefault:true}];
-let portals=[...defaultAuthorizationPortals];let portalsConnected=false;let currentUserIsAdmin=false;let currentPortalUrl='';
+let portals=[...defaultAuthorizationPortals];let portalsConnected=false;let currentUserIsAdmin=false;let adminFunctionsEnabled=true;let currentPortalUrl='';
 const defaultProfessionals=[
  {id:'vanessa',name:'Dra. Vanessa',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
  {id:'camila',name:'Dra. Camila',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
@@ -75,7 +75,7 @@ function renderPortals(){
   const name=document.createElement('strong');name.textContent=portal.name;const mode=document.createElement('small');mode.textContent=portal.openMode==='external'?'Nova aba':'Abrir internamente';card.append(name,mode);
   const open=()=>openPortal(portal);card.addEventListener('click',open);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open()}});
   const portalCount=document.querySelector('#adminPortalCount');if(portalCount)portalCount.textContent=`${portals.length} ${portals.length===1?'portal cadastrado':'portais cadastrados'}`;
- if(currentUserIsAdmin&&!portal.isDefault){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
+ if(currentUserIsAdmin&&adminFunctionsEnabled&&!portal.isDefault){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
   root.append(card);
  });
 }
@@ -281,12 +281,22 @@ function firebaseMessage(reason){
  };
  return messages[reason.code]||`Erro no cadastro (${reason.code||'desconhecido'}).`;
 }
+function applyAdminPreviewMode(preview){
+ if(!currentUserIsAdmin)return;
+ adminFunctionsEnabled=!preview;localStorage.setItem('apflow.adminPreview',String(preview));
+ document.querySelectorAll('.admin-only').forEach(element=>element.hidden=preview);
+ const toggle=document.querySelector('#adminModeToggle');toggle.hidden=false;toggle.textContent=preview?'Retornar ao modo Admin':'Visualizar como usuário comum';toggle.classList.toggle('preview-active',preview);
+ const panelButton=document.querySelector('#adminPreviewButton');if(panelButton)panelButton.textContent=preview?'Retornar ao modo Admin':'Ativar modo usuário comum';
+ renderPortals();
+ if(preview&&document.querySelector('.tool[data-view="administracao"]')?.classList.contains('active'))switchPage('inicio');
+ showToast(preview?'Funções administrativas ocultadas.':'Funções administrativas reativadas.');
+}
 async function revealApp(user){
  loginScreen.classList.add('hidden');document.querySelector('.user-area strong').textContent=user.displayName||'Equipe APFlow';setConnection(true,'Firebase conectado');
  if(!firestoreConnected){firestoreConnected=true;connectFirestore()}
  if(!therapistsConnected){therapistsConnected=true;connectTherapists()}
  connectPortals();
- try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){currentUserIsAdmin=true;document.querySelectorAll('.admin-only').forEach(element=>element.hidden=false);connectAdminUsers();renderPortals();switchPage(localStorage.getItem('apflow.activePage')||'inicio',false)}}catch(error){console.error('Perfil indisponível:',error)}
+ try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){currentUserIsAdmin=true;document.querySelector('#adminModeToggle').hidden=false;connectAdminUsers();applyAdminPreviewMode(localStorage.getItem('apflow.adminPreview')==='true');if(adminFunctionsEnabled)switchPage(localStorage.getItem('apflow.activePage')||'inicio',false)}}catch(error){console.error('Perfil indisponível:',error)}
 }
 function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
 
@@ -335,10 +345,12 @@ function connectAdminUsers(){
  onSnapshot(query(collection(db,'usuarios'),orderBy('name')),snapshot=>{
   const list=document.querySelector('#userRoleList');const userCount=document.querySelector('#adminUserCount');if(userCount)userCount.textContent=`${snapshot.size} ${snapshot.size===1?'usuário cadastrado':'usuários cadastrados'}`;
   list.innerHTML=snapshot.empty?'<p class="empty-mini">Nenhum usuário cadastrado.</p>':'';
-  snapshot.docs.forEach(item=>{const user=item.data();const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${user.name||user.username}</strong><small>@${user.username}</small></div><select aria-label="Cargo de ${user.name||user.username}">${roles.map(role=>`<option value="${role.toLowerCase()}" ${user.role===role.toLowerCase()?'selected':''}>${role}</option>`).join('')}</select>`;row.querySelector('select').addEventListener('change',async event=>{event.target.disabled=true;try{await updateDoc(doc(db,'usuarios',item.id),{role:event.target.value,updatedAt:serverTimestamp()});showToast('Cargo atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar o cargo.')}finally{event.target.disabled=false}});list.append(row)});
+  snapshot.docs.forEach(item=>{const user=item.data();const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${user.name||user.username}</strong><small>@${user.username}</small></div><select aria-label="Cargo de ${user.name||user.username}">${roles.map(role=>`<option value="${role.toLowerCase()}" ${user.role===role.toLowerCase()?'selected':''}>${role}</option>`).join('')}</select>`;row.querySelector('select').addEventListener('change',async event=>{const select=event.target;const previous=user.role||'equipe';const next=select.value;if(next==='admin'&&previous!=='admin'&&!confirm(`Tornar ${user.name||user.username} administrador? Esta conta terá acesso a todas as configurações do APFlow.`)){select.value=previous;return}select.disabled=true;try{await updateDoc(doc(db,'usuarios',item.id),{role:next,updatedAt:serverTimestamp()});showToast(next==='admin'?'Usuário promovido a administrador.':'Cargo atualizado.')}catch(error){console.error(error);select.value=previous;showToast('Não foi possível atualizar o cargo.')}finally{select.disabled=false}});list.append(row)});
  },error=>{console.error(error);document.querySelector('#userRoleList').innerHTML='<p class="empty-mini">Sem permissão para visualizar usuários.</p>'});
 }
 const adminDialog=document.querySelector('#adminDialog');
+document.querySelector('#adminModeToggle').addEventListener('click',()=>applyAdminPreviewMode(adminFunctionsEnabled));
+document.querySelector('#adminPreviewButton').addEventListener('click',()=>applyAdminPreviewMode(adminFunctionsEnabled));
 document.querySelectorAll('[data-admin-open]').forEach(button=>button.addEventListener('click',()=>{
  const action=button.dataset.adminOpen;
  if(action==='portals'){switchPage('autorizacoes');showToast('Use “Adicionar portal” para cadastrar um novo acesso.');return}
