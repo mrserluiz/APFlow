@@ -274,22 +274,6 @@
     <div class="admin-panel">
       <div class="dialog-head"><div><p class="eyebrow">ÁREA RESTRITA</p><h2>Administração</h2></div><button class="icon-button" type="button" id="closeAdmin" aria-label="Fechar">×</button></div>
       <div class="admin-grid">
-        <section class="admin-section">
-          <h3>Profissionais</h3>
-          <p>Cadastre profissionais e vincule cada pessoa ao seu setor.</p>
-          <form id="therapistForm" class="inline-form">
-            <label>Nome completo<input name="name" required placeholder="Nome do profissional"></label>
-            <label>Setor<select name="profession" required><option>Médico</option><option>Fisioterapeuta</option><option>Pilates</option><option>RPG</option></select></label>
-            <label>Colunas da agenda<select name="agendaColumns" required><option value="4">4 colunas</option><option value="5">5 colunas</option></select></label>
-            <button class="primary" type="submit">Adicionar</button>
-          </form>
-          <div class="admin-list" id="adminTherapistList"></div>
-        </section>
-        <section class="admin-section">
-          <h3>Usuários e cargos</h3>
-          <p>Defina quais áreas cada usuário poderá acessar.</p>
-          <div class="admin-list" id="userRoleList"><p class="empty-mini">Carregando usuários...</p></div>
-        </section>
         <section class="admin-section admin-system-tools">
           <h3>Demonstração e manutenção</h3>
           <p>Gere pacientes fictícios na data selecionada ou zere somente as agendas do APFlow.</p>
@@ -300,6 +284,22 @@
           <small>A limpeza remove todos os agendamentos, inclusive históricos, faltas e horários travados. Usuários, profissionais, relatórios e portais não serão apagados.</small>
         </section>
 
+        <section class="admin-section" id="adminProfessionalsSection">
+          <h3>Profissionais</h3>
+          <p>Cadastre profissionais e vincule cada pessoa ao seu setor.</p>
+          <form id="therapistForm" class="inline-form">
+            <label>Nome completo<input name="name" required placeholder="Nome do profissional"></label>
+            <label>Setor<select name="profession" required><option>Médico</option><option>Fisioterapeuta</option><option>Pilates</option><option>RPG</option></select></label>
+            <label>Colunas da agenda<select name="agendaColumns" required><option value="4">4 colunas</option><option value="5">5 colunas</option></select></label>
+            <button class="primary" type="submit">Adicionar</button>
+          </form>
+          <div class="admin-list" id="adminTherapistList"></div>
+        </section>
+        <section class="admin-section" id="adminUsersSection">
+          <h3>Usuários e cargos</h3>
+          <p>Defina quais áreas cada usuário poderá acessar.</p>
+          <div class="admin-list" id="userRoleList"><p class="empty-mini">Carregando usuários...</p></div>
+        </section>
       </div>
     </div>
   </dialog>
@@ -335,6 +335,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260920-14"></script>
+  <script type="module" src="script.js?v=20260920-15"></script>
 </body>
 </html>
