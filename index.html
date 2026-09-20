@@ -22,6 +22,7 @@
     <button class="tool" data-view="agendas"><span class="ui-icon icon-agenda"></span>Agendas</button>
     <button class="tool active" data-view="relatorio"><span class="ui-icon icon-relatorio"></span>Relatório</button>
     <button class="tool" data-view="financeiro"><span class="ui-icon icon-financeiro"></span>Financeiro</button>
+    <button class="tool" data-view="autorizacoes"><span class="ui-icon icon-visualizacao"></span>Autorizações</button>
     <div class="ribbon-separator"></div>
     <button class="tool admin-only" id="adminButton" hidden><span class="ui-icon icon-configuracoes"></span>Administração</button>
   </nav>
@@ -68,6 +69,27 @@
       <section class="day-panel"><h2>Lançamentos</h2><p class="large-empty">Nenhum lançamento financeiro nesta data.</p></section>
     </section>
 
+    <section class="workspace page-view authorization-page" data-page="autorizacoes" hidden>
+      <div class="workspace-head">
+        <div><p class="eyebrow">PORTAIS DOS CONVÊNIOS</p><h1>Autorizações</h1><p>Acesse os portais cadastrados pela administração.</p></div>
+        <button class="primary admin-only" id="addPortalButton" type="button" hidden>＋ Adicionar portal</button>
+      </div>
+      <nav class="authorization-shortcuts" id="portalList" aria-label="Portais de autorizações">
+        <p class="authorization-empty">Nenhum portal cadastrado.</p>
+      </nav>
+      <section class="internal-browser" id="internalBrowser" hidden>
+        <header>
+          <div><span class="browser-status"></span><strong id="browserTitle">Portal do convênio</strong></div>
+          <div class="browser-controls">
+            <button class="secondary" id="openPortalExternal" type="button">Abrir em nova aba</button>
+            <button class="icon-button" id="closeInternalBrowser" type="button" aria-label="Fechar portal">×</button>
+          </div>
+        </header>
+        <p class="browser-notice">Se o portal não aparecer abaixo, ele bloqueia a abertura interna. Use “Abrir em nova aba”. O Google Password Manager funciona no navegador e o APFlow não acessa suas senhas.</p>
+        <iframe id="authorizationFrame" title="Portal de autorização do convênio" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </section>
+    </section>
+
     <section class="workspace page-view" data-page="relatorio">
       <div class="workspace-head">
         <div><p class="eyebrow">RELATÓRIOS CLÍNICOS</p><h1>Fluxo de solicitações</h1><div class="head-date-row"><p id="todayLabel" data-selected-date></p><button class="header-filter" type="button">⌕ Filtro</button></div></div>
@@ -105,6 +127,20 @@
         <label>Convênio<select id="agreementFilter"><option value="">Todos</option><option>IAMSPE</option><option>Outros</option></select></label>
       </div>
       <div class="dialog-actions"><button class="secondary" id="clearFilters" type="button">Limpar filtros</button><button class="primary" value="confirm">Aplicar</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="portalDialog" class="portal-dialog">
+    <form id="portalForm">
+      <div class="dialog-head"><div><p class="eyebrow">ADMINISTRAÇÃO</p><h2>Adicionar portal de autorização</h2></div><button class="icon-button" type="button" id="closePortalDialog" aria-label="Fechar">×</button></div>
+      <div class="form-grid">
+        <label>Nome do convênio *<input name="name" required placeholder="Ex.: IAMSPE"></label>
+        <label>Modo de abertura<select name="openMode"><option value="internal">Dentro do APFlow</option><option value="external">Nova aba do navegador</option></select></label>
+        <label class="full">Endereço do portal *<input name="url" type="url" required inputmode="url" placeholder="https://portal.exemplo.com.br"></label>
+        <label class="full">Endereço do ícone ou logotipo (opcional)<input name="iconUrl" type="url" inputmode="url" placeholder="https://.../icone.png"></label>
+      </div>
+      <p class="deadline-note">Cadastre somente endereços HTTPS oficiais. Senhas não são armazenadas pelo APFlow.</p>
+      <div class="dialog-actions"><button class="secondary" type="button" id="cancelPortal">Cancelar</button><button class="primary" type="submit">Salvar portal</button></div>
     </form>
   </dialog>
 
