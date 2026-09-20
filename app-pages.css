@@ -193,3 +193,10 @@
 .admin-dashboard-actions .danger-button { border: 1px solid #9d3535; color: #fff; background: #9d3535; }
 .admin-dashboard-actions button:disabled { cursor: wait; opacity: .6; }
 @media (max-width:760px) { .maintenance-dashboard-card { min-height: 210px; } .admin-dashboard-actions { display: grid; } .admin-dashboard-actions button { width: 100%; min-width: 0; } }
+
+
+/* A coluna cinza deve permanecer sempre na última posição */
+.physio-schedule[data-columns="5"] .appointment-slot.column-4 .slot-time { background:#74354f; }
+.physio-schedule[data-columns="5"] .appointment-slot.column-5 .slot-time { background:#aaa; }
+.physio-schedule[data-columns="5"] .column-markers .column-4 { background:#74354f; }
+.physio-schedule[data-columns="5"] .column-markers .column-5 { background:#aaa; }
