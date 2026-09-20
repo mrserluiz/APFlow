@@ -200,3 +200,20 @@
 .physio-schedule[data-columns="5"] .appointment-slot.column-5 .slot-time { background:#aaa; }
 .physio-schedule[data-columns="5"] .column-markers .column-4 { background:#74354f; }
 .physio-schedule[data-columns="5"] .column-markers .column-5 { background:#aaa; }
+
+
+/* Pesquisa de cadastro na nova solicitação de relatório */
+.request-patient-lookup { position: relative; display: grid; gap: 6px; }
+.request-patient-lookup > label { color: #273d49; font-weight: 700; }
+.request-patient-lookup > input { width: 100%; padding: 12px 42px 12px 13px; border: 1px solid #bfcfd8; border-radius: 7px; background: #fff; font: inherit; }
+.request-patient-lookup::after { content: '⌕'; position: absolute; top: 31px; right: 14px; color: #315f7d; font-size: 22px; pointer-events: none; }
+.request-patient-results { display: grid; max-height: 210px; overflow: auto; border: 1px solid #d3dfe5; border-radius: 7px; background: #f7fafb; }
+.request-patient-results:empty { display: none; }
+.request-patient-results > p { margin: 0; padding: 14px; color: #778b96; text-align: center; }
+.request-patient-results button { display: grid; gap: 4px; width: 100%; padding: 11px 13px; border: 0; border-bottom: 1px solid #dce5ea; background: #fff; color: #294f66; text-align: left; cursor: pointer; }
+.request-patient-results button:last-child { border-bottom: 0; }
+.request-patient-results button:hover { background: #eaf3f8; }
+.request-patient-results button span { color: #6f828d; font-size: 11px; }
+.request-selected-patient { display: grid; gap: 4px; padding: 11px 13px; border: 1px solid #8dc7ae; border-left: 5px solid #2f8a68; border-radius: 7px; background: #eef8f4; color: #315e50; }
+.request-selected-patient span { font-size: 12px; }
+#requestForm input[name="patient"][readonly] { background: #f1f5f7; color: #294f66; font-weight: 700; }
