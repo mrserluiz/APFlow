@@ -229,10 +229,9 @@ function renderRequestPatientResults(){
  found.forEach(patient=>{const button=document.createElement('button');button.type='button';const name=document.createElement('strong');name.textContent=patient.patient||'Paciente sem nome';const details=document.createElement('span');details.textContent=`Código: ${patient.code||'—'} • Nascimento: ${patient.birthDate?patient.birthDate.split('-').reverse().join('/'):'—'} • CPF: ${patient.cpf||'—'}`;button.append(name,details);button.addEventListener('click',()=>selectRequestPatient(patient));root.append(button)})
 }
 function selectRequestPatient(patient){
- const form=document.querySelector('#requestForm');['patient','code','birthDate','phone','cpf','rg','insuranceCard'].forEach(field=>{form.elements[field].value=patient[field]||''});
- if(patient.agreement){const agreement=form.querySelector(`[name="agreement"][value="${patient.agreement}"]`);if(agreement)agreement.checked=true}
+ const form=document.querySelector('#requestForm');['patient','code','birthDate','phone','cpf','rg','insuranceCard','agreement'].forEach(field=>{form.elements[field].value=patient[field]||''});
  document.querySelector('#requestPatientSearch').value='';document.querySelector('#requestPatientResults').innerHTML='';
- const selected=document.querySelector('#requestSelectedPatient');selected.hidden=false;selected.innerHTML='';const title=document.createElement('strong');title.textContent='Paciente selecionado: '+(patient.patient||'');const details=document.createElement('span');details.textContent=`Código: ${patient.code||'—'} • Telefone: ${patient.phone||'—'} • Carteirinha: ${patient.insuranceCard||'—'}`;selected.append(title,details)
+ const selected=document.querySelector('#requestSelectedPatient');selected.hidden=false;selected.innerHTML='';const title=document.createElement('strong');title.textContent='Paciente selecionado: '+(patient.patient||'');const details=document.createElement('span');details.textContent=`Código: ${patient.code||'—'} • Convênio: ${patient.agreement||'—'} • Carteirinha: ${patient.insuranceCard||'—'}`;selected.append(title,details)
 }
 async function loadRequestPatients(){
  const root=document.querySelector('#requestPatientResults');root.innerHTML='<p>Carregando cadastros...</p>';
