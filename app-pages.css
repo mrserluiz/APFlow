@@ -252,3 +252,13 @@
  body.clinical-printing #clinicalPreviewDialog .clinical-preview-panel { padding:0; }
  body.clinical-printing #clinicalPreviewDialog .clinical-document { width:auto; min-height:0; margin:0; padding:18mm; box-shadow:none; }
 }
+
+
+/* Etapa final: relatórios entregues */
+.board { grid-template-columns:repeat(4,minmax(240px,1fr)); overflow-x:auto; }
+.gray-bg { background:#6d7d86; }
+.clinical-delivery-actions { flex-wrap:wrap; }
+.clinical-delivery-actions .delivered-button { background:#2f8a68; color:#fff; }
+.clinical-delivery-actions .danger-button { border:1px solid #9d3535; color:#fff; background:#9d3535; }
+.clinical-delivery-actions [hidden] { display:none!important; }
+@media (max-width:1100px) { .board { grid-template-columns:repeat(4,280px); } }
