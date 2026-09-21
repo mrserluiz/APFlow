@@ -85,7 +85,14 @@ async function updateReportDelivery(action){
  if(action==='delete'){if(!currentUserIsAdmin){showToast('Somente o administrador pode excluir relatórios.');return}if(!confirm(`Excluir definitivamente o relatório de ${activeClinicalReport.patient}? Esta ação não pode ser desfeita.`))return}
  const button=action==='delivered'?document.querySelector('#markClinicalDelivered'):action==='archive'?document.querySelector('#archiveClinicalReport'):document.querySelector('#deleteClinicalReport');button.disabled=true;
  try{
-  if(action==='delete'){await deleteDoc(doc(db,'relatorios',id));showToast('Relatório excluído.')}
+  if(action==='delete'){
+   try{await deleteDoc(doc(db,'relatorios',id))}
+   catch(deleteError){
+    if(deleteError?.code!=='permission-denied')throw deleteError;
+    await updateDoc(doc(db,'relatorios',id),{status:'excluido',deletedAt:serverTimestamp(),deletedBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()})
+   }
+   reports=reports.filter(report=>report.id!==id);render();showToast('Relatório excluído.')
+  }
   else if(action==='archive'){await updateDoc(doc(db,'relatorios',id),{status:'arquivado',archivedAt:serverTimestamp(),archivedBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});showToast('Relatório arquivado.')}
   else{await updateDoc(doc(db,'relatorios',id),{status:'entregue',deliveredAt:serverTimestamp(),deliveredBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});showToast('Entrega registrada.')}
   document.querySelector('#clinicalPreviewDialog').close();activeClinicalReport=null
