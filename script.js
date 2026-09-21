@@ -74,7 +74,7 @@ async function openClinicalEditor(report){
  document.querySelector('#clinicalReportDialog').showModal();setTimeout(()=>form.elements.hd.focus(),50)
 }
 function fillClinicalPreview(report){
- document.querySelector('#clinicalDocumentPatient').textContent=report.patient||'Paciente';document.querySelector('#clinicalDocumentHd').textContent=report.hd||'Não informado';document.querySelector('#clinicalDocumentText').textContent=report.clinicalText||'';
+ document.querySelector('#clinicalDocumentPatient').textContent=`Nome: ${report.patient||'Paciente'}`;document.querySelector('#clinicalDocumentHd').textContent=report.hd||'Não informado';document.querySelector('#clinicalDocumentText').textContent=report.clinicalText||'';
  document.querySelector('#clinicalDocumentAuthor').textContent=report.finalizedByName||report.therapist||'Profissional responsável';document.querySelector('#clinicalDocumentDate').textContent=report.finalizedDate||new Intl.DateTimeFormat('pt-BR').format(new Date())
 }
 function openClinicalPreview(report){
