@@ -41,9 +41,9 @@ let selectedDate=new Date();
 let calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);
 const agendaSlots={manha:['08:00','08:40','09:20','10:00','10:40','11:20'],tarde:['13:00','13:40','14:20','15:00','15:40','16:20','17:00','17:40','18:20']};
 const roles=['Admin','Financeiro','Gerente','Atendente','Fisioterapeuta','Médico','Enfermagem','Técnico'];
-const colors={aguardando:'#c88313',confeccao:'#377ea7',pronto:'#2f8a68'};
-const labels={aguardando:'Aguardando',confeccao:'Em confecção',pronto:'Pronto'};
-const lists={aguardando:document.querySelector('#waitingList'),confeccao:document.querySelector('#draftList'),pronto:document.querySelector('#readyList')};
+const colors={aguardando:'#c88313',confeccao:'#377ea7',pronto:'#2f8a68',entregue:'#6d7d86'};
+const labels={aguardando:'Aguardando',confeccao:'Em confecção',pronto:'Pronto',entregue:'Entregue'};
+const lists={aguardando:document.querySelector('#waitingList'),confeccao:document.querySelector('#draftList'),pronto:document.querySelector('#readyList'),entregue:document.querySelector('#deliveredList')};
 const filters={search:document.querySelector('#searchInput'),therapist:document.querySelector('#therapistFilter'),agreement:document.querySelector('#agreementFilter')};
 
 function render(){
@@ -54,7 +54,7 @@ function render(){
    const card=document.createElement('article'); card.className='report-card'; card.style.setProperty('--accent',colors[r.status]);
    card.innerHTML=`<div class="card-top"><div><h3>${r.patient}</h3><span class="code">Nº ${r.code}</span></div><span class="due ${r.due<='18/09/2026'?'urgent':''}">${r.due}</span></div><p>${r.agreement} • ${r.purpose}</p><div class="card-footer"><span class="badge">${labels[r.status]}</span><span class="therapist">${r.therapist}</span></div>`;
    card.tabIndex=0;card.setAttribute('role','button');
-   const openReport=()=>{if(r.status==='pronto')openClinicalPreview(r);else if(canEditClinicalReport())openClinicalEditor(r);else showToast('Somente Admin, fisioterapeuta ou médico pode editar este relatório.')};
+   const openReport=()=>{if(r.status==='pronto'||r.status==='entregue')openClinicalPreview(r);else if(canEditClinicalReport())openClinicalEditor(r);else showToast('Somente Admin, fisioterapeuta ou médico pode editar este relatório.')};
    card.addEventListener('click',openReport);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openReport()}});lists[r.status].append(card);
  });
  document.querySelectorAll('.lane').forEach(lane=>lane.querySelector('.lane-count').textContent=visible.filter(r=>r.status===lane.dataset.status).length);
@@ -77,7 +77,20 @@ function fillClinicalPreview(report){
  document.querySelector('#clinicalDocumentPatient').textContent=report.patient||'Paciente';document.querySelector('#clinicalDocumentHd').textContent=report.hd||'Não informado';document.querySelector('#clinicalDocumentText').textContent=report.clinicalText||'';
  document.querySelector('#clinicalDocumentAuthor').textContent=report.finalizedByName||report.therapist||'Profissional responsável';document.querySelector('#clinicalDocumentDate').textContent=report.finalizedDate||new Intl.DateTimeFormat('pt-BR').format(new Date())
 }
-function openClinicalPreview(report){activeClinicalReport={...report};fillClinicalPreview(report);document.querySelector('#clinicalPreviewDialog').showModal()}
+function openClinicalPreview(report){
+ activeClinicalReport={...report};fillClinicalPreview(report);const delivered=report.status==='entregue';document.querySelector('#markClinicalDelivered').hidden=report.status!=='pronto';document.querySelector('#archiveClinicalReport').hidden=!delivered;document.querySelector('#deleteClinicalReport').hidden=!delivered||!currentUserIsAdmin;document.querySelector('#clinicalPreviewDialog').showModal()
+}
+async function updateReportDelivery(action){
+ if(!activeClinicalReport?.id)return;const id=activeClinicalReport.id;
+ if(action==='delete'){if(!currentUserIsAdmin){showToast('Somente o administrador pode excluir relatórios.');return}if(!confirm(`Excluir definitivamente o relatório de ${activeClinicalReport.patient}? Esta ação não pode ser desfeita.`))return}
+ const button=action==='delivered'?document.querySelector('#markClinicalDelivered'):action==='archive'?document.querySelector('#archiveClinicalReport'):document.querySelector('#deleteClinicalReport');button.disabled=true;
+ try{
+  if(action==='delete'){await deleteDoc(doc(db,'relatorios',id));showToast('Relatório excluído.')}
+  else if(action==='archive'){await updateDoc(doc(db,'relatorios',id),{status:'arquivado',archivedAt:serverTimestamp(),archivedBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});showToast('Relatório arquivado.')}
+  else{await updateDoc(doc(db,'relatorios',id),{status:'entregue',deliveredAt:serverTimestamp(),deliveredBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});showToast('Entrega registrada.')}
+  document.querySelector('#clinicalPreviewDialog').close();activeClinicalReport=null
+ }catch(error){console.error(error);showToast('Não foi possível concluir a ação.')}finally{button.disabled=false}
+}
 async function saveClinicalReport(finalize){
  const form=document.querySelector('#clinicalReportForm');const id=form.elements.reportId.value;const hd=form.elements.hd.value.trim();const clinicalText=form.elements.clinicalText.value.trim();if(!id)return;
  if(finalize&&(!form.elements.patient.value.trim()||!hd||!clinicalText)){showToast('Preencha Nome, HD e Texto para finalizar.');return}
@@ -503,6 +516,9 @@ document.querySelector('#clinicalReportForm').addEventListener('submit',event=>{
 document.querySelector('#saveClinicalDraft').addEventListener('click',()=>saveClinicalReport(false));
 document.querySelector('#closeClinicalPreview').addEventListener('click',()=>document.querySelector('#clinicalPreviewDialog').close());
 document.querySelector('#printClinicalReport').addEventListener('click',()=>{document.body.classList.add('clinical-printing');window.print()});
+document.querySelector('#markClinicalDelivered').addEventListener('click',()=>updateReportDelivery('delivered'));
+document.querySelector('#archiveClinicalReport').addEventListener('click',()=>updateReportDelivery('archive'));
+document.querySelector('#deleteClinicalReport').addEventListener('click',()=>updateReportDelivery('delete'));
 window.addEventListener('afterprint',()=>document.body.classList.remove('clinical-printing'));
 
 const adminDialog=document.querySelector('#adminDialog');
