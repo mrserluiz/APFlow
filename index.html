@@ -202,7 +202,7 @@
           <div class="request-selected-patient" id="requestSelectedPatient" hidden></div>
         </div>
         <input name="code" type="hidden"><input name="birthDate" type="hidden"><input name="phone" type="hidden"><input name="cpf" type="hidden"><input name="rg" type="hidden"><input name="insuranceCard" type="hidden">
-        <label>Convênio do cadastro *<input name="agreement" required readonly placeholder="Preenchido ao selecionar o paciente"></label>
+        <input name="agreement" type="hidden">
         <fieldset class="full"><legend>Finalidade do relatório *</legend><div class="choices"><label class="choice"><input type="radio" name="purpose" value="Perícia do INSS" checked> Perícia do INSS</label><label class="choice"><input type="radio" name="purpose" value="Perícia de seguro"> Perícia de seguro</label><label class="choice"><input type="radio" name="purpose" value="Retorno médico"> Retorno médico</label><label class="choice"><input type="radio" name="purpose" value="Outro"> Outro</label></div><textarea name="otherPurpose" id="otherPurpose" rows="2" placeholder="Descreva a outra finalidade" disabled></textarea></fieldset>
         <label>Fisioterapeuta responsável *<select name="therapist" id="requestTherapist" required><option value="">Selecione</option></select></label>
         <label>Data prevista para entrega<input name="dueDate" id="dueDate" readonly></label>
