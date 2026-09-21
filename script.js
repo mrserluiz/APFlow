@@ -24,7 +24,7 @@ let therapists=[];
 let appointments=[];let stopAppointments=null;
 let agendaMode=null;let moveSource=null;let pendingScheduleAction=null;let pendingChargeAppointment=null;let appointmentContext='agendar';
 const defaultAuthorizationPortals=[{id:'orizon-brasil',name:'Orizon Brasil',url:'https://www.orizonbrasil.com.br/acesso-restrito.html',iconUrl:'',openMode:'internal',active:true,order:1,isDefault:true}];
-let portals=[...defaultAuthorizationPortals];let portalsConnected=false;let currentUserIsAdmin=false;let adminFunctionsEnabled=true;let currentPortalUrl='';
+let portals=[...defaultAuthorizationPortals];let portalsConnected=false;let currentUserIsAdmin=false;let currentUserRole='equipe';let adminFunctionsEnabled=true;let currentPortalUrl='';let activeClinicalReport=null;
 const defaultProfessionals=[
  {id:'vanessa',name:'Dra. Vanessa',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
  {id:'camila',name:'Dra. Camila',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
@@ -53,7 +53,9 @@ function render(){
  visible.filter(r=>lists[r.status]).forEach(r=>{
    const card=document.createElement('article'); card.className='report-card'; card.style.setProperty('--accent',colors[r.status]);
    card.innerHTML=`<div class="card-top"><div><h3>${r.patient}</h3><span class="code">Nº ${r.code}</span></div><span class="due ${r.due<='18/09/2026'?'urgent':''}">${r.due}</span></div><p>${r.agreement} • ${r.purpose}</p><div class="card-footer"><span class="badge">${labels[r.status]}</span><span class="therapist">${r.therapist}</span></div>`;
-   card.addEventListener('click',()=>showToast(`${r.patient} — ${labels[r.status]}`)); lists[r.status].append(card);
+   card.tabIndex=0;card.setAttribute('role','button');
+   const openReport=()=>{if(r.status==='pronto')openClinicalPreview(r);else if(canEditClinicalReport())openClinicalEditor(r);else showToast('Somente Admin, fisioterapeuta ou médico pode editar este relatório.')};
+   card.addEventListener('click',openReport);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openReport()}});lists[r.status].append(card);
  });
  document.querySelectorAll('.lane').forEach(lane=>lane.querySelector('.lane-count').textContent=visible.filter(r=>r.status===lane.dataset.status).length);
  ['aguardando','confeccao','pronto','entregue'].forEach((s,i)=>document.querySelectorAll('.metric strong')[i].textContent=reports.filter(r=>r.status===s).length);
@@ -62,6 +64,27 @@ function render(){
  const homePending=document.querySelector('#homePending');if(homePending)homePending.textContent=reports.filter(r=>r.status==='aguardando').length;
  renderTherapistCounts();
 }
+function normalizedRole(){return String(currentUserRole||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+function canEditClinicalReport(){const role=normalizedRole();return(currentUserIsAdmin&&adminFunctionsEnabled)||role==='fisioterapeuta'||role==='medico'}
+function updateClinicalFinalizeState(){const form=document.querySelector('#clinicalReportForm');document.querySelector('#finalizeClinicalReport').disabled=!(form.elements.patient.value.trim()&&form.elements.hd.value.trim()&&form.elements.clinicalText.value.trim())}
+async function openClinicalEditor(report){
+ if(!canEditClinicalReport()){showToast('Somente Admin, fisioterapeuta ou médico pode editar este relatório.');return}
+ activeClinicalReport={...report};const form=document.querySelector('#clinicalReportForm');form.reset();form.elements.reportId.value=report.id;form.elements.patient.value=report.patient||'';form.elements.hd.value=report.hd||'';form.elements.clinicalText.value=report.clinicalText||'';document.querySelector('#clinicalEditorPatientMeta').textContent=`Código: ${report.code||'—'} • ${report.agreement||'Convênio não informado'} • Responsável: ${report.therapist||'—'}`;updateClinicalFinalizeState();
+ if(report.status==='aguardando'){try{await updateDoc(doc(db,'relatorios',report.id),{status:'confeccao',startedAt:serverTimestamp(),startedBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});activeClinicalReport.status='confeccao'}catch(error){console.error(error);showToast('Não foi possível iniciar a confecção.');return}}
+ document.querySelector('#clinicalReportDialog').showModal();setTimeout(()=>form.elements.hd.focus(),50)
+}
+function fillClinicalPreview(report){
+ document.querySelector('#clinicalDocumentPatient').textContent=report.patient||'Paciente';document.querySelector('#clinicalDocumentCode').textContent=`Código: ${report.code||'—'}`;document.querySelector('#clinicalDocumentHd').textContent=report.hd||'Não informado';document.querySelector('#clinicalDocumentText').textContent=report.clinicalText||'';
+ document.querySelector('#clinicalDocumentAuthor').textContent=report.finalizedByName||report.therapist||'Profissional responsável';document.querySelector('#clinicalDocumentDate').textContent=report.finalizedDate||new Intl.DateTimeFormat('pt-BR').format(new Date())
+}
+function openClinicalPreview(report){activeClinicalReport={...report};fillClinicalPreview(report);document.querySelector('#clinicalPreviewDialog').showModal()}
+async function saveClinicalReport(finalize){
+ const form=document.querySelector('#clinicalReportForm');const id=form.elements.reportId.value;const hd=form.elements.hd.value.trim();const clinicalText=form.elements.clinicalText.value.trim();if(!id)return;
+ if(finalize&&(!form.elements.patient.value.trim()||!hd||!clinicalText)){showToast('Preencha Nome, HD e Texto para finalizar.');return}
+ const button=finalize?document.querySelector('#finalizeClinicalReport'):document.querySelector('#saveClinicalDraft');button.disabled=true;const original=button.textContent;button.textContent=finalize?'Finalizando...':'Salvando...';
+ try{const payload={hd,clinicalText,status:finalize?'pronto':'confeccao',updatedAt:serverTimestamp(),editedBy:auth.currentUser?.uid||''};if(finalize){payload.finalizedAt=serverTimestamp();payload.finalizedDate=new Intl.DateTimeFormat('pt-BR').format(new Date());payload.finalizedByName=auth.currentUser?.displayName||activeClinicalReport?.therapist||'Profissional responsável'}await updateDoc(doc(db,'relatorios',id),payload);document.querySelector('#clinicalReportDialog').close();showToast(finalize?'Relatório finalizado e pronto para entrega.':'Rascunho salvo.');if(finalize)openClinicalPreview({...activeClinicalReport,...payload})}catch(error){console.error(error);showToast('Não foi possível salvar o relatório.')}finally{button.disabled=false;button.textContent=original;updateClinicalFinalizeState()}
+}
+
 function normalizePortalUrl(value){
  const url=new URL(value);
  if(url.protocol!=='https:')throw new Error('Somente endereços HTTPS são permitidos.');
@@ -388,7 +411,7 @@ async function revealApp(user){
  if(!firestoreConnected){firestoreConnected=true;connectFirestore()}
  if(!therapistsConnected){therapistsConnected=true;connectTherapists()}
  connectPortals();
- try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()&&profile.data().role==='admin'){currentUserIsAdmin=true;document.querySelector('#adminModeToggle').hidden=false;connectAdminUsers();applyAdminPreviewMode(localStorage.getItem('apflow.adminPreview')==='true');if(adminFunctionsEnabled)switchPage(localStorage.getItem('apflow.activePage')||'inicio',false)}}catch(error){console.error('Perfil indisponível:',error)}
+ try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()){currentUserRole=profile.data().role||'equipe';if(currentUserRole==='admin'){currentUserIsAdmin=true;document.querySelector('#adminModeToggle').hidden=false;connectAdminUsers();applyAdminPreviewMode(localStorage.getItem('apflow.adminPreview')==='true');if(adminFunctionsEnabled)switchPage(localStorage.getItem('apflow.activePage')||'inicio',false)}}}catch(error){console.error('Perfil indisponível:',error)}
 }
 function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
 
@@ -472,6 +495,15 @@ async function clearAllSchedules(event){
  const button=event?.currentTarget||document.querySelector('#clearAllSchedules');button.disabled=true;button.textContent='Limpando...';
  try{const snapshot=await getDocs(collection(db,'agendamentos'));const operations=snapshot.docs.map(item=>batch=>batch.delete(item.ref));await commitBatches(operations);showToast(`${snapshot.size} registros de agenda removidos.`);adminDialog.close();appointments=[];connectAppointments()}catch(error){console.error(error);showToast('Não foi possível limpar as agendas. Confira as permissões.')}finally{button.disabled=false;button.textContent='Limpar sistema'}
 }
+
+const clinicalReportDialog=document.querySelector('#clinicalReportDialog');
+document.querySelectorAll('#closeClinicalReport,#cancelClinicalReport').forEach(button=>button.addEventListener('click',()=>clinicalReportDialog.close()));
+document.querySelector('#clinicalReportForm').addEventListener('input',updateClinicalFinalizeState);
+document.querySelector('#clinicalReportForm').addEventListener('submit',event=>{event.preventDefault();saveClinicalReport(true)});
+document.querySelector('#saveClinicalDraft').addEventListener('click',()=>saveClinicalReport(false));
+document.querySelector('#closeClinicalPreview').addEventListener('click',()=>document.querySelector('#clinicalPreviewDialog').close());
+document.querySelector('#printClinicalReport').addEventListener('click',()=>{document.body.classList.add('clinical-printing');window.print()});
+window.addEventListener('afterprint',()=>document.body.classList.remove('clinical-printing'));
 
 const adminDialog=document.querySelector('#adminDialog');
 document.querySelector('#adminModeToggle').addEventListener('click',()=>applyAdminPreviewMode(adminFunctionsEnabled));
