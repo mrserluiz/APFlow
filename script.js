@@ -522,7 +522,11 @@ document.querySelector('#clinicalReportForm').addEventListener('input',updateCli
 document.querySelector('#clinicalReportForm').addEventListener('submit',event=>{event.preventDefault();saveClinicalReport(true)});
 document.querySelector('#saveClinicalDraft').addEventListener('click',()=>saveClinicalReport(false));
 document.querySelector('#closeClinicalPreview').addEventListener('click',()=>document.querySelector('#clinicalPreviewDialog').close());
-document.querySelector('#printClinicalReport').addEventListener('click',()=>{document.body.classList.add('clinical-printing');window.print()});
+document.querySelector('#printClinicalReport').addEventListener('click',()=>{
+ const dialog=document.querySelector('#clinicalPreviewDialog');const page=dialog.querySelector('.clinical-document');
+ document.body.classList.add('clinical-printing');dialog.style.setProperty('box-shadow','none','important');dialog.style.setProperty('border-radius','0','important');page.style.setProperty('box-shadow','none','important');page.style.setProperty('border-radius','0','important');page.style.setProperty('filter','none','important');
+ requestAnimationFrame(()=>requestAnimationFrame(()=>window.print()))
+});
 document.querySelector('#markClinicalDelivered').addEventListener('click',()=>updateReportDelivery('delivered'));
 document.querySelector('#archiveClinicalReport').addEventListener('click',()=>updateReportDelivery('archive'));
 document.querySelector('#deleteClinicalReport').addEventListener('click',()=>updateReportDelivery('delete'));
