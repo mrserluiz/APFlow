@@ -244,6 +244,7 @@ document.querySelector('#requestPatientSearch').addEventListener('input',renderR
 document.querySelectorAll('[name="purpose"]').forEach(r=>r.addEventListener('change',()=>{const field=document.querySelector('#otherPurpose');field.disabled=r.value!=='Outro';if(!field.disabled)field.focus()}));
 document.querySelector('#requestForm').addEventListener('submit',async e=>{
  e.preventDefault();const form=e.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
+ if(!String(data.get('patient')||'').trim()){showToast('Pesquise e selecione o cadastro do paciente.');document.querySelector('#requestPatientSearch').focus();return}
  const report={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate:data.get('birthDate'),phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),insuranceCard:data.get('insuranceCard').trim(),agreement:data.get('agreement'),purpose:data.get('purpose')==='Outro'?(data.get('otherPurpose').trim()||'Outro'):data.get('purpose'),therapist:data.get('therapist'),requestDate:dateKey(selectedDate),due:data.get('dueDate'),status:'aguardando',createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
  submit.disabled=true;submit.textContent='Enviando...';
  try{await addDoc(collection(db,'relatorios'),report);form.reset();dialog.close();showToast('Solicitação salva no APFlow.')}catch(error){console.error(error);showToast('Não foi possível salvar. Ative o Firestore e confira as regras.')}finally{submit.disabled=false;submit.textContent='Enviar pedido'}
