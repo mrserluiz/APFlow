@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260920-16">
+  <link rel="stylesheet" href="app-pages.css?v=20260921-01">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -279,6 +279,33 @@
       <div class="dialog-actions"><button class="secondary" value="cancel">Cancelar</button><button class="primary" id="confirmScheduleAction" value="default">Confirmar</button></div>
     </form>
   </dialog>
+  <dialog id="clinicalReportDialog" class="clinical-report-dialog">
+    <form id="clinicalReportForm">
+      <div class="dialog-head"><div><p class="eyebrow">CONFECÇÃO DO RELATÓRIO</p><h2>Editor clínico</h2><span id="clinicalEditorPatientMeta" class="clinical-editor-meta"></span></div><button class="icon-button" type="button" id="closeClinicalReport" aria-label="Fechar">×</button></div>
+      <input name="reportId" type="hidden">
+      <div class="clinical-editor-fields">
+        <label>NOME<input name="patient" readonly></label>
+        <label>HD<textarea name="hd" rows="3" required placeholder="Digite a hipótese diagnóstica"></textarea></label>
+        <label>TEXTO<textarea name="clinicalText" rows="11" required placeholder="Digite o conteúdo do relatório clínico"></textarea></label>
+      </div>
+      <div class="dialog-actions"><button class="secondary" type="button" id="cancelClinicalReport">Cancelar</button><button class="secondary" type="button" id="saveClinicalDraft">Salvar rascunho</button><button class="primary" type="submit" id="finalizeClinicalReport" disabled>Finalizar relatório</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="clinicalPreviewDialog" class="clinical-preview-dialog">
+    <div class="clinical-preview-panel">
+      <div class="dialog-head clinical-preview-toolbar"><div><p class="eyebrow">RELATÓRIO PRONTO</p><h2>Visualização para entrega</h2></div><button class="icon-button" type="button" id="closeClinicalPreview" aria-label="Fechar">×</button></div>
+      <article class="clinical-document">
+        <header><div class="document-brand">APFlow</div><h1>RELATÓRIO CLÍNICO</h1></header>
+        <section class="document-patient"><h2 id="clinicalDocumentPatient">Paciente</h2><span id="clinicalDocumentCode">Código</span></section>
+        <section><h3>HD</h3><p id="clinicalDocumentHd"></p></section>
+        <section><h3>RELATÓRIO</h3><p id="clinicalDocumentText" class="document-text"></p></section>
+        <footer><div><span id="clinicalDocumentAuthor">Profissional responsável</span><small>Assinatura e carimbo</small></div><time id="clinicalDocumentDate"></time></footer>
+      </article>
+      <div class="dialog-actions clinical-preview-toolbar"><button class="primary" type="button" id="printClinicalReport">Imprimir relatório</button></div>
+    </div>
+  </dialog>
+
   <dialog id="adminDialog" class="admin-dialog">
     <div class="admin-panel">
       <div class="dialog-head"><div><p class="eyebrow">ÁREA RESTRITA</p><h2>Administração</h2></div><button class="icon-button" type="button" id="closeAdmin" aria-label="Fechar">×</button></div>
@@ -344,6 +371,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260921-02"></script>
+  <script type="module" src="script.js?v=20260921-03"></script>
 </body>
 </html>
