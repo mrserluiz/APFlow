@@ -385,7 +385,7 @@ appointmentForm.addEventListener('submit',async event=>{event.preventDefault();c
 function connectFirestore(){
  const reportsQuery=query(collection(db,'relatorios'),orderBy('createdAt','desc'));
  onSnapshot(reportsQuery,snapshot=>{
-   reports=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+   reports=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(report=>report.status!=='excluido');
    setConnection(true,'Firebase conectado');render();
  },error=>{console.error(error);reports=[];setConnection(false,'Firebase requer configuração');render();showToast('Não foi possível carregar os relatórios.')});
 }
