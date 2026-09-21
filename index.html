@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260921-01">
+  <link rel="stylesheet" href="app-pages.css?v=20260921-02">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -114,6 +114,7 @@
         <section class="lane" data-status="aguardando"><header><span class="status-dot amber-bg"></span><h2>Solicitações</h2><b class="lane-count">0</b></header><div class="card-list" id="waitingList"></div></section>
         <section class="lane" data-status="confeccao"><header><span class="status-dot blue-bg"></span><h2>Em confecção</h2><b class="lane-count">0</b></header><div class="card-list" id="draftList"></div></section>
         <section class="lane" data-status="pronto"><header><span class="status-dot green-bg"></span><h2>Prontos para entrega</h2><b class="lane-count">0</b></header><div class="card-list" id="readyList"></div></section>
+        <section class="lane" data-status="entregue"><header><span class="status-dot gray-bg"></span><h2>Entregues</h2><b class="lane-count">0</b></header><div class="card-list" id="deliveredList"></div></section>
       </div>
     </section>
     <section class="workspace page-view admin-dashboard" data-page="administracao" hidden>
@@ -302,7 +303,12 @@
         <section><h3>RELATÓRIO</h3><p id="clinicalDocumentText" class="document-text"></p></section>
         <footer><div><span id="clinicalDocumentAuthor">Profissional responsável</span><small>Assinatura e carimbo</small></div><time id="clinicalDocumentDate"></time></footer>
       </article>
-      <div class="dialog-actions clinical-preview-toolbar"><button class="primary" type="button" id="printClinicalReport">Imprimir relatório</button></div>
+      <div class="dialog-actions clinical-preview-toolbar clinical-delivery-actions">
+        <button class="secondary" type="button" id="archiveClinicalReport" hidden>Arquivar</button>
+        <button class="danger-button" type="button" id="deleteClinicalReport" hidden>Excluir relatório</button>
+        <button class="primary delivered-button" type="button" id="markClinicalDelivered" hidden>Entregue</button>
+        <button class="primary" type="button" id="printClinicalReport">Imprimir relatório</button>
+      </div>
     </div>
   </dialog>
 
@@ -371,6 +377,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260921-04"></script>
+  <script type="module" src="script.js?v=20260921-05"></script>
 </body>
 </html>
