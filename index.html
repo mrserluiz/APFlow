@@ -194,7 +194,7 @@
     <form id="requestForm" method="dialog">
       <div class="dialog-head"><div><p class="eyebrow">ETAPA 1 — RECEPÇÃO</p><h2>Nova solicitação</h2></div><button class="icon-button" type="button" id="closeDialog" aria-label="Fechar">×</button></div>
       <div class="form-grid">
-        <label class="full">Nome do paciente *<input name="patient" required readonly placeholder="Selecione um cadastro na pesquisa abaixo"></label>
+        <input name="patient" type="hidden">
         <div class="full request-patient-lookup">
           <label for="requestPatientSearch">Pesquisar cadastro do paciente</label>
           <input id="requestPatientSearch" type="search" autocomplete="off" placeholder="Nome, código, nascimento, telefone, CPF, RG ou carteirinha">
@@ -344,6 +344,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260921-01"></script>
+  <script type="module" src="script.js?v=20260921-02"></script>
 </body>
 </html>
