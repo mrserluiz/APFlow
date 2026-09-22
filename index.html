@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260921-04">
+  <link rel="stylesheet" href="app-pages.css?v=20260922-01">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -284,10 +284,25 @@
     <form id="clinicalReportForm">
       <div class="dialog-head"><div><p class="eyebrow">CONFECÇÃO DO RELATÓRIO</p><h2>Editor clínico</h2><span id="clinicalEditorPatientMeta" class="clinical-editor-meta"></span></div><button class="icon-button" type="button" id="closeClinicalReport" aria-label="Fechar">×</button></div>
       <input name="reportId" type="hidden">
-      <div class="clinical-editor-fields">
-        <label>NOME<input name="patient" readonly></label>
-        <label>HD<textarea name="hd" rows="3" required placeholder="Digite a hipótese diagnóstica"></textarea></label>
-        <label>TEXTO<textarea name="clinicalText" rows="11" required placeholder="Digite o conteúdo do relatório clínico"></textarea></label>
+      <div class="clinical-editor-fields physiotherapy-editor">
+        <label class="full">NOME DO PACIENTE<input name="patient" readonly></label>
+        <label class="full">HD / DIAGNÓSTICO CLÍNICO<textarea name="hd" rows="3" required placeholder="Digite o diagnóstico clínico"></textarea></label>
+        <label class="clinical-item">QUADRO CLÍNICO<textarea name="clinicalItem" rows="4" required placeholder="Descreva o quadro clínico"></textarea></label>
+        <label>EVA
+          <select name="eva" required><option value="">Selecione</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+        </label>
+        <label class="full">PROTOCOLO PROPOSTO
+          <select name="treatmentProtocol" required>
+            <option value="">Selecione</option>
+            <option>Eletroterapia</option>
+            <option>Cinesioterapia</option>
+            <option>Eletroterapia + Cinesioterapia</option>
+          </select>
+        </label>
+        <label>NÚMERO DE SESSÕES<input name="sessionCount" type="number" min="1" max="999" required placeholder="Ex.: 10"></label>
+        <label>INÍCIO DAS SESSÕES<input name="sessionStart" type="date" required></label>
+        <label>FINAL DAS SESSÕES<input name="sessionEnd" type="date" required></label>
+        <label>DATA DO RELATÓRIO<input name="reportDate" type="date" readonly></label>
       </div>
       <div class="dialog-actions"><button class="secondary" type="button" id="cancelClinicalReport">Cancelar</button><button class="secondary" type="button" id="saveClinicalDraft">Salvar rascunho</button><button class="primary" type="submit" id="finalizeClinicalReport" disabled>Finalizar relatório</button></div>
     </form>
@@ -296,12 +311,28 @@
   <dialog id="clinicalPreviewDialog" class="clinical-preview-dialog">
     <div class="clinical-preview-panel">
       <div class="dialog-head clinical-preview-toolbar"><div><p class="eyebrow">RELATÓRIO PRONTO</p><h2>Visualização para entrega</h2></div><button class="icon-button" type="button" id="closeClinicalPreview" aria-label="Fechar">×</button></div>
-      <article class="clinical-document">
-        <header><div class="document-brand">APFlow</div><h1>RELATÓRIO CLÍNICO</h1></header>
-        <section class="document-patient"><h2 id="clinicalDocumentPatient">Paciente</h2></section>
-        <section><h3>HD</h3><p id="clinicalDocumentHd"></p></section>
-        <section><h3>RELATÓRIO</h3><p id="clinicalDocumentText" class="document-text"></p></section>
-        <footer><div><span id="clinicalDocumentAuthor">Profissional responsável</span><small>Assinatura e carimbo</small></div><time id="clinicalDocumentDate"></time></footer>
+      <article class="clinical-document physiotherapy-document">
+        <header class="physio-document-header">
+          <img src="assets/apoio-logo.svg" alt="APOIO Fisiofit">
+          <h1>Relatório Fisioterapêutico</h1>
+        </header>
+        <div class="physio-report-body">
+          <p><strong>1- Paciente:</strong> <span id="clinicalDocumentPatient"></span></p>
+          <p><strong>2- Diagnóstico:</strong> <span id="clinicalDocumentHd"></span></p>
+          <p><strong>3- Quadro Clínico:</strong> <span id="clinicalDocumentClinicalItem"></span> (EVA <span id="clinicalDocumentEva"></span>)</p>
+          <p><strong>4- Protocolo Proposto:</strong> <span id="clinicalDocumentProtocol"></span></p>
+          <p><strong>5- Evolução:</strong> Realizou <span id="clinicalDocumentSessions"></span> sessões de <span id="clinicalDocumentSessionStart"></span> a <span id="clinicalDocumentSessionEnd"></span>. Ele não apresentou alteração do quadro acima descrito.</p>
+          <p class="physio-closing">Sem mais.</p>
+        </div>
+        <div class="physio-signature">
+          <span></span>
+          <p>São Bernardo do Campo <time id="clinicalDocumentDate"></time></p>
+        </div>
+        <footer class="physio-document-footer">
+          <p>Av. Onze de Agosto, 94 – Jardim Hollywood – São Bernardo do Campo/SP – RE: 8876/SP</p>
+          <p>Tel: (11) 3424-4208</p>
+          <p>E-mail: apoiofisiofit@gmail.com</p>
+        </footer>
       </article>
       <div class="dialog-actions clinical-preview-toolbar clinical-delivery-actions">
         <button class="secondary" type="button" id="archiveClinicalReport" hidden>Arquivar</button>
@@ -377,6 +408,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260921-08"></script>
+  <script type="module" src="script.js?v=20260922-01"></script>
 </body>
 </html>
