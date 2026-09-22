@@ -66,16 +66,35 @@ function render(){
 }
 function normalizedRole(){return String(currentUserRole||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 function canEditClinicalReport(){const role=normalizedRole();return(currentUserIsAdmin&&adminFunctionsEnabled)||role==='fisioterapeuta'||role==='medico'}
-function updateClinicalFinalizeState(){const form=document.querySelector('#clinicalReportForm');document.querySelector('#finalizeClinicalReport').disabled=!(form.elements.patient.value.trim()&&form.elements.hd.value.trim()&&form.elements.clinicalText.value.trim())}
+function localDateValue(date=new Date()){const offset=date.getTimezoneOffset();return new Date(date.getTime()-offset*60000).toISOString().slice(0,10)}
+function brDate(value){if(!value)return'—';const parts=String(value).slice(0,10).split('-');return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:value}
+function updateClinicalFinalizeState(){
+ const form=document.querySelector('#clinicalReportForm');
+ const required=['patient','hd','clinicalItem','eva','treatmentProtocol','sessionCount','sessionStart','sessionEnd','reportDate'];
+ document.querySelector('#finalizeClinicalReport').disabled=!required.every(name=>String(form.elements[name]?.value||'').trim());
+}
 async function openClinicalEditor(report){
  if(!canEditClinicalReport()){showToast('Somente Admin, fisioterapeuta ou médico pode editar este relatório.');return}
- activeClinicalReport={...report};const form=document.querySelector('#clinicalReportForm');form.reset();form.elements.reportId.value=report.id;form.elements.patient.value=report.patient||'';form.elements.hd.value=report.hd||'';form.elements.clinicalText.value=report.clinicalText||'';document.querySelector('#clinicalEditorPatientMeta').textContent=`Código: ${report.code||'—'} • ${report.agreement||'Convênio não informado'} • Responsável: ${report.therapist||'—'}`;updateClinicalFinalizeState();
+ activeClinicalReport={...report};const form=document.querySelector('#clinicalReportForm');form.reset();
+ form.elements.reportId.value=report.id;form.elements.patient.value=report.patient||'';form.elements.hd.value=report.hd||'';
+ form.elements.clinicalItem.value=report.clinicalItem||report.clinicalText||'';form.elements.eva.value=report.eva||'';
+ form.elements.treatmentProtocol.value=report.treatmentProtocol||'';form.elements.sessionCount.value=report.sessionCount||'';
+ form.elements.sessionStart.value=report.sessionStart||'';form.elements.sessionEnd.value=report.sessionEnd||'';
+ form.elements.reportDate.value=report.reportDate||localDateValue();
+ document.querySelector('#clinicalEditorPatientMeta').textContent=`Código: ${report.code||'—'} • ${report.agreement||'Convênio não informado'} • Responsável: ${report.therapist||'—'}`;updateClinicalFinalizeState();
  if(report.status==='aguardando'){try{await updateDoc(doc(db,'relatorios',report.id),{status:'confeccao',startedAt:serverTimestamp(),startedBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});activeClinicalReport.status='confeccao'}catch(error){console.error(error);showToast('Não foi possível iniciar a confecção.');return}}
  document.querySelector('#clinicalReportDialog').showModal();setTimeout(()=>form.elements.hd.focus(),50)
 }
 function fillClinicalPreview(report){
- document.querySelector('#clinicalDocumentPatient').textContent=`Nome: ${report.patient||'Paciente'}`;document.querySelector('#clinicalDocumentHd').textContent=report.hd||'Não informado';document.querySelector('#clinicalDocumentText').textContent=report.clinicalText||'';
- document.querySelector('#clinicalDocumentAuthor').textContent=report.finalizedByName||report.therapist||'Profissional responsável';document.querySelector('#clinicalDocumentDate').textContent=report.finalizedDate||new Intl.DateTimeFormat('pt-BR').format(new Date())
+ document.querySelector('#clinicalDocumentPatient').textContent=report.patient||'Paciente';
+ document.querySelector('#clinicalDocumentHd').textContent=report.hd||'Não informado';
+ document.querySelector('#clinicalDocumentClinicalItem').textContent=report.clinicalItem||report.clinicalText||'Não informado';
+ document.querySelector('#clinicalDocumentEva').textContent=report.eva||'—';
+ document.querySelector('#clinicalDocumentProtocol').textContent=report.treatmentProtocol||'Não informado';
+ document.querySelector('#clinicalDocumentSessions').textContent=report.sessionCount||'—';
+ document.querySelector('#clinicalDocumentSessionStart').textContent=brDate(report.sessionStart);
+ document.querySelector('#clinicalDocumentSessionEnd').textContent=brDate(report.sessionEnd);
+ document.querySelector('#clinicalDocumentDate').textContent=brDate(report.reportDate)||report.finalizedDate||new Intl.DateTimeFormat('pt-BR').format(new Date());
 }
 function openClinicalPreview(report){
  activeClinicalReport={...report};fillClinicalPreview(report);const delivered=report.status==='entregue';document.querySelector('#markClinicalDelivered').hidden=report.status!=='pronto';document.querySelector('#archiveClinicalReport').hidden=!delivered;document.querySelector('#deleteClinicalReport').hidden=!delivered||!currentUserIsAdmin;document.querySelector('#clinicalPreviewDialog').showModal()
@@ -99,10 +118,17 @@ async function updateReportDelivery(action){
  }catch(error){console.error(error);showToast('Não foi possível concluir a ação.')}finally{button.disabled=false}
 }
 async function saveClinicalReport(finalize){
- const form=document.querySelector('#clinicalReportForm');const id=form.elements.reportId.value;const hd=form.elements.hd.value.trim();const clinicalText=form.elements.clinicalText.value.trim();if(!id)return;
- if(finalize&&(!form.elements.patient.value.trim()||!hd||!clinicalText)){showToast('Preencha Nome, HD e Texto para finalizar.');return}
+ const form=document.querySelector('#clinicalReportForm');const id=form.elements.reportId.value;if(!id)return;
+ const payload={
+  hd:form.elements.hd.value.trim(),clinicalItem:form.elements.clinicalItem.value.trim(),clinicalText:form.elements.clinicalItem.value.trim(),
+  eva:form.elements.eva.value,treatmentProtocol:form.elements.treatmentProtocol.value,sessionCount:Number(form.elements.sessionCount.value),
+  sessionStart:form.elements.sessionStart.value,sessionEnd:form.elements.sessionEnd.value,reportDate:form.elements.reportDate.value,
+  status:finalize?'pronto':'confeccao',updatedAt:serverTimestamp(),editedBy:auth.currentUser?.uid||''
+ };
+ if(finalize&&document.querySelector('#finalizeClinicalReport').disabled){showToast('Preencha todos os campos do relatório para finalizar.');return}
+ if(payload.sessionStart&&payload.sessionEnd&&payload.sessionEnd<payload.sessionStart){showToast('A data final das sessões não pode ser anterior à data inicial.');return}
  const button=finalize?document.querySelector('#finalizeClinicalReport'):document.querySelector('#saveClinicalDraft');button.disabled=true;const original=button.textContent;button.textContent=finalize?'Finalizando...':'Salvando...';
- try{const payload={hd,clinicalText,status:finalize?'pronto':'confeccao',updatedAt:serverTimestamp(),editedBy:auth.currentUser?.uid||''};if(finalize){payload.finalizedAt=serverTimestamp();payload.finalizedDate=new Intl.DateTimeFormat('pt-BR').format(new Date());payload.finalizedByName=auth.currentUser?.displayName||activeClinicalReport?.therapist||'Profissional responsável'}await updateDoc(doc(db,'relatorios',id),payload);document.querySelector('#clinicalReportDialog').close();showToast(finalize?'Relatório finalizado e pronto para entrega.':'Rascunho salvo.');if(finalize)openClinicalPreview({...activeClinicalReport,...payload})}catch(error){console.error(error);showToast('Não foi possível salvar o relatório.')}finally{button.disabled=false;button.textContent=original;updateClinicalFinalizeState()}
+ try{if(finalize){payload.finalizedAt=serverTimestamp();payload.finalizedDate=new Intl.DateTimeFormat('pt-BR').format(new Date());payload.finalizedByName=auth.currentUser?.displayName||activeClinicalReport?.therapist||'Profissional responsável'}await updateDoc(doc(db,'relatorios',id),payload);document.querySelector('#clinicalReportDialog').close();showToast(finalize?'Relatório finalizado e pronto para entrega.':'Rascunho salvo.');if(finalize)openClinicalPreview({...activeClinicalReport,...payload})}catch(error){console.error(error);showToast('Não foi possível salvar o relatório.')}finally{button.disabled=false;button.textContent=original;updateClinicalFinalizeState()}
 }
 
 function normalizePortalUrl(value){
