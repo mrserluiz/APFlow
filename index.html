@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260922-01">
+  <link rel="stylesheet" href="app-pages.css?v=20260922-02">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -199,6 +199,7 @@
         <div class="full request-patient-lookup">
           <label for="requestPatientSearch">Pesquisar cadastro do paciente</label>
           <input id="requestPatientSearch" type="search" autocomplete="off" placeholder="Nome, código, nascimento, telefone, CPF, RG ou carteirinha">
+          <div class="request-patient-actions"><button class="secondary register-patient-button" id="openPatientRegistration" type="button">+ Cadastrar paciente</button></div>
           <div class="request-patient-results" id="requestPatientResults"><p>Digite uma informação para localizar o paciente.</p></div>
           <div class="request-selected-patient" id="requestSelectedPatient" hidden></div>
         </div>
@@ -210,6 +211,26 @@
       </div>
       <p class="deadline-note">O prazo é calculado automaticamente em 3 dias úteis. Sábados, domingos e feriados não entram na contagem.</p>
       <div class="dialog-actions"><button type="button" class="secondary" id="cancelDialog">Cancelar</button><button class="primary" type="submit">Enviar pedido</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="patientRegistrationDialog" class="patient-registration-dialog">
+    <form id="patientRegistrationForm">
+      <div class="dialog-head"><div><p class="eyebrow">CADASTRO BÁSICO</p><h2>Cadastrar paciente</h2></div><button class="icon-button" type="button" id="closePatientRegistration" aria-label="Fechar">×</button></div>
+      <div class="form-grid patient-registration-grid">
+        <label class="full">Nome completo *<input name="patient" required autocomplete="name" placeholder="Nome completo do paciente"></label>
+        <label>Código *<input name="code" required inputmode="numeric" placeholder="Ex.: 410510"></label>
+        <label>Data de nascimento<input name="birthDate" type="date"></label>
+        <label>Telefone<input name="phone" type="tel" autocomplete="tel" placeholder="(11) 99999-9999"></label>
+        <label>CPF<input name="cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
+        <label>RG<input name="rg" placeholder="Número do RG"></label>
+        <label>Convênio *
+          <select name="agreement" required><option value="">Selecione</option><option>IAMSPE</option><option>Outros</option></select>
+        </label>
+        <label>Carteirinha do convênio<input name="insuranceCard" placeholder="Número da carteirinha"></label>
+      </div>
+      <p class="deadline-note">Cadastro básico temporário. Depois criaremos a ficha completa do paciente.</p>
+      <div class="dialog-actions"><button class="secondary" type="button" id="cancelPatientRegistration">Cancelar</button><button class="primary" type="submit">Salvar e selecionar</button></div>
     </form>
   </dialog>
   <dialog id="appointmentDialog">
@@ -408,6 +429,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260922-02"></script>
+  <script type="module" src="script.js?v=20260922-03"></script>
 </body>
 </html>
