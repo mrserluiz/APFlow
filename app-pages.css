@@ -309,3 +309,14 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
  body.clinical-printing .physio-signature p { font-size:14pt; }
  body.clinical-printing .physio-document-footer { font-size:9pt; }
 }
+
+
+/* Cadastro rápido de paciente dentro da nova solicitação */
+.request-patient-actions { display:flex; justify-content:flex-end; margin-top:9px; }
+.register-patient-button { padding:9px 14px; border-color:#8fb5c9; color:#245c7b; background:#e9f3f8; font-weight:800; }
+.register-patient-button:hover { background:#dcecf4; }
+.patient-registration-dialog { width:min(720px,calc(100% - 24px)); max-height:calc(100vh - 24px); }
+#patientRegistrationForm { padding:22px; }
+.patient-registration-grid { margin-top:18px; }
+.patient-registration-grid select { width:100%; padding:12px; border:1px solid #bdccd5; border-radius:7px; background:#fff; color:#243d4b; }
+@media (max-width:700px) { .request-patient-actions { justify-content:stretch; }.register-patient-button { width:100%; } }
