@@ -304,12 +304,25 @@ function selectRequestPatient(patient){
 }
 async function loadRequestPatients(){
  const root=document.querySelector('#requestPatientResults');root.innerHTML='<p>Carregando cadastros...</p>';
- try{const snapshot=await getDocs(collection(db,'agendamentos'));const map=new Map();[...reports,...snapshot.docs.map(item=>item.data()).filter(item=>item.patient)].forEach(item=>{const patient=normalizePatientRecord(item);const key=requestPatientKey(patient);if(key)map.set(key,{...(map.get(key)||{}),...patient})});requestPatientPool=[...map.values()].sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));renderRequestPatientResults()}catch(error){console.error(error);root.innerHTML='<p>Não foi possível carregar os cadastros.</p>'}
+ try{
+  const [patientSnapshot,appointmentSnapshot]=await Promise.all([getDocs(collection(db,'pacientes')),getDocs(collection(db,'agendamentos'))]);const map=new Map();
+  [...patientSnapshot.docs.map(item=>({id:item.id,...item.data()})),...reports,...appointmentSnapshot.docs.map(item=>item.data()).filter(item=>item.patient)].forEach(item=>{const patient=normalizePatientRecord(item);const key=requestPatientKey(patient);if(key)map.set(key,{...(map.get(key)||{}),...patient})});
+  requestPatientPool=[...map.values()].sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));renderRequestPatientResults()
+ }catch(error){console.error(error);root.innerHTML='<p>Não foi possível carregar os cadastros.</p>'}
 }
 function openDialog(){const form=document.querySelector('#requestForm');form.reset();document.querySelector('#requestSelectedPatient').hidden=true;document.querySelector('#requestSelectedPatient').innerHTML='';document.querySelector('#requestPatientSearch').value='';document.querySelector('#dueDate').value=brDate(addBusinessDays(selectedDate,3));dialog.showModal();loadRequestPatients();setTimeout(()=>document.querySelector('#requestPatientSearch').focus(),50)}
 document.querySelectorAll('#newRequest,#newRequestTop').forEach(b=>b.addEventListener('click',openDialog));
 document.querySelectorAll('#closeDialog,#cancelDialog').forEach(b=>b.addEventListener('click',()=>dialog.close()));
 document.querySelector('#requestPatientSearch').addEventListener('input',renderRequestPatientResults);
+const patientRegistrationDialog=document.querySelector('#patientRegistrationDialog');
+document.querySelector('#openPatientRegistration').addEventListener('click',()=>{document.querySelector('#patientRegistrationForm').reset();patientRegistrationDialog.showModal();setTimeout(()=>document.querySelector('#patientRegistrationForm').elements.patient.focus(),50)});
+document.querySelectorAll('#closePatientRegistration,#cancelPatientRegistration').forEach(button=>button.addEventListener('click',()=>patientRegistrationDialog.close()));
+document.querySelector('#patientRegistrationForm').addEventListener('submit',async event=>{
+ event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
+ const patient={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate:data.get('birthDate'),phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),agreement:data.get('agreement'),insuranceCard:data.get('insuranceCard').trim()};
+ submit.disabled=true;submit.textContent='Salvando...';
+ try{const reference=await addDoc(collection(db,'pacientes'),{...patient,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});const saved={id:reference.id,...patient};requestPatientPool.push(saved);requestPatientPool.sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));selectRequestPatient(saved);patientRegistrationDialog.close();showToast('Paciente cadastrado e selecionado.')}catch(error){console.error(error);showToast('Não foi possível cadastrar o paciente. Confira as permissões do Firebase.')}finally{submit.disabled=false;submit.textContent='Salvar e selecionar'}
+});
 document.querySelectorAll('[name="purpose"]').forEach(r=>r.addEventListener('change',()=>{const field=document.querySelector('#otherPurpose');field.disabled=r.value!=='Outro';if(!field.disabled)field.focus()}));
 document.querySelector('#requestForm').addEventListener('submit',async e=>{
  e.preventDefault();const form=e.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
