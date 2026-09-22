@@ -67,7 +67,7 @@ function render(){
 function normalizedRole(){return String(currentUserRole||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 function canEditClinicalReport(){const role=normalizedRole();return(currentUserIsAdmin&&adminFunctionsEnabled)||role==='fisioterapeuta'||role==='medico'}
 function localDateValue(date=new Date()){const offset=date.getTimezoneOffset();return new Date(date.getTime()-offset*60000).toISOString().slice(0,10)}
-function brDate(value){if(!value)return'—';const parts=String(value).slice(0,10).split('-');return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:value}
+function reportBrDate(value){if(!value)return'';const parts=String(value).slice(0,10).split('-');return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:value}
 function updateClinicalFinalizeState(){
  const form=document.querySelector('#clinicalReportForm');
  const required=['patient','hd','clinicalItem','eva','treatmentProtocol','sessionCount','sessionStart','sessionEnd','reportDate'];
@@ -92,9 +92,9 @@ function fillClinicalPreview(report){
  document.querySelector('#clinicalDocumentEva').textContent=report.eva||'—';
  document.querySelector('#clinicalDocumentProtocol').textContent=report.treatmentProtocol||'Não informado';
  document.querySelector('#clinicalDocumentSessions').textContent=report.sessionCount||'—';
- document.querySelector('#clinicalDocumentSessionStart').textContent=brDate(report.sessionStart);
- document.querySelector('#clinicalDocumentSessionEnd').textContent=brDate(report.sessionEnd);
- document.querySelector('#clinicalDocumentDate').textContent=brDate(report.reportDate)||report.finalizedDate||new Intl.DateTimeFormat('pt-BR').format(new Date());
+ document.querySelector('#clinicalDocumentSessionStart').textContent=reportBrDate(report.sessionStart)||'—';
+ document.querySelector('#clinicalDocumentSessionEnd').textContent=reportBrDate(report.sessionEnd)||'—';
+ document.querySelector('#clinicalDocumentDate').textContent=reportBrDate(report.reportDate)||report.finalizedDate||new Intl.DateTimeFormat('pt-BR').format(new Date());
 }
 function openClinicalPreview(report){
  activeClinicalReport={...report};fillClinicalPreview(report);const delivered=report.status==='entregue';document.querySelector('#markClinicalDelivered').hidden=report.status!=='pronto';document.querySelector('#archiveClinicalReport').hidden=!delivered;document.querySelector('#deleteClinicalReport').hidden=!delivered||!currentUserIsAdmin;document.querySelector('#clinicalPreviewDialog').showModal()
