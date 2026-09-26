@@ -70,7 +70,7 @@ function localDateValue(date=new Date()){const offset=date.getTimezoneOffset();r
 function reportBrDate(value){if(!value)return'';const parts=String(value).slice(0,10).split('-');return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:value}
 function updateClinicalFinalizeState(){
  const form=document.querySelector('#clinicalReportForm');
- const required=['patient','hd','clinicalItem','eva','treatmentProtocol','sessionCount','sessionStart','sessionEnd','reportDate'];
+ const required=['patient','hd','clinicalItem','eva','treatmentProtocol','sessionCount','sessionStart','sessionEnd','evolution','reportDate'];
  document.querySelector('#finalizeClinicalReport').disabled=!required.every(name=>String(form.elements[name]?.value||'').trim());
 }
 async function openClinicalEditor(report){
@@ -80,7 +80,7 @@ async function openClinicalEditor(report){
  form.elements.clinicalItem.value=report.clinicalItem||report.clinicalText||'';form.elements.eva.value=report.eva||'';
  form.elements.treatmentProtocol.value=report.treatmentProtocol||'';form.elements.sessionCount.value=report.sessionCount||'';
  form.elements.sessionStart.value=report.sessionStart||'';form.elements.sessionEnd.value=report.sessionEnd||'';
- form.elements.reportDate.value=report.reportDate||localDateValue();
+ form.elements.evolution.value=report.evolution||'';form.elements.reportDate.value=report.reportDate||localDateValue();
  document.querySelector('#clinicalEditorPatientMeta').textContent=`Código: ${report.code||'—'} • ${report.agreement||'Convênio não informado'} • Responsável: ${report.therapist||'—'}`;updateClinicalFinalizeState();
  if(report.status==='aguardando'){try{await updateDoc(doc(db,'relatorios',report.id),{status:'confeccao',startedAt:serverTimestamp(),startedBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});activeClinicalReport.status='confeccao'}catch(error){console.error(error);showToast('Não foi possível iniciar a confecção.');return}}
  document.querySelector('#clinicalReportDialog').showModal();setTimeout(()=>form.elements.hd.focus(),50)
@@ -94,6 +94,7 @@ function fillClinicalPreview(report){
  document.querySelector('#clinicalDocumentSessions').textContent=report.sessionCount||'—';
  document.querySelector('#clinicalDocumentSessionStart').textContent=reportBrDate(report.sessionStart)||'—';
  document.querySelector('#clinicalDocumentSessionEnd').textContent=reportBrDate(report.sessionEnd)||'—';
+ const evolution=String(report.evolution||'').trim();document.querySelector('#clinicalDocumentEvolution').textContent=evolution?' '+evolution:'';
  document.querySelector('#clinicalDocumentDate').textContent=reportBrDate(report.reportDate)||report.finalizedDate||new Intl.DateTimeFormat('pt-BR').format(new Date());
 }
 function openClinicalPreview(report){
@@ -122,7 +123,7 @@ async function saveClinicalReport(finalize){
  const payload={
   hd:form.elements.hd.value.trim(),clinicalItem:form.elements.clinicalItem.value.trim(),clinicalText:form.elements.clinicalItem.value.trim(),
   eva:form.elements.eva.value,treatmentProtocol:form.elements.treatmentProtocol.value,sessionCount:Number(form.elements.sessionCount.value),
-  sessionStart:form.elements.sessionStart.value,sessionEnd:form.elements.sessionEnd.value,reportDate:form.elements.reportDate.value,
+  sessionStart:form.elements.sessionStart.value,sessionEnd:form.elements.sessionEnd.value,evolution:form.elements.evolution.value.trim(),reportDate:form.elements.reportDate.value,
   status:finalize?'pronto':'confeccao',updatedAt:serverTimestamp(),editedBy:auth.currentUser?.uid||''
  };
  if(finalize&&document.querySelector('#finalizeClinicalReport').disabled){showToast('Preencha todos os campos do relatório para finalizar.');return}
