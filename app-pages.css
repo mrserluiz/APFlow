@@ -273,9 +273,12 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 
 
 /* Modelo oficial do Relatório Fisioterapêutico APOIO Fisiofit */
-.physiotherapy-editor { grid-template-columns:minmax(0,1fr) 150px; }
+.physiotherapy-editor { grid-template-columns:minmax(240px,2fr) minmax(130px,1fr) minmax(150px,1fr) minmax(150px,1fr); align-items:end; }
 .physiotherapy-editor .full { grid-column:1/-1; }
-.physiotherapy-editor .clinical-item { grid-column:1; }
+.physiotherapy-editor .clinical-item { grid-column:1/4; }
+.physiotherapy-editor .clinical-protocol { grid-column:1; }
+.physiotherapy-editor textarea[name="hd"] { min-height:44px; resize:vertical; }
+.physiotherapy-editor .clinical-item textarea { min-height:44px; }
 .physiotherapy-editor select { width:100%; padding:12px; border:1px solid #bdccd5; border-radius:7px; background:#fff; color:#243d4b; font:inherit; }
 .physiotherapy-document { position:relative; display:flex; flex-direction:column; width:min(816px,100%); min-height:1056px; padding:58px 68px 48px; color:#111; font-family:Arial,sans-serif; }
 .physio-document-header { display:flex; flex-direction:column; align-items:center; gap:30px; padding:0; border:0; }
@@ -323,7 +326,19 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 
 /* Lapidação do editor e da folha final do relatório */
 .physiotherapy-editor .clinical-evolution-field{grid-column:1/-1}
-.physiotherapy-editor .clinical-evolution-field textarea{min-height:112px}
+.clinical-evolution-composer{overflow:hidden;border:1px solid #bdccd5;border-radius:8px;background:#fff}
+.clinical-evolution-composer p{margin:0;padding:11px 12px 3px;color:#294c60;font-weight:700;line-height:1.35}
+.clinical-evolution-composer p strong{color:#163f57}
+.physiotherapy-editor .clinical-evolution-composer textarea{display:block;width:100%;min-height:92px;padding:5px 12px 12px;border:0;border-radius:0;outline:0;resize:vertical}
+.physiotherapy-editor .clinical-evolution-composer:focus-within{border-color:#2e769d;box-shadow:0 0 0 2px rgba(46,118,157,.14)}
+@media(max-width:900px){
+ .physiotherapy-editor{grid-template-columns:1fr 1fr}
+ .physiotherapy-editor .clinical-item,.physiotherapy-editor .clinical-protocol{grid-column:1/-1}
+}
+@media(max-width:600px){
+ .physiotherapy-editor{grid-template-columns:1fr}
+ .physiotherapy-editor>label,.physiotherapy-editor .clinical-item,.physiotherapy-editor .clinical-protocol{grid-column:1}
+}
 .clinical-document .physio-document-header{border-bottom:0}
 .physio-document-footer{flex:0 0 auto;width:100%;margin-top:0;page-break-inside:avoid}
 .physio-document-footer p{white-space:normal}
