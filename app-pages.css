@@ -347,3 +347,54 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
  body.clinical-printing .physio-signature{margin-bottom:10mm}
  body.clinical-printing .physio-document-footer{position:absolute;right:24mm;bottom:10mm;left:24mm;width:auto;margin:0;color:#062b78;font-size:9pt;line-height:1.25;text-align:center}
 }
+
+
+/* Impressão em página única — regra final e prioritária */
+@media print{
+ html,
+ body.clinical-printing{
+  width:216mm!important;
+  height:279mm!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+ }
+ body.clinical-printing #clinicalPreviewDialog{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  box-sizing:border-box!important;
+  width:216mm!important;
+  height:279mm!important;
+  max-width:216mm!important;
+  max-height:279mm!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+ }
+ body.clinical-printing #clinicalPreviewDialog .clinical-preview-panel{
+  box-sizing:border-box!important;
+  width:216mm!important;
+  height:279mm!important;
+  max-height:279mm!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+ }
+ body.clinical-printing #clinicalPreviewDialog .physiotherapy-document{
+  box-sizing:border-box!important;
+  width:216mm!important;
+  height:278mm!important;
+  min-height:278mm!important;
+  max-height:278mm!important;
+  margin:0!important;
+  padding:20mm 24mm 16mm!important;
+  overflow:hidden!important;
+  break-after:avoid!important;
+  break-inside:avoid!important;
+  page-break-after:avoid!important;
+  page-break-inside:avoid!important;
+ }
+}
