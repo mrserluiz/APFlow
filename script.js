@@ -283,7 +283,30 @@ function renderCalendar(){
 }
 function addBusinessDays(start,days){const date=new Date(start);let added=0;while(added<days){date.setDate(date.getDate()+1);if(date.getDay()!==0&&date.getDay()!==6)added++}return date}
 function brDate(date){return new Intl.DateTimeFormat('pt-BR').format(date)}
-function showToast(message){const toast=document.querySelector('#toast');toast.textContent=message;toast.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove('show'),2600)}
+function showToast(message,type='info',duration=4200){
+ const toast=document.querySelector('#toast');toast.textContent=message;toast.className='toast '+type;
+ try{if(typeof toast.showPopover==='function'&&!toast.matches(':popover-open'))toast.showPopover()}catch(error){}
+ requestAnimationFrame(()=>toast.classList.add('show'));clearTimeout(showToast.timer);
+ showToast.timer=setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>{try{if(typeof toast.hidePopover==='function'&&toast.matches(':popover-open'))toast.hidePopover()}catch(error){}},220)},duration)
+}
+function firebasePatientError(error){
+ const code=String(error?.code||'');
+ if(code.includes('permission-denied'))return 'Cadastro não autorizado pelo Firebase. Publique as regras da coleção pacientes no Firestore.';
+ if(code.includes('unavailable'))return 'Firebase indisponível no momento. Verifique a conexão e tente novamente.';
+ if(code.includes('unauthenticated'))return 'Sua sessão expirou. Entre novamente para cadastrar o paciente.';
+ return 'Não foi possível cadastrar o paciente'+(code?' ('+code.replace('firestore/','')+')':'')+'.'
+}
+function maskBirthDate(value){
+ const digits=String(value||'').replace(/\D/g,'').slice(0,8);
+ return [digits.slice(0,2),digits.slice(2,4),digits.slice(4,8)].filter(Boolean).join('/')
+}
+function birthDateToIso(value){
+ const text=String(value||'').trim();if(!text)return '';
+ const match=text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(!match)return null;
+ const day=Number(match[1]),month=Number(match[2]),year=Number(match[3]);const date=new Date(Date.UTC(year,month-1,day));
+ if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)return null;
+ return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+}
 function setConnection(online,message){document.querySelector('#connectionStatus').textContent=message;document.querySelector('#connectionDot').style.background=online?'#20a36d':'#c88313'}
 async function hashText(value){const bytes=new TextEncoder().encode(value);const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('')}
 const dialog=document.querySelector('#requestDialog');
@@ -315,13 +338,34 @@ document.querySelectorAll('#newRequest,#newRequestTop').forEach(b=>b.addEventLis
 document.querySelectorAll('#closeDialog,#cancelDialog').forEach(b=>b.addEventListener('click',()=>dialog.close()));
 document.querySelector('#requestPatientSearch').addEventListener('input',renderRequestPatientResults);
 const patientRegistrationDialog=document.querySelector('#patientRegistrationDialog');
-document.querySelector('#openPatientRegistration').addEventListener('click',()=>{document.querySelector('#patientRegistrationForm').reset();patientRegistrationDialog.showModal();setTimeout(()=>document.querySelector('#patientRegistrationForm').elements.patient.focus(),50)});
+const patientRegistrationForm=document.querySelector('#patientRegistrationForm');
+const patientAgreement=patientRegistrationForm.elements.agreement;
+const patientInsuranceCard=patientRegistrationForm.elements.insuranceCard;
+const patientInsuranceCardLabel=document.querySelector('#patientInsuranceCardLabel');
+function syncPatientInsuranceCard(){
+ const particular=patientAgreement.value==='Particular';patientInsuranceCard.disabled=particular;
+ patientInsuranceCardLabel.classList.toggle('field-disabled',particular);
+ if(particular){patientInsuranceCard.value='';patientInsuranceCard.placeholder='Não se aplica a paciente particular'}else patientInsuranceCard.placeholder='Número da carteirinha'
+}
+document.querySelector('#openPatientRegistration').addEventListener('click',()=>{patientRegistrationForm.reset();syncPatientInsuranceCard();patientRegistrationDialog.showModal();setTimeout(()=>patientRegistrationForm.elements.patient.focus(),50)});
 document.querySelectorAll('#closePatientRegistration,#cancelPatientRegistration').forEach(button=>button.addEventListener('click',()=>patientRegistrationDialog.close()));
-document.querySelector('#patientRegistrationForm').addEventListener('submit',async event=>{
+patientAgreement.addEventListener('change',syncPatientInsuranceCard);
+patientRegistrationForm.elements.birthDate.addEventListener('input',event=>{event.target.value=maskBirthDate(event.target.value)});
+patientRegistrationForm.addEventListener('submit',async event=>{
  event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
- const patient={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate:data.get('birthDate'),phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),agreement:data.get('agreement'),insuranceCard:data.get('insuranceCard').trim()};
- submit.disabled=true;submit.textContent='Salvando...';
- try{const reference=await addDoc(collection(db,'pacientes'),{...patient,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});const saved={id:reference.id,...patient};requestPatientPool.push(saved);requestPatientPool.sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));selectRequestPatient(saved);patientRegistrationDialog.close();showToast('Paciente cadastrado e selecionado.')}catch(error){console.error(error);showToast('Não foi possível cadastrar o paciente. Confira as permissões do Firebase.')}finally{submit.disabled=false;submit.textContent='Salvar e selecionar'}
+ const birthDate=birthDateToIso(data.get('birthDate'));
+ if(birthDate===null){showToast('Digite uma data de nascimento válida no formato dd/mm/aaaa.','warning');form.elements.birthDate.focus();return}
+ const patient={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate,phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),agreement:data.get('agreement'),insuranceCard:patientAgreement.value==='Particular'?'':data.get('insuranceCard').trim()};
+ const localDuplicate=requestPatientPool.find(item=>String(item.code||'').trim().toLowerCase()===patient.code.toLowerCase());
+ if(localDuplicate){showToast('Paciente já possui cadastro.','warning',5600);return}
+ submit.disabled=true;submit.textContent='Verificando código...';
+ try{
+  const duplicateSnapshot=await getDocs(query(collection(db,'pacientes'),where('code','==',patient.code)));
+  if(!duplicateSnapshot.empty){showToast('Paciente já possui cadastro.','warning',5600);return}
+  submit.textContent='Salvando...';
+  const reference=await addDoc(collection(db,'pacientes'),{...patient,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});
+  const saved={id:reference.id,...patient};requestPatientPool.push(saved);requestPatientPool.sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));selectRequestPatient(saved);patientRegistrationDialog.close();showToast('Paciente cadastrado e selecionado.','success')
+ }catch(error){console.error(error);showToast(firebasePatientError(error),'error',7200)}finally{submit.disabled=false;submit.textContent='Salvar e selecionar'}
 });
 document.querySelectorAll('[name="purpose"]').forEach(r=>r.addEventListener('change',()=>{const field=document.querySelector('#otherPurpose');field.disabled=r.value!=='Outro';if(!field.disabled)field.focus()}));
 document.querySelector('#requestForm').addEventListener('submit',async e=>{
