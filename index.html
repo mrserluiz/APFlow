@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#315f7d">
   <title>APFlow — Relatórios clínicos</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260926-01">
   <link rel="stylesheet" href="login.css">
   <link rel="stylesheet" href="app-pages.css?v=20260922-02">
   <link rel="stylesheet" href="icons.css">
@@ -220,14 +220,14 @@
       <div class="form-grid patient-registration-grid">
         <label class="full">Nome completo *<input name="patient" required autocomplete="name" placeholder="Nome completo do paciente"></label>
         <label>Código *<input name="code" required inputmode="numeric" placeholder="Ex.: 410510"></label>
-        <label>Data de nascimento<input name="birthDate" type="date"></label>
+        <label>Data de nascimento<input name="birthDate" type="text" inputmode="numeric" maxlength="10" autocomplete="bday" placeholder="dd/mm/aaaa"></label>
         <label>Telefone<input name="phone" type="tel" autocomplete="tel" placeholder="(11) 99999-9999"></label>
         <label>CPF<input name="cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
         <label>RG<input name="rg" placeholder="Número do RG"></label>
         <label>Convênio *
-          <select name="agreement" required><option value="">Selecione</option><option>IAMSPE</option><option>Outros</option></select>
+          <select name="agreement" required><option value="">Selecione</option><option>IAMSPE</option><option>Outros</option><option>Particular</option></select>
         </label>
-        <label>Carteirinha do convênio<input name="insuranceCard" placeholder="Número da carteirinha"></label>
+        <label id="patientInsuranceCardLabel">Carteirinha do convênio<input name="insuranceCard" placeholder="Número da carteirinha"></label>
       </div>
       <p class="deadline-note">Cadastro básico temporário. Depois criaremos a ficha completa do paciente.</p>
       <div class="dialog-actions"><button class="secondary" type="button" id="cancelPatientRegistration">Cancelar</button><button class="primary" type="submit">Salvar e selecionar</button></div>
@@ -397,7 +397,7 @@
       </div>
     </div>
   </dialog>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="toast" id="toast" popover="manual" role="status" aria-live="polite"></div>
   <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
     <div class="login-card">
       <header class="login-brand">
@@ -429,6 +429,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260922-03"></script>
+  <script type="module" src="script.js?v=20260926-01"></script>
 </body>
 </html>
