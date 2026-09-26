@@ -68,8 +68,16 @@ function normalizedRole(){return String(currentUserRole||'').normalize('NFD').re
 function canEditClinicalReport(){const role=normalizedRole();return(currentUserIsAdmin&&adminFunctionsEnabled)||role==='fisioterapeuta'||role==='medico'}
 function localDateValue(date=new Date()){const offset=date.getTimezoneOffset();return new Date(date.getTime()-offset*60000).toISOString().slice(0,10)}
 function reportBrDate(value){if(!value)return'';const parts=String(value).slice(0,10).split('-');return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:value}
+function updateClinicalEvolutionSummary(){
+ const form=document.querySelector('#clinicalReportForm');if(!form)return;
+ const sessions=String(form.elements.sessionCount?.value||'').trim();
+ document.querySelector('#editorEvolutionSessions').textContent=sessions||'—';
+ document.querySelector('#editorEvolutionStart').textContent=reportBrDate(form.elements.sessionStart?.value)||'—';
+ document.querySelector('#editorEvolutionEnd').textContent=reportBrDate(form.elements.sessionEnd?.value)||'—';
+}
 function updateClinicalFinalizeState(){
  const form=document.querySelector('#clinicalReportForm');
+ updateClinicalEvolutionSummary();
  const required=['patient','hd','clinicalItem','eva','treatmentProtocol','sessionCount','sessionStart','sessionEnd','evolution','reportDate'];
  document.querySelector('#finalizeClinicalReport').disabled=!required.every(name=>String(form.elements[name]?.value||'').trim());
 }
