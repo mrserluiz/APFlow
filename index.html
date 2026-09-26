@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css?v=20260926-01">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260926-03">
+  <link rel="stylesheet" href="app-pages.css?v=20260926-04">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -307,12 +307,12 @@
       <input name="reportId" type="hidden">
       <div class="clinical-editor-fields physiotherapy-editor">
         <label class="full">NOME DO PACIENTE<input name="patient" readonly></label>
-        <label class="full">HD / DIAGNÓSTICO CLÍNICO<textarea name="hd" rows="3" required placeholder="Digite o diagnóstico clínico"></textarea></label>
-        <label class="clinical-item">QUADRO CLÍNICO<textarea name="clinicalItem" rows="4" required placeholder="Descreva o quadro clínico"></textarea></label>
+        <label class="full">HD / DIAGNÓSTICO CLÍNICO<textarea name="hd" rows="1" required placeholder="Digite o diagnóstico clínico"></textarea></label>
+        <label class="clinical-item">QUADRO CLÍNICO<textarea name="clinicalItem" rows="2" required placeholder="Descreva o quadro clínico"></textarea></label>
         <label>EVA
           <select name="eva" required><option value="">Selecione</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
         </label>
-        <label class="full">PROTOCOLO PROPOSTO
+        <label class="clinical-protocol">PROTOCOLO PROPOSTO
           <select name="treatmentProtocol" required>
             <option value="">Selecione</option>
             <option>Eletroterapia</option>
@@ -323,7 +323,12 @@
         <label>NÚMERO DE SESSÕES<input name="sessionCount" type="number" min="1" max="999" required placeholder="Ex.: 10"></label>
         <label>INÍCIO DAS SESSÕES<input name="sessionStart" type="date" required></label>
         <label>FINAL DAS SESSÕES<input name="sessionEnd" type="date" required></label>
-        <label class="full clinical-evolution-field">EVOLUÇÃO<textarea name="evolution" rows="4" required placeholder="Descreva a evolução clínica do paciente"></textarea></label>
+        <label class="full clinical-evolution-field">EVOLUÇÃO
+          <div class="clinical-evolution-composer">
+            <p>Realizou <strong id="editorEvolutionSessions">—</strong> sessões de <strong id="editorEvolutionStart">—</strong> a <strong id="editorEvolutionEnd">—</strong>.</p>
+            <textarea name="evolution" rows="4" required placeholder="Descreva a evolução clínica do paciente"></textarea>
+          </div>
+        </label>
         <label>DATA DO RELATÓRIO<input name="reportDate" type="date" readonly></label>
       </div>
       <div class="dialog-actions"><button class="secondary" type="button" id="cancelClinicalReport">Cancelar</button><button class="secondary" type="button" id="saveClinicalDraft">Salvar rascunho</button><button class="primary" type="submit" id="finalizeClinicalReport" disabled>Finalizar relatório</button></div>
@@ -430,6 +435,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260926-02"></script>
+  <script type="module" src="script.js?v=20260926-03"></script>
 </body>
 </html>
