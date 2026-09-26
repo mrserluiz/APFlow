@@ -291,8 +291,8 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .physio-signature { width:54%; margin:0 0 42px auto; margin-top:auto; text-align:center; }
 .physio-signature > span { display:block; border-top:2px solid #111; }
 .physio-signature p { margin:5px 0 0; font-size:17px; }
-.physio-document-footer { display:block; margin:0; padding:0; border:0; text-align:center; font-size:12px; line-height:1.35; }
-.physio-document-footer p { margin:0; }
+.physio-document-footer { display:block; flex:0 0 auto; width:100%; margin:0; padding:0; border:0; color:#062b78; text-align:center; font-size:12px; line-height:1.35; }
+.physio-document-footer p { margin:0; white-space:normal; }
 @media (max-width:700px) {
  .physiotherapy-editor { grid-template-columns:1fr; }
  .physiotherapy-editor .full,.physiotherapy-editor .clinical-item { grid-column:1; }
@@ -345,5 +345,5 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 @media print{
  body.clinical-printing #clinicalPreviewDialog .physiotherapy-document{box-sizing:border-box;height:279mm;min-height:279mm;max-height:279mm;overflow:hidden}
  body.clinical-printing .physio-signature{margin-bottom:10mm}
- body.clinical-printing .physio-document-footer{margin-top:0}
+ body.clinical-printing .physio-document-footer{position:absolute;right:24mm;bottom:10mm;left:24mm;width:auto;margin:0;color:#062b78;font-size:9pt;line-height:1.25;text-align:center}
 }
