@@ -26,7 +26,7 @@ exports.adminUpdateUserAccess=onCall({region:'southamerica-east1'},async request
 
  const changes={};
  if(email)changes.email=email;
- if(password)changes.password=password;
+ if(password)changes.password=`AP:${password}`;
 
  try{
   await getAuth().updateUser(targetUid,changes);
