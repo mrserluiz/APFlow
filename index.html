@@ -11,7 +11,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css?v=20260926-01">
   <link rel="stylesheet" href="login.css">
-  <link rel="stylesheet" href="app-pages.css?v=20260926-07">
+  <link rel="stylesheet" href="app-pages.css?v=20261030-01">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -405,6 +405,24 @@
       </div>
     </div>
   </dialog>
+  <dialog id="adminAccessDialog" class="admin-access-dialog">
+    <form id="adminAccessForm">
+      <div class="dialog-head">
+        <div><p class="eyebrow">CONTROLE DE ACESSO</p><h2>Alterar acesso do usuário</h2></div>
+        <button class="icon-button" type="button" id="closeAdminAccess" aria-label="Fechar">×</button>
+      </div>
+      <input name="targetUid" type="hidden">
+      <label>CONTA<input name="account" readonly></label>
+      <label>NOVO E-MAIL<input name="email" type="email" autocomplete="off" placeholder="usuario@exemplo.com"></label>
+      <label>NOVA SENHA<input name="password" type="password" minlength="4" autocomplete="new-password" placeholder="Mínimo de 4 caracteres"></label>
+      <p class="admin-access-note">Preencha apenas o que deseja alterar. A senha não será exibida nem armazenada no cadastro.</p>
+      <p class="login-error" id="adminAccessError" role="alert"></p>
+      <div class="dialog-actions">
+        <button class="secondary" type="button" id="cancelAdminAccess">Cancelar</button>
+        <button class="primary" type="submit">Salvar acesso</button>
+      </div>
+    </form>
+  </dialog>
   <div class="toast" id="toast" popover="manual" role="status" aria-live="polite"></div>
   <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
     <div class="login-card">
@@ -437,6 +455,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20260926-03"></script>
+  <script type="module" src="script.js?v=20261030-01"></script>
 </body>
 </html>
