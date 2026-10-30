@@ -1,7 +1,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import { getAnalytics, isSupported } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js';
-import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, setPersistence, signInWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
+import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-functions.js';
 
 const firebaseConfig={
  apiKey:'AIzaSyCoRrH2gCwMvqPgFNEWpr8vlEAgNyOdWfc',
@@ -15,6 +16,8 @@ const firebaseConfig={
 const firebaseApp=initializeApp(firebaseConfig);
 const db=getFirestore(firebaseApp);
 const auth=getAuth(firebaseApp);
+const functions=getFunctions(firebaseApp,'southamerica-east1');
+const adminUpdateUserAccess=httpsCallable(functions,'adminUpdateUserAccess');
 const accessCodeHash='aa856b786ce69faea3a86585ad904714bf6e3ff66ac9c5e139b1396e5dc7bebe';
 isSupported().then(supported=>{if(supported)getAnalytics(firebaseApp)}).catch(()=>{});
 
@@ -491,7 +494,24 @@ let therapistsConnected=false;
 let usersConnected=false;
 
 function internalEmail(username){return `${username.trim().toLowerCase().replace(/[^a-z0-9._-]/g,'')}@apflow.local`}
-function firebasePassword(password){return `AP:${password}`}
+function loginEmail(identifier){
+ const value=String(identifier||'').trim().toLowerCase();
+ if(value.includes('@'))return value;
+ if(value==='adminflow')return 'mrserluiz@gmail.com';
+ return internalEmail(value);
+}
+function passwordCandidates(password){
+ const value=String(password||'');
+ return [`AP:${value}`,value].filter((candidate,index,list)=>candidate&&list.indexOf(candidate)===index);
+}
+async function signInCompatible(identifier,password){
+ const email=loginEmail(identifier);let lastError;
+ for(const candidate of passwordCandidates(password)){
+  try{return await signInWithEmailAndPassword(auth,email,candidate)}
+  catch(error){lastError=error;if(error?.code!=='auth/invalid-credential'&&error?.code!=='auth/wrong-password')throw error}
+ }
+ throw lastError;
+}
 function firebaseMessage(reason){
  const messages={
   'auth/email-already-in-use':'Este usuário já existe. Volte ao login para entrar.',
@@ -538,7 +558,7 @@ loginForm.addEventListener('submit',async event=>{
  error.textContent='';button.disabled=true;button.textContent='Entrando...';
  try{
    await setPersistence(auth,data.get('remember')?browserLocalPersistence:browserSessionPersistence);
-   await signInWithEmailAndPassword(auth,internalEmail(data.get('username')),firebasePassword(data.get('password')));
+   await signInCompatible(data.get('username'),data.get('password'));
  }catch(reason){error.textContent=firebaseMessage(reason)}
  finally{button.disabled=false;button.textContent='Entrar'}
 });
@@ -549,7 +569,7 @@ registerForm.addEventListener('submit',async event=>{
  try{
    if(await hashText(code)!==accessCodeHash)throw new Error('invalid-code');
    const username=data.get('username').trim();if(internalEmail(username)==='@apflow.local')throw new Error('invalid-username');
-   const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),firebasePassword(data.get('password')));
+   const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),String(data.get('password')));
    await updateProfile(credential.user,{displayName:data.get('fullName').trim()});
    const role=username.toLowerCase()==='admin'?'admin':'equipe';
    await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),role,createdAt:serverTimestamp()});
@@ -560,19 +580,39 @@ registerForm.addEventListener('submit',async event=>{
 });
 
 switchAuth.addEventListener('click',()=>{const registering=registerForm.classList.toggle('hidden')===false;loginForm.classList.toggle('hidden',registering);document.querySelector('#loginTitle').textContent=registering?'Criar nova conta':'Acesso ao sistema';switchAuth.textContent=registering?'Voltar para o login':'Criar uma nova conta';document.querySelector('#forgotPassword').hidden=registering;document.querySelector('#loginError').textContent='';document.querySelector('#registerError').textContent='';setTimeout(()=>registering?registerForm.elements.fullName.focus():loginForm.elements.username.focus(),50)});
-document.querySelector('#forgotPassword').addEventListener('click',()=>showToast('Procure o administrador da clínica para redefinir sua senha.'));
+document.querySelector('#forgotPassword').addEventListener('click',async()=>{
+ const identifier=loginForm.elements.username.value.trim();
+ if(!identifier){document.querySelector('#loginError').textContent='Digite o usuário ou e-mail antes de recuperar a senha.';loginForm.elements.username.focus();return}
+ const email=loginEmail(identifier);
+ if(email.endsWith('@apflow.local')){showToast('Esta conta ainda não possui e-mail real. Peça ao administrador para atualizar o acesso.');return}
+ const button=document.querySelector('#forgotPassword');button.disabled=true;
+ try{await sendPasswordResetEmail(auth,email);showToast(`Enviamos a recuperação para ${email}.`)}
+ catch(error){console.error(error);document.querySelector('#loginError').textContent=error?.code==='auth/user-not-found'?'Conta não encontrada com este e-mail.':firebaseMessage(error)}
+ finally{button.disabled=false}
+});
 document.querySelector('#logoutButton').addEventListener('click',async()=>{await signOut(auth);location.reload()});
 onAuthStateChanged(auth,user=>{if(user)revealApp(user);else showLogin()});
 
 function connectTherapists(){
  onSnapshot(query(collection(db,'profissionais'),orderBy('name')),snapshot=>{const saved=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.active!==false);const savedByName=new Map(saved.map(person=>[person.name.toLowerCase(),person]));const defaultsMerged=defaultProfessionals.map(defaultPerson=>{const savedPerson=savedByName.get(defaultPerson.name.toLowerCase());if(!savedPerson)return defaultPerson;savedByName.delete(defaultPerson.name.toLowerCase());return{...defaultPerson,...savedPerson,scheduleGroup:savedPerson.scheduleGroup||defaultPerson.scheduleGroup,agendaColumns:savedPerson.agendaColumns||defaultPerson.agendaColumns,isDefault:false}});therapists=[...defaultsMerged,...savedByName.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));renderTherapists()},error=>{console.error(error);therapists=[...defaultProfessionals];renderTherapists();showToast('Lista padrão carregada; Firebase indisponível.')});
 }
+function openAdminAccessDialog(uid,user){
+ const form=document.querySelector('#adminAccessForm');form.reset();
+ form.elements.targetUid.value=uid;form.elements.account.value=user.name||user.username||uid;form.elements.email.value=user.email||'';
+ document.querySelector('#adminAccessError').textContent='';document.querySelector('#adminAccessDialog').showModal();
+}
 function connectAdminUsers(){
  if(usersConnected)return;usersConnected=true;
  onSnapshot(query(collection(db,'usuarios'),orderBy('name')),snapshot=>{
   const list=document.querySelector('#userRoleList');const userCount=document.querySelector('#adminUserCount');if(userCount)userCount.textContent=`${snapshot.size} ${snapshot.size===1?'usuário cadastrado':'usuários cadastrados'}`;
   list.innerHTML=snapshot.empty?'<p class="empty-mini">Nenhum usuário cadastrado.</p>':'';
-  snapshot.docs.forEach(item=>{const user=item.data();const row=document.createElement('div');row.className='admin-row';row.innerHTML=`<div><strong>${user.name||user.username}</strong><small>@${user.username}</small></div><select aria-label="Cargo de ${user.name||user.username}">${roles.map(role=>`<option value="${role.toLowerCase()}" ${user.role===role.toLowerCase()?'selected':''}>${role}</option>`).join('')}</select>`;row.querySelector('select').addEventListener('change',async event=>{const select=event.target;const previous=user.role||'equipe';const next=select.value;if(next==='admin'&&previous!=='admin'&&!confirm(`Tornar ${user.name||user.username} administrador? Esta conta terá acesso a todas as configurações do APFlow.`)){select.value=previous;return}select.disabled=true;try{await updateDoc(doc(db,'usuarios',item.id),{role:next,updatedAt:serverTimestamp()});showToast(next==='admin'?'Usuário promovido a administrador.':'Cargo atualizado.')}catch(error){console.error(error);select.value=previous;showToast('Não foi possível atualizar o cargo.')}finally{select.disabled=false}});list.append(row)});
+  snapshot.docs.forEach(item=>{
+   const user=item.data();const row=document.createElement('div');row.className='admin-row';
+   row.innerHTML=`<div class="admin-user-identity"><strong>${user.name||user.username}</strong><small>@${user.username}${user.email?` • ${user.email}`:''}</small></div><div class="admin-user-actions"><select aria-label="Cargo de ${user.name||user.username}">${roles.map(role=>`<option value="${role.toLowerCase()}" ${user.role===role.toLowerCase()?'selected':''}>${role}</option>`).join('')}</select><button class="secondary admin-access-button" type="button">Alterar acesso</button></div>`;
+   const select=row.querySelector('select');
+   select.addEventListener('change',async()=>{const previous=user.role||'equipe';const next=select.value;if(next==='admin'&&previous!=='admin'&&!confirm(`Tornar ${user.name||user.username} administrador? Esta conta terá acesso a todas as configurações do APFlow.`)){select.value=previous;return}select.disabled=true;try{await updateDoc(doc(db,'usuarios',item.id),{role:next,updatedAt:serverTimestamp()});showToast(next==='admin'?'Usuário promovido a administrador.':'Cargo atualizado.')}catch(error){console.error(error);select.value=previous;showToast('Não foi possível atualizar o cargo.')}finally{select.disabled=false}});
+   row.querySelector('.admin-access-button').addEventListener('click',()=>openAdminAccessDialog(item.id,user));list.append(row);
+  });
  },error=>{console.error(error);document.querySelector('#userRoleList').innerHTML='<p class="empty-mini">Sem permissão para visualizar usuários.</p>'});
 }
 
@@ -607,6 +647,19 @@ async function clearAllSchedules(event){
  const button=event?.currentTarget||document.querySelector('#clearAllSchedules');button.disabled=true;button.textContent='Limpando...';
  try{const snapshot=await getDocs(collection(db,'agendamentos'));const operations=snapshot.docs.map(item=>batch=>batch.delete(item.ref));await commitBatches(operations);showToast(`${snapshot.size} registros de agenda removidos.`);adminDialog.close();appointments=[];connectAppointments()}catch(error){console.error(error);showToast('Não foi possível limpar as agendas. Confira as permissões.')}finally{button.disabled=false;button.textContent='Limpar sistema'}
 }
+
+const adminAccessDialog=document.querySelector('#adminAccessDialog');
+document.querySelectorAll('#closeAdminAccess,#cancelAdminAccess').forEach(button=>button.addEventListener('click',()=>adminAccessDialog.close()));
+document.querySelector('#adminAccessForm').addEventListener('submit',async event=>{
+ event.preventDefault();const form=event.currentTarget;const error=document.querySelector('#adminAccessError');const button=form.querySelector('button[type="submit"]');
+ const targetUid=form.elements.targetUid.value;const email=form.elements.email.value.trim().toLowerCase();const password=form.elements.password.value;error.textContent='';
+ if(!email&&!password){error.textContent='Informe um novo e-mail ou uma nova senha.';return}
+ if(password&&password.length<4){error.textContent='A senha precisa ter pelo menos 4 caracteres.';return}
+ button.disabled=true;const original=button.textContent;button.textContent='Salvando...';
+ try{const result=await adminUpdateUserAccess({targetUid,email:email||null,password:password||null});adminAccessDialog.close();showToast(result.data?.message||'Acesso atualizado com sucesso.')}
+ catch(reason){console.error(reason);const code=String(reason?.code||'');error.textContent=code.includes('permission-denied')?'Somente administradores podem alterar acessos.':code.includes('not-found')?'Conta não encontrada no Firebase.':code.includes('already-exists')?'Este e-mail já pertence a outra conta.':'Não foi possível alterar o acesso. Verifique se a Cloud Function foi publicada.'}
+ finally{button.disabled=false;button.textContent=original}
+});
 
 const clinicalReportDialog=document.querySelector('#clinicalReportDialog');
 document.querySelectorAll('#closeClinicalReport,#cancelClinicalReport').forEach(button=>button.addEventListener('click',()=>clinicalReportDialog.close()));
