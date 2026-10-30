@@ -568,7 +568,7 @@ registerForm.addEventListener('submit',async event=>{
  try{
    if(await hashText(code)!==accessCodeHash)throw new Error('invalid-code');
    const username=data.get('username').trim();if(internalEmail(username)==='@apflow.local')throw new Error('invalid-username');
-   const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),String(data.get('password')));
+   const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),`AP:${String(data.get('password'))}`);
    await updateProfile(credential.user,{displayName:data.get('fullName').trim()});
    const role=username.toLowerCase()==='admin'?'admin':'equipe';
    await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),role,createdAt:serverTimestamp()});
