@@ -497,7 +497,6 @@ function internalEmail(username){return `${username.trim().toLowerCase().replace
 function loginEmail(identifier){
  const value=String(identifier||'').trim().toLowerCase();
  if(value.includes('@'))return value;
- if(value==='adminflow')return 'mrserluiz@gmail.com';
  return internalEmail(value);
 }
 function passwordCandidates(password){
