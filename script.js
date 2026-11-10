@@ -310,7 +310,9 @@ function renderCalendar(){
  const root=document.querySelector('#calendarDays');const title=document.querySelector('#calendarTitle');const today=new Date();
  title.textContent=new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(calendarMonth).replace(/^./,letter=>letter.toUpperCase());root.innerHTML='';
  const firstCell=new Date(calendarMonth);firstCell.setDate(1-firstCell.getDay());
- for(let offset=0;offset<42;offset++){
+ const daysInMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,0).getDate();
+ const visibleCells=Math.ceil((calendarMonth.getDay()+daysInMonth)/7)*7;
+ for(let offset=0;offset<visibleCells;offset++){
   const date=new Date(firstCell);date.setDate(firstCell.getDate()+offset);const button=document.createElement('button');button.type='button';button.textContent=date.getDate();button.setAttribute('aria-label',longDate(date));
   if(date.getMonth()!==calendarMonth.getMonth())button.classList.add('muted');if(sameDay(date,today))button.classList.add('today');if(sameDay(date,selectedDate))button.classList.add('selected');
   button.addEventListener('click',()=>{selectedDate=new Date(date);calendarMonth=new Date(date.getFullYear(),date.getMonth(),1);updateSelectedDate();renderCalendar();connectAppointments()});root.append(button);
