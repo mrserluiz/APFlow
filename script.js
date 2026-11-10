@@ -597,13 +597,14 @@ registerForm.addEventListener('submit',async event=>{
  try{
    if(await hashText(code)!==accessCodeHash)throw new Error('invalid-code');
    const username=data.get('username').trim();if(internalEmail(username)==='@apflow.local')throw new Error('invalid-username');
-   const credential=await createUserWithEmailAndPassword(auth,internalEmail(username),`AP:${String(data.get('password'))}`);
+   const recoveryEmail=String(data.get('email')||'').trim().toLowerCase();if(!recoveryEmail||!recoveryEmail.includes('@'))throw new Error('invalid-recovery-email');
+   const credential=await createUserWithEmailAndPassword(auth,recoveryEmail,`AP:${String(data.get('password'))}`);
    await updateProfile(credential.user,{displayName:data.get('fullName').trim()});
    const role=username.toLowerCase()==='admin'?'admin':'equipe';
-   await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),role,createdAt:serverTimestamp()});
+   await setDoc(doc(db,'usuarios',credential.user.uid),{name:data.get('fullName').trim(),username:username.toLowerCase(),email:recoveryEmail,recoveryEmail,role,createdAt:serverTimestamp()});
    document.querySelector('.user-area strong').textContent=data.get('fullName').trim();
    registerForm.reset();showToast('Conta criada com sucesso.');
- }catch(reason){console.error('Falha ao criar conta:',reason);error.textContent=reason.message==='invalid-code'?'Código de cadastro incorreto.':reason.message==='invalid-username'?'Digite um usuário válido.':firebaseMessage(reason);codeInputs.forEach(input=>input.value='');codeInputs[0].focus()}
+ }catch(reason){console.error('Falha ao criar conta:',reason);error.textContent=reason.message==='invalid-code'?'Código de cadastro incorreto.':reason.message==='invalid-username'?'Digite um usuário válido.':reason.message==='invalid-recovery-email'?'Digite um e-mail válido para recuperação.':firebaseMessage(reason);codeInputs.forEach(input=>input.value='');codeInputs[0].focus()}
  finally{button.disabled=false;button.textContent='Criar conta'}
 });
 
@@ -611,10 +612,10 @@ switchAuth.addEventListener('click',()=>{const registering=registerForm.classLis
 document.querySelector('#forgotPassword').addEventListener('click',async()=>{
  const identifier=loginForm.elements.username.value.trim();
  if(!identifier){document.querySelector('#loginError').textContent='Digite o usuário ou e-mail antes de recuperar a senha.';loginForm.elements.username.focus();return}
- const email=loginEmail(identifier);
- if(email.endsWith('@apflow.local')){showToast('Esta conta ainda não possui e-mail real. Peça ao administrador para atualizar o acesso.');return}
+ if(!identifier.includes('@')){document.querySelector('#loginError').textContent='Digite o e-mail cadastrado para receber a recuperação da senha.';loginForm.elements.username.focus();return}
+ const email=identifier.toLowerCase();
  const button=document.querySelector('#forgotPassword');button.disabled=true;
- try{await sendPasswordResetEmail(auth,email);showToast(`Enviamos a recuperação para ${email}.`)}
+ try{await sendPasswordResetEmail(auth,email);showToast(`Enviamos o link de troca de senha para ${email}.`,'success',7000)}
  catch(error){console.error(error);document.querySelector('#loginError').textContent=error?.code==='auth/user-not-found'?'Conta não encontrada com este e-mail.':firebaseMessage(error)}
  finally{button.disabled=false}
 });
