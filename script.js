@@ -35,11 +35,20 @@ const defaultProfessionals=[
  {id:'fernanda',name:'Dra. Fernanda',profession:'Fisioterapeuta',scheduleGroup:'Eletro Manhã',agendaColumns:4,isDefault:true},
  {id:'nadia',name:'Dra. Nadia',profession:'Fisioterapeuta',scheduleGroup:'Eletro Manhã',agendaColumns:4,isDefault:true},
  {id:'mirian',name:'Dra. Mirian',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Tarde',agendaColumns:5,isDefault:true},
- {id:'julliane',name:'Dra. Julliane',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Tarde',agendaColumns:5,isDefault:true},
+ {id:'julliane',name:'Dr.(a) Disponível',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Tarde',agendaColumns:5,isDefault:true},
  {id:'alex',name:'Dr. Alex',profession:'Fisioterapeuta',scheduleGroup:'Eletro Tarde',agendaColumns:4,isDefault:true},
- {id:'larissa',name:'Dra. Larissa',profession:'Fisioterapeuta',scheduleGroup:'Eletro Tarde',agendaColumns:4,isDefault:true},
+ {id:'larissa',name:'Dr. Alan',profession:'Fisioterapeuta',scheduleGroup:'Eletro Tarde',agendaColumns:4,isDefault:true},
  {id:'marcia',name:'Dra. Marcia',profession:'Fisioterapeuta',scheduleGroup:'Eletro Tarde',agendaColumns:4,isDefault:true}
 ];
+const professionalNameAliases={
+ 'Dra. Julliane':'Dr.(a) Disponível',
+ 'Dra. Larissa':'Dr. Alan'
+};
+function currentProfessionalName(name){return professionalNameAliases[name]||name}
+function professionalStoredNames(name){
+ const legacy=Object.entries(professionalNameAliases).filter(([,current])=>current===name).map(([old])=>old);
+ return[name,...legacy]
+}
 let selectedDate=new Date();
 let calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);
 const agendaSlots={manha:['08:00','08:40','09:20','10:00','10:40','11:20'],tarde:['13:00','13:40','14:20','15:00','15:40','16:20','17:00','17:40','18:20']};
@@ -290,7 +299,7 @@ function renderAgenda(){
   slots.forEach(time=>{const row=document.createElement('div');row.className='schedule-row';for(let column=1;column<=columns;column++){const appointment=activeAppointments.find(item=>item.time===time&&Number(item.column)===column);row.append(createAgendaSlot(time,column,appointment,agendaMode?'Clique para selecionar':'Dois cliques para agendar'))}root.append(row)});
  });
 }
-function connectAppointments(){const professional=document.querySelector('#agendaProfessional').value;if(stopAppointments)stopAppointments();appointments=[];if(!professional){renderAgenda();return}stopAppointments=onSnapshot(query(collection(db,'agendamentos'),where('professional','==',professional),where('date','==',dateKey(selectedDate))),snapshot=>{appointments=snapshot.docs.map(item=>({id:item.id,...item.data()}));renderAgenda()},error=>{console.error(error);appointments=[];renderAgenda();showToast('Publique as regras do Firestore para usar a agenda.')})}
+function connectAppointments(){const professional=document.querySelector('#agendaProfessional').value;if(stopAppointments)stopAppointments();appointments=[];if(!professional){renderAgenda();return}const acceptedNames=new Set(professionalStoredNames(professional));stopAppointments=onSnapshot(query(collection(db,'agendamentos'),where('date','==',dateKey(selectedDate))),snapshot=>{appointments=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>acceptedNames.has(item.professional));renderAgenda()},error=>{console.error(error);appointments=[];renderAgenda();showToast('Publique as regras do Firestore para usar a agenda.')})}
 const appointmentDialog=document.querySelector('#appointmentDialog');const appointmentForm=document.querySelector('#appointmentForm');
 function openAppointment(slot,appointment,context='agendar'){appointmentContext=context;appointmentForm.reset();appointmentForm.elements.appointmentId.value=appointment?.id||'';appointmentForm.elements.time.value=slot.dataset.time;appointmentForm.elements.column.value=slot.dataset.column;document.querySelector('#appointmentTitle').textContent=appointment?'Cadastro do paciente':context==='encaixar'?`Encaixar às ${slot.dataset.time}`:`Agendar às ${slot.dataset.time}`;if(appointment){['patient','code','agreement','treatment'].forEach(field=>{const input=appointmentForm.elements[field];if(input.type==='checkbox')input.checked=Boolean(appointment[field]);else input.value=appointment[field]||''})}appointmentDialog.showModal()}
 function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
@@ -611,7 +620,7 @@ document.querySelector('#logoutButton').addEventListener('click',async()=>{await
 onAuthStateChanged(auth,user=>{if(user)revealApp(user);else showLogin()});
 
 function connectTherapists(){
- onSnapshot(query(collection(db,'profissionais'),orderBy('name')),snapshot=>{const saved=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.active!==false);const savedByName=new Map(saved.map(person=>[person.name.toLowerCase(),person]));const defaultsMerged=defaultProfessionals.map(defaultPerson=>{const savedPerson=savedByName.get(defaultPerson.name.toLowerCase());if(!savedPerson)return defaultPerson;savedByName.delete(defaultPerson.name.toLowerCase());return{...defaultPerson,...savedPerson,scheduleGroup:savedPerson.scheduleGroup||defaultPerson.scheduleGroup,agendaColumns:savedPerson.agendaColumns||defaultPerson.agendaColumns,isDefault:false}});therapists=[...defaultsMerged,...savedByName.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));renderTherapists()},error=>{console.error(error);therapists=[...defaultProfessionals];renderTherapists();showToast('Lista padrão carregada; Firebase indisponível.')});
+ onSnapshot(query(collection(db,'profissionais'),orderBy('name')),snapshot=>{const saved=snapshot.docs.map(item=>{const data=item.data();return{id:item.id,...data,name:currentProfessionalName(data.name)}}).filter(item=>item.active!==false);const savedByName=new Map(saved.map(person=>[person.name.toLowerCase(),person]));const defaultsMerged=defaultProfessionals.map(defaultPerson=>{const savedPerson=savedByName.get(defaultPerson.name.toLowerCase());if(!savedPerson)return defaultPerson;savedByName.delete(defaultPerson.name.toLowerCase());return{...defaultPerson,...savedPerson,scheduleGroup:savedPerson.scheduleGroup||defaultPerson.scheduleGroup,agendaColumns:savedPerson.agendaColumns||defaultPerson.agendaColumns,isDefault:false}});therapists=[...defaultsMerged,...savedByName.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));renderTherapists()},error=>{console.error(error);therapists=[...defaultProfessionals];renderTherapists();showToast('Lista padrão carregada; Firebase indisponível.')});
 }
 function openAdminAccessDialog(uid,user){
  const form=document.querySelector('#adminAccessForm');form.reset();
