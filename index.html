@@ -304,6 +304,20 @@
       <div class="dialog-actions"><button class="secondary" value="cancel">Cancelar</button><button class="primary" id="confirmScheduleAction" value="default">Confirmar</button></div>
     </form>
   </dialog>
+  <dialog id="clinicalStartDialog" class="clinical-start-dialog">
+    <form method="dialog" id="clinicalStartForm">
+      <div class="dialog-head">
+        <div><p class="eyebrow">SOLICITAÇÃO AGUARDANDO</p><h2>Iniciar confecção do relatório?</h2></div>
+        <button class="icon-button" type="button" id="closeClinicalStart" aria-label="Voltar">×</button>
+      </div>
+      <div class="schedule-patient-summary" id="clinicalStartSummary"></div>
+      <p>O pedido somente será movido para <strong>Em confecção</strong> depois da confirmação.</p>
+      <div class="dialog-actions">
+        <button class="secondary" type="button" id="cancelClinicalStart">Cancelar / Voltar</button>
+        <button class="primary" type="button" id="confirmClinicalStart">Iniciar relatório</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="clinicalReportDialog" class="clinical-report-dialog">
     <form id="clinicalReportForm">
       <div class="dialog-head"><div><p class="eyebrow">CONFECÇÃO DO RELATÓRIO</p><h2>Editor clínico</h2><span id="clinicalEditorPatientMeta" class="clinical-editor-meta"></span></div><button class="icon-button" type="button" id="closeClinicalReport" aria-label="Fechar">×</button></div>
@@ -455,6 +469,6 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261030-03"></script>
+  <script type="module" src="script.js?v=20261110-01"></script>
 </body>
 </html>
