@@ -427,7 +427,7 @@
       </div>
       <input name="targetUid" type="hidden">
       <label>CONTA<input name="account" readonly></label>
-      <label>NOVO E-MAIL<input name="email" type="email" autocomplete="off" placeholder="usuario@exemplo.com"></label>
+      <label>E-MAIL DE ACESSO E RECUPERAÇÃO<input name="email" type="email" autocomplete="off" placeholder="usuario@exemplo.com"></label>
       <label>NOVA SENHA<input name="password" type="password" minlength="4" autocomplete="new-password" placeholder="Mínimo de 4 caracteres"></label>
       <p class="admin-access-note">Preencha apenas o que deseja alterar. A senha não será exibida nem armazenada no cadastro.</p>
       <p class="login-error" id="adminAccessError" role="alert"></p>
@@ -456,6 +456,7 @@
         <form id="registerForm" class="hidden">
           <label class="login-field"><span aria-hidden="true">♙</span><input name="fullName" autocomplete="name" placeholder="Nome completo" aria-label="Nome completo" required></label>
           <label class="login-field"><span aria-hidden="true">＠</span><input name="username" autocomplete="username" minlength="3" placeholder="Criar usuário" aria-label="Criar usuário" required></label>
+          <label class="login-field"><span aria-hidden="true">✉</span><input name="email" type="email" autocomplete="email" placeholder="E-mail para acesso e recuperação" aria-label="E-mail para acesso e recuperação" required></label>
           <label class="login-field"><span aria-hidden="true">▣</span><input name="password" type="password" autocomplete="new-password" minlength="4" placeholder="Criar senha (mínimo 4 caracteres)" aria-label="Criar senha" required></label>
           <label class="code-label">Código para criar a conta</label>
           <div class="code-inputs" aria-label="Código para criar a conta">
@@ -469,7 +470,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261110-04"></script>
+  <script type="module" src="script.js?v=20261110-05"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
