@@ -27,7 +27,7 @@ let therapists=[];
 let appointments=[];let stopAppointments=null;
 let agendaMode=null;let moveSource=null;let pendingScheduleAction=null;let pendingChargeAppointment=null;let appointmentContext='agendar';
 const defaultAuthorizationPortals=[{id:'orizon-brasil',name:'Orizon Brasil',url:'https://www.orizonbrasil.com.br/acesso-restrito.html',iconUrl:'',openMode:'internal',active:true,order:1,isDefault:true}];
-let portals=[...defaultAuthorizationPortals];let portalsConnected=false;let currentUserIsAdmin=false;let currentUserRole='equipe';let adminFunctionsEnabled=true;let currentPortalUrl='';let activeClinicalReport=null;
+let portals=[...defaultAuthorizationPortals];let portalsConnected=false;let currentUserIsAdmin=false;let currentUserRole='equipe';let adminFunctionsEnabled=true;let currentPortalUrl='';let activeClinicalReport=null;let pendingClinicalStart=null;
 const defaultProfessionals=[
  {id:'vanessa',name:'Dra. Vanessa',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
  {id:'camila',name:'Dra. Camila',profession:'Fisioterapeuta',scheduleGroup:'Cinesio Manhã',agendaColumns:5,isDefault:true},
@@ -69,6 +69,11 @@ function render(){
 }
 function normalizedRole(){return String(currentUserRole||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 function canEditClinicalReport(){const role=normalizedRole();return(currentUserIsAdmin&&adminFunctionsEnabled)||role==='fisioterapeuta'||role==='medico'}
+function canCreateReportRequest(){return['admin','gerente','atendente'].includes(normalizedRole())}
+function applyReportRolePermissions(){
+ const allowed=canCreateReportRequest();
+ document.querySelectorAll('#newRequest,#newRequestTop').forEach(button=>{button.hidden=!allowed;button.disabled=!allowed});
+}
 function localDateValue(date=new Date()){const offset=date.getTimezoneOffset();return new Date(date.getTime()-offset*60000).toISOString().slice(0,10)}
 function reportBrDate(value){if(!value)return'';const parts=String(value).slice(0,10).split('-');return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:value}
 function updateClinicalEvolutionSummary(){
@@ -84,8 +89,7 @@ function updateClinicalFinalizeState(){
  const required=['patient','hd','clinicalItem','eva','treatmentProtocol','sessionCount','sessionStart','sessionEnd','evolution','reportDate'];
  document.querySelector('#finalizeClinicalReport').disabled=!required.every(name=>String(form.elements[name]?.value||'').trim());
 }
-async function openClinicalEditor(report){
- if(!canEditClinicalReport()){showToast('Somente Admin, fisioterapeuta ou médico pode editar este relatório.');return}
+function showClinicalEditor(report){
  activeClinicalReport={...report};const form=document.querySelector('#clinicalReportForm');form.reset();
  form.elements.reportId.value=report.id;form.elements.patient.value=report.patient||'';form.elements.hd.value=report.hd||'';
  form.elements.clinicalItem.value=report.clinicalItem||report.clinicalText||'';form.elements.eva.value=report.eva||'';
@@ -93,9 +97,19 @@ async function openClinicalEditor(report){
  form.elements.sessionStart.value=report.sessionStart||'';form.elements.sessionEnd.value=report.sessionEnd||'';
  form.elements.evolution.value=report.evolution||'';form.elements.reportDate.value=report.reportDate||localDateValue();
  document.querySelector('#clinicalEditorPatientMeta').textContent=`Código: ${report.code||'—'} • ${report.agreement||'Convênio não informado'} • Responsável: ${report.therapist||'—'}`;updateClinicalFinalizeState();
- if(report.status==='aguardando'){try{await updateDoc(doc(db,'relatorios',report.id),{status:'confeccao',startedAt:serverTimestamp(),startedBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});activeClinicalReport.status='confeccao'}catch(error){console.error(error);showToast('Não foi possível iniciar a confecção.');return}}
  document.querySelector('#clinicalReportDialog').showModal();setTimeout(()=>form.elements.hd.focus(),50)
 }
+function openClinicalEditor(report){
+ if(!canEditClinicalReport()){showToast('Somente Admin, fisioterapeuta ou médico pode editar este relatório.');return}
+ if(report.status==='aguardando'){
+  pendingClinicalStart={...report};
+  document.querySelector('#clinicalStartSummary').innerHTML=`<strong>${report.patient||'Paciente'}</strong><span>${report.purpose||'Relatório clínico'} • Responsável: ${report.therapist||'—'}</span>`;
+  document.querySelector('#clinicalStartDialog').showModal();
+  return;
+ }
+ showClinicalEditor(report)
+}
+
 function fillClinicalPreview(report){
  document.querySelector('#clinicalDocumentPatient').textContent=report.patient||'Paciente';
  document.querySelector('#clinicalDocumentHd').textContent=report.hd||'Não informado';
@@ -345,7 +359,10 @@ async function loadRequestPatients(){
   requestPatientPool=[...map.values()].sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));renderRequestPatientResults()
  }catch(error){console.error(error);root.innerHTML='<p>Não foi possível carregar os cadastros.</p>'}
 }
-function openDialog(){const form=document.querySelector('#requestForm');form.reset();document.querySelector('#requestSelectedPatient').hidden=true;document.querySelector('#requestSelectedPatient').innerHTML='';document.querySelector('#requestPatientSearch').value='';document.querySelector('#dueDate').value=brDate(addBusinessDays(selectedDate,3));dialog.showModal();loadRequestPatients();setTimeout(()=>document.querySelector('#requestPatientSearch').focus(),50)}
+function openDialog(){
+ if(!canCreateReportRequest()){showToast('Seu cargo pode confeccionar relatórios, mas não criar novos pedidos.');return}
+ const form=document.querySelector('#requestForm');form.reset();document.querySelector('#requestSelectedPatient').hidden=true;document.querySelector('#requestSelectedPatient').innerHTML='';document.querySelector('#requestPatientSearch').value='';document.querySelector('#dueDate').value=brDate(addBusinessDays(selectedDate,3));dialog.showModal();loadRequestPatients();setTimeout(()=>document.querySelector('#requestPatientSearch').focus(),50)
+}
 document.querySelectorAll('#newRequest,#newRequestTop').forEach(b=>b.addEventListener('click',openDialog));
 document.querySelectorAll('#closeDialog,#cancelDialog').forEach(b=>b.addEventListener('click',()=>dialog.close()));
 document.querySelector('#requestPatientSearch').addEventListener('input',renderRequestPatientResults);
@@ -543,6 +560,7 @@ async function revealApp(user){
  if(!therapistsConnected){therapistsConnected=true;connectTherapists()}
  connectPortals();
  try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()){currentUserRole=profile.data().role||'equipe';if(currentUserRole==='admin'){currentUserIsAdmin=true;document.querySelector('#adminModeToggle').hidden=false;connectAdminUsers();applyAdminPreviewMode(localStorage.getItem('apflow.adminPreview')==='true');if(adminFunctionsEnabled)switchPage(localStorage.getItem('apflow.activePage')||'inicio',false)}}}catch(error){console.error('Perfil indisponível:',error)}
+ applyReportRolePermissions();
 }
 function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
 
@@ -657,6 +675,21 @@ document.querySelector('#adminAccessForm').addEventListener('submit',async event
  button.disabled=true;const original=button.textContent;button.textContent='Salvando...';
  try{const result=await adminUpdateUserAccess({targetUid,email:email||null,password:password||null});adminAccessDialog.close();showToast(result.data?.message||'Acesso atualizado com sucesso.')}
  catch(reason){console.error(reason);const code=String(reason?.code||'');error.textContent=code.includes('permission-denied')?'Somente administradores podem alterar acessos.':code.includes('not-found')?'Conta não encontrada no Firebase.':code.includes('already-exists')?'Este e-mail já pertence a outra conta.':'Não foi possível alterar o acesso. Verifique se a Cloud Function foi publicada.'}
+ finally{button.disabled=false;button.textContent=original}
+});
+
+const clinicalStartDialog=document.querySelector('#clinicalStartDialog');
+function cancelClinicalStart(){pendingClinicalStart=null;clinicalStartDialog.close()}
+document.querySelectorAll('#closeClinicalStart,#cancelClinicalStart').forEach(button=>button.addEventListener('click',cancelClinicalStart));
+clinicalStartDialog.addEventListener('cancel',()=>{pendingClinicalStart=null});
+document.querySelector('#confirmClinicalStart').addEventListener('click',async event=>{
+ if(!pendingClinicalStart)return;
+ const button=event.currentTarget;button.disabled=true;const original=button.textContent;button.textContent='Iniciando...';
+ try{
+  const report={...pendingClinicalStart};
+  await updateDoc(doc(db,'relatorios',report.id),{status:'confeccao',startedAt:serverTimestamp(),startedBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});
+  report.status='confeccao';pendingClinicalStart=null;clinicalStartDialog.close();showClinicalEditor(report);
+ }catch(error){console.error(error);showToast('Não foi possível iniciar a confecção. O pedido continua aguardando.')}
  finally{button.disabled=false;button.textContent=original}
 });
 
