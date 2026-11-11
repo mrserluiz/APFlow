@@ -76,8 +76,12 @@ function fillAgreementSelect(select,placeholder){
  agreementOptions.forEach(item=>{const option=document.createElement('option');option.value=typeof item==='string'?item:item.value;option.textContent=typeof item==='string'?item:item.label;select.append(option)});
  if([...select.options].some(option=>option.value===previous))select.value=previous;
 }
+function fillAgreementDatalist(list){
+ if(!list)return;
+ list.innerHTML='';agreementOptions.forEach(item=>{const option=document.createElement('option');option.value=typeof item==='string'?item:item.value;option.label=typeof item==='string'?item:item.label;list.append(option)});
+}
 fillAgreementSelect(document.querySelector('#agreementFilter'),'Todos');
-fillAgreementSelect(document.querySelector('#patientRegistrationForm select[name="agreement"]'),'Selecione');
+fillAgreementDatalist(document.querySelector('#patientAgreementOptions'));
 fillAgreementSelect(document.querySelector('#appointmentForm select[name="agreement"]'),'Selecione');
 
 function render(){
@@ -411,7 +415,9 @@ function syncPatientInsuranceCard(){
 }
 document.querySelector('#openPatientRegistration').addEventListener('click',()=>{patientRegistrationForm.reset();syncPatientInsuranceCard();patientRegistrationDialog.showModal();setTimeout(()=>patientRegistrationForm.elements.patient.focus(),50)});
 document.querySelectorAll('#closePatientRegistration,#cancelPatientRegistration').forEach(button=>button.addEventListener('click',()=>patientRegistrationDialog.close()));
+patientAgreement.addEventListener('input',syncPatientInsuranceCard);
 patientAgreement.addEventListener('change',syncPatientInsuranceCard);
+patientAgreement.addEventListener('click',()=>{try{patientAgreement.showPicker?.()}catch(error){}});
 patientRegistrationForm.elements.birthDate.addEventListener('input',event=>{event.target.value=maskBirthDate(event.target.value)});
 patientRegistrationForm.addEventListener('submit',async event=>{
  event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
