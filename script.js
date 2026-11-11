@@ -531,9 +531,10 @@ let firestoreConnected=false;
 let therapistsConnected=false;
 let usersConnected=false;
 
+function normalizeEmail(value){return String(value||'').trim().toLowerCase().replace(/[.,;:]+$/,'')}
 function internalEmail(username){return `${username.trim().toLowerCase().replace(/[^a-z0-9._-]/g,'')}@apflow.local`}
 function loginEmail(identifier){
- const value=String(identifier||'').trim().toLowerCase();
+ const value=normalizeEmail(identifier);
  if(value.includes('@'))return value;
  return internalEmail(value);
 }
@@ -607,7 +608,7 @@ registerForm.addEventListener('submit',async event=>{
  try{
    if(await hashText(code)!==accessCodeHash)throw new Error('invalid-code');
    const username=data.get('username').trim();if(internalEmail(username)==='@apflow.local')throw new Error('invalid-username');
-   const recoveryEmail=String(data.get('email')||'').trim().toLowerCase();if(!recoveryEmail||!recoveryEmail.includes('@'))throw new Error('invalid-recovery-email');
+   const recoveryEmail=normalizeEmail(data.get('email'));if(!recoveryEmail||!recoveryEmail.includes('@'))throw new Error('invalid-recovery-email');
    const credential=await createUserWithEmailAndPassword(auth,recoveryEmail,`AP:${String(data.get('password'))}`);
    await updateProfile(credential.user,{displayName:data.get('fullName').trim()});
    const role=username.toLowerCase()==='admin'?'admin':'equipe';
@@ -623,7 +624,7 @@ document.querySelector('#forgotPassword').addEventListener('click',async()=>{
  const identifier=loginForm.elements.username.value.trim();
  if(!identifier){document.querySelector('#loginError').textContent='Digite o usuário ou e-mail antes de recuperar a senha.';loginForm.elements.username.focus();return}
  if(!identifier.includes('@')){document.querySelector('#loginError').textContent='Digite o e-mail cadastrado para receber a recuperação da senha.';loginForm.elements.username.focus();return}
- const email=identifier.toLowerCase();
+ const email=normalizeEmail(identifier);
  const button=document.querySelector('#forgotPassword');button.disabled=true;
  try{await sendPasswordResetEmail(auth,email);showToast(`Enviamos o link de troca de senha para ${email}.`,'success',7000)}
  catch(error){console.error(error);document.querySelector('#loginError').textContent=error?.code==='auth/user-not-found'?'Conta não encontrada com este e-mail.':firebaseMessage(error)}
@@ -691,7 +692,7 @@ const adminAccessDialog=document.querySelector('#adminAccessDialog');
 document.querySelectorAll('#closeAdminAccess,#cancelAdminAccess').forEach(button=>button.addEventListener('click',()=>adminAccessDialog.close()));
 document.querySelector('#adminAccessForm').addEventListener('submit',async event=>{
  event.preventDefault();const form=event.currentTarget;const error=document.querySelector('#adminAccessError');const button=form.querySelector('button[type="submit"]');
- const targetUid=form.elements.targetUid.value;const email=form.elements.email.value.trim().toLowerCase();const password=form.elements.password.value;error.textContent='';
+ const targetUid=form.elements.targetUid.value;const email=normalizeEmail(form.elements.email.value);const password=form.elements.password.value;error.textContent='';
  if(!email&&!password){error.textContent='Informe um novo e-mail ou uma nova senha.';return}
  if(password&&password.length<4){error.textContent='A senha precisa ter pelo menos 4 caracteres.';return}
  button.disabled=true;const original=button.textContent;button.textContent='Salvando...';
