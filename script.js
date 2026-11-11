@@ -626,7 +626,7 @@ document.querySelector('#forgotPassword').addEventListener('click',async()=>{
  if(!identifier.includes('@')){document.querySelector('#loginError').textContent='Digite o e-mail cadastrado para receber a recuperação da senha.';loginForm.elements.username.focus();return}
  const email=normalizeEmail(identifier);
  const button=document.querySelector('#forgotPassword');button.disabled=true;
- try{await sendPasswordResetEmail(auth,email);showToast(`Enviamos o link de troca de senha para ${email}.`,'success',7000)}
+ try{await sendPasswordResetEmail(auth,email);showToast(`Enviamos o link de troca de senha para ${email}`,'success',7000)}
  catch(error){console.error(error);document.querySelector('#loginError').textContent=error?.code==='auth/user-not-found'?'Conta não encontrada com este e-mail.':firebaseMessage(error)}
  finally{button.disabled=false}
 });
