@@ -57,6 +57,28 @@ const colors={aguardando:'#c88313',confeccao:'#377ea7',pronto:'#2f8a68',entregue
 const labels={aguardando:'Aguardando',confeccao:'Em confecção',pronto:'Pronto',entregue:'Entregue'};
 const lists={aguardando:document.querySelector('#waitingList'),confeccao:document.querySelector('#draftList'),pronto:document.querySelector('#readyList'),entregue:document.querySelector('#deliveredList')};
 const filters={search:document.querySelector('#searchInput'),therapist:document.querySelector('#therapistFilter'),agreement:document.querySelector('#agreementFilter')};
+const agreementOptions=[
+ 'ABET','AFRESP','AMIL','AMIL FISIOFIT','APATEJ (ASS. PAULISTA DOS TÉCNICOS JUDICIÁRIOS)','APEOESP',
+ 'BRADESCO FISIOTERAPIA','BRADESCO SAÚDE - OPERADOR','BRADESCO TRAUMATO-ORTOPEDIA','CAASP','CAIXA SEGUROS SAÚDE',
+ 'CAREPLUS','CASSI','CLASSES LABORIOSAS','CLUBE DE DESCONTO ANCHIETA','CRUZ AZUL','DIX AMICO','DONA SAÚDE','DPVAT',
+ 'FISIOFIT/IAMSPE','GAMA SAÚDE','GOLDEN CROSS','GOLDEN LIFE SAÚDE','IAMSPE','IMASF','IMESC','ITAÚ SAÚDE',
+ 'MAPFRE SAÚDE','MEDIAL SAÚDE','MEDISERVICE','MEDLINE ASSISTÊNCIA MÉDICA','MULTICARE','NIPOMED','NOTREDAME INTERMÉDICA',
+ 'OMINT',{value:'Particular',label:'PARTICULAR'},'PARTICULAR CONVÊNIO','PARTICULAR IAMSPE','PLASMMET','PLENA ASSISTENCIAL',
+ 'PORTO SEGURO','POSTAL SAÚDE','PREV SAÚDE','PRODESP','SABESP','SANTA AMÁLIA','SAÚDE ABAS JUSTIÇA DO TRABALHO',
+ 'SAÚDE CAIXA','SEGURO SAÚDE - CAT','SEPACO','SEPACO FISIO','SERMA ASSISTÊNCIA MÉDICA','SERPRO','SOMPO SAÚDE',
+ 'STARMED','SUL AMÉRICA','TEMPO SAÚDE','UNIMED CNU','VALE SAÚDE SEMPRE','VRSAÚDE','VERITAS INSURANCE BPO','VIVEST',
+ {value:'Outros',label:'OUTROS'}
+];
+function fillAgreementSelect(select,placeholder){
+ if(!select)return;
+ const previous=select.value;select.innerHTML='';
+ const empty=document.createElement('option');empty.value='';empty.textContent=placeholder;select.append(empty);
+ agreementOptions.forEach(item=>{const option=document.createElement('option');option.value=typeof item==='string'?item:item.value;option.textContent=typeof item==='string'?item:item.label;select.append(option)});
+ if([...select.options].some(option=>option.value===previous))select.value=previous;
+}
+fillAgreementSelect(document.querySelector('#agreementFilter'),'Todos');
+fillAgreementSelect(document.querySelector('#patientRegistrationForm select[name="agreement"]'),'Selecione');
+fillAgreementSelect(document.querySelector('#appointmentForm select[name="agreement"]'),'Selecione');
 
 function render(){
  Object.values(lists).forEach(list=>list.innerHTML='');
@@ -383,7 +405,7 @@ const patientAgreement=patientRegistrationForm.elements.agreement;
 const patientInsuranceCard=patientRegistrationForm.elements.insuranceCard;
 const patientInsuranceCardLabel=document.querySelector('#patientInsuranceCardLabel');
 function syncPatientInsuranceCard(){
- const particular=patientAgreement.value==='Particular';patientInsuranceCard.disabled=particular;
+ const particular=patientAgreement.value.toUpperCase().startsWith('PARTICULAR');patientInsuranceCard.disabled=particular;
  patientInsuranceCardLabel.classList.toggle('field-disabled',particular);
  if(particular){patientInsuranceCard.value='';patientInsuranceCard.placeholder='Não se aplica a paciente particular'}else patientInsuranceCard.placeholder='Número da carteirinha'
 }
@@ -395,7 +417,7 @@ patientRegistrationForm.addEventListener('submit',async event=>{
  event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
  const birthDate=birthDateToIso(data.get('birthDate'));
  if(birthDate===null){showToast('Digite uma data de nascimento válida no formato dd/mm/aaaa.','warning');form.elements.birthDate.focus();return}
- const patient={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate,phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),agreement:data.get('agreement'),insuranceCard:patientAgreement.value==='Particular'?'':data.get('insuranceCard').trim()};
+ const patient={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate,phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),agreement:data.get('agreement'),insuranceCard:patientAgreement.value.toUpperCase().startsWith('PARTICULAR')?'':data.get('insuranceCard').trim()};
  const localDuplicate=requestPatientPool.find(item=>String(item.code||'').trim().toLowerCase()===patient.code.toLowerCase());
  if(localDuplicate){showToast('Paciente já possui cadastro.','warning',5600);return}
  submit.disabled=true;submit.textContent='Verificando código...';
