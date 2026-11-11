@@ -10,7 +10,7 @@
   <title>APFlow — Relatórios clínicos</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23315f7d' d='M32 3 55 12v17c0 15-9 25-23 32C18 54 9 44 9 29V12z'/%3E%3Cpath fill='white' d='M29 16h6v12h12v6H35v13h-6V34H17v-6h12z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css?v=20261110-01">
-  <link rel="stylesheet" href="login.css">
+  <link rel="stylesheet" href="login.css?v=20261111-01">
   <link rel="stylesheet" href="app-pages.css?v=20261030-01">
   <link rel="stylesheet" href="icons.css">
 </head>
@@ -447,17 +447,17 @@
       <div class="login-body">
         <h2 id="loginTitle">Acesso ao sistema</h2>
         <form id="loginForm">
-          <label class="login-field"><span aria-hidden="true">♙</span><input name="username" autocomplete="username" placeholder="Usuário ou e-mail" aria-label="Usuário ou e-mail" required></label>
-          <label class="login-field"><span aria-hidden="true">▣</span><input name="password" type="password" autocomplete="current-password" placeholder="Senha" aria-label="Senha" required></label>
+          <label class="login-field"><span aria-hidden="true">👤</span><input name="username" autocomplete="username" placeholder="Usuário ou e-mail" aria-label="Usuário ou e-mail" required></label>
+          <label class="login-field password-field"><span aria-hidden="true">🔐</span><input name="password" type="password" autocomplete="current-password" placeholder="Senha" aria-label="Senha" required><button class="password-toggle is-hidden" type="button" aria-label="Mostrar senha" title="Mostrar senha">👁</button></label>
           <label class="remember"><input type="checkbox" name="remember"> Lembrar de mim</label>
           <p class="login-error" id="loginError" role="alert"></p>
           <button class="login-button" type="submit">Entrar</button>
         </form>
         <form id="registerForm" class="hidden">
-          <label class="login-field"><span aria-hidden="true">♙</span><input name="fullName" autocomplete="name" placeholder="Nome completo" aria-label="Nome completo" required></label>
-          <label class="login-field"><span aria-hidden="true">＠</span><input name="username" autocomplete="username" minlength="3" placeholder="Criar usuário" aria-label="Criar usuário" required></label>
+          <label class="login-field"><span aria-hidden="true">👤</span><input name="fullName" autocomplete="name" placeholder="Nome completo" aria-label="Nome completo" required></label>
+          <label class="login-field"><span aria-hidden="true">👤</span><input name="username" autocomplete="username" minlength="3" placeholder="Criar usuário" aria-label="Criar usuário" required></label>
           <label class="login-field"><span aria-hidden="true">✉</span><input name="email" type="email" autocomplete="email" placeholder="E-mail para acesso e recuperação" aria-label="E-mail para acesso e recuperação" required></label>
-          <label class="login-field"><span aria-hidden="true">▣</span><input name="password" type="password" autocomplete="new-password" minlength="4" placeholder="Criar senha (mínimo 4 caracteres)" aria-label="Criar senha" required></label>
+          <label class="login-field password-field"><span aria-hidden="true">🔐</span><input name="password" type="password" autocomplete="new-password" minlength="4" placeholder="Criar senha (mínimo 4 caracteres)" aria-label="Criar senha" required><button class="password-toggle is-hidden" type="button" aria-label="Mostrar senha" title="Mostrar senha">👁</button></label>
           <label class="code-label">Código para criar a conta</label>
           <div class="code-inputs" aria-label="Código para criar a conta">
             <input type="password" maxlength="1" autocomplete="off" aria-label="Letra 1" required><input type="password" maxlength="1" autocomplete="off" aria-label="Letra 2" required><input type="password" maxlength="1" autocomplete="off" aria-label="Letra 3" required><input type="password" maxlength="1" autocomplete="off" aria-label="Letra 4" required><input type="password" maxlength="1" autocomplete="off" aria-label="Letra 5" required><input type="password" maxlength="1" autocomplete="off" aria-label="Letra 6" required>
@@ -470,7 +470,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261110-05"></script>
+  <script type="module" src="script.js?v=20261111-01"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
