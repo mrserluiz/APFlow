@@ -517,6 +517,16 @@ const loginForm=document.querySelector('#loginForm');
 const registerForm=document.querySelector('#registerForm');
 const switchAuth=document.querySelector('#switchAuth');
 const codeInputs=[...document.querySelectorAll('.code-inputs input')];
+document.querySelectorAll('.password-toggle').forEach(button=>{
+ button.addEventListener('click',()=>{
+  const input=button.closest('.password-field')?.querySelector('input');
+  if(!input)return;
+  const reveal=input.type==='password';input.type=reveal?'text':'password';
+  button.classList.toggle('is-hidden',!reveal);
+  button.setAttribute('aria-label',reveal?'Ocultar senha':'Mostrar senha');
+  button.title=reveal?'Ocultar senha':'Mostrar senha';
+ });
+});
 let firestoreConnected=false;
 let therapistsConnected=false;
 let usersConnected=false;
