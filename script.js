@@ -23,6 +23,9 @@ isSupported().then(supported=>{if(supported)getAnalytics(firebaseApp)}).catch(()
 
 let reports=[];
 let requestPatientPool=[];
+let patientDirectoryPool=[];
+let activePatientRecord=null;
+let selectPatientAfterRegistration=false;
 let therapists=[];
 let appointments=[];let stopAppointments=null;
 let agendaMode=null;let moveSource=null;let pendingScheduleAction=null;let pendingChargeAppointment=null;let appointmentContext='agendar';
@@ -413,27 +416,50 @@ function syncPatientInsuranceCard(){
  patientInsuranceCardLabel.classList.toggle('field-disabled',particular);
  if(particular){patientInsuranceCard.value='';patientInsuranceCard.placeholder='Não se aplica a paciente particular'}else patientInsuranceCard.placeholder='Número da carteirinha'
 }
-document.querySelector('#openPatientRegistration').addEventListener('click',()=>{patientRegistrationForm.reset();syncPatientInsuranceCard();patientRegistrationDialog.showModal();setTimeout(()=>patientRegistrationForm.elements.patient.focus(),50)});
+function openPatientRegistration(patient=null,selectAfterSave=false){
+ patientRegistrationForm.reset();selectPatientAfterRegistration=selectAfterSave;
+ patientRegistrationForm.elements.patientId.value=patient?.patientDocId||patient?.id||'';
+ patientRegistrationForm.elements.patient.value=patient?.patient||'';
+ patientRegistrationForm.elements.code.value=patient?.code||'';
+ patientRegistrationForm.elements.birthDate.value=patient?.birthDate?patient.birthDate.split('-').reverse().join('/'):'';
+ patientRegistrationForm.elements.phone.value=patient?.phone||'';
+ patientRegistrationForm.elements.cpf.value=patient?.cpf||'';
+ patientRegistrationForm.elements.rg.value=patient?.rg||'';
+ patientRegistrationForm.elements.agreement.value=patient?.agreement||'';
+ patientRegistrationForm.elements.insuranceCard.value=patient?.insuranceCard||'';
+ const editing=Boolean(patientRegistrationForm.elements.patientId.value);
+ document.querySelector('#patientRegistrationTitle').textContent=editing?'Editar paciente':'Cadastrar paciente';
+ document.querySelector('#patientRegistrationSubmit').textContent=editing?'Salvar alterações':'Salvar e selecionar';
+ syncPatientInsuranceCard();patientRegistrationDialog.showModal();setTimeout(()=>patientRegistrationForm.elements.patient.focus(),50)
+}
+document.querySelector('#openPatientRegistration').addEventListener('click',()=>openPatientRegistration(null,true));
 document.querySelectorAll('#closePatientRegistration,#cancelPatientRegistration').forEach(button=>button.addEventListener('click',()=>patientRegistrationDialog.close()));
 patientAgreement.addEventListener('input',syncPatientInsuranceCard);
 patientAgreement.addEventListener('change',syncPatientInsuranceCard);
 patientAgreement.addEventListener('click',()=>{try{patientAgreement.showPicker?.()}catch(error){}});
 patientRegistrationForm.elements.birthDate.addEventListener('input',event=>{event.target.value=maskBirthDate(event.target.value)});
 patientRegistrationForm.addEventListener('submit',async event=>{
- event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');
+ event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');const patientId=String(data.get('patientId')||'');
  const birthDate=birthDateToIso(data.get('birthDate'));
  if(birthDate===null){showToast('Digite uma data de nascimento válida no formato dd/mm/aaaa.','warning');form.elements.birthDate.focus();return}
  const patient={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate,phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),agreement:data.get('agreement'),insuranceCard:patientAgreement.value.toUpperCase().startsWith('PARTICULAR')?'':data.get('insuranceCard').trim()};
- const localDuplicate=requestPatientPool.find(item=>String(item.code||'').trim().toLowerCase()===patient.code.toLowerCase());
- if(localDuplicate){showToast('Paciente já possui cadastro.','warning',5600);return}
  submit.disabled=true;submit.textContent='Verificando código...';
  try{
   const duplicateSnapshot=await getDocs(query(collection(db,'pacientes'),where('code','==',patient.code)));
-  if(!duplicateSnapshot.empty){showToast('Paciente já possui cadastro.','warning',5600);return}
+  const duplicate=duplicateSnapshot.docs.find(item=>item.id!==patientId);
+  if(duplicate){showToast('Paciente já possui cadastro com este código.','warning',5600);return}
   submit.textContent='Salvando...';
-  const reference=await addDoc(collection(db,'pacientes'),{...patient,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});
-  const saved={id:reference.id,...patient};requestPatientPool.push(saved);requestPatientPool.sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));selectRequestPatient(saved);patientRegistrationDialog.close();showToast('Paciente cadastrado e selecionado.','success')
- }catch(error){console.error(error);showToast(firebasePatientError(error),'error',7200)}finally{submit.disabled=false;submit.textContent='Salvar e selecionar'}
+  let referenceId=patientId;
+  if(patientId)await updateDoc(doc(db,'pacientes',patientId),{...patient,active:true,updatedAt:serverTimestamp(),updatedBy:auth.currentUser?.uid||''});
+  else{const reference=await addDoc(collection(db,'pacientes'),{...patient,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});referenceId=reference.id}
+  const saved={patientDocId:referenceId,id:referenceId,...patient};
+  requestPatientPool=requestPatientPool.filter(item=>(item.patientDocId||item.id)!==referenceId);requestPatientPool.push(saved);requestPatientPool.sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));
+  patientDirectoryPool=patientDirectoryPool.filter(item=>item.patientDocId!==referenceId);patientDirectoryPool.push(saved);patientDirectoryPool.sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));
+  activePatientRecord=saved;patientRegistrationDialog.close();
+  if(selectPatientAfterRegistration)selectRequestPatient(saved);else renderPatientSearch();
+  showToast(patientId?'Cadastro do paciente atualizado.':'Paciente cadastrado e selecionado.','success')
+ }catch(error){console.error(error);showToast(firebasePatientError(error),'error',7200)}
+ finally{submit.disabled=false;submit.textContent=patientId?'Salvar alterações':'Salvar e selecionar'}
 });
 document.querySelectorAll('[name="purpose"]').forEach(r=>r.addEventListener('change',()=>{const field=document.querySelector('#otherPurpose');field.disabled=r.value!=='Outro';if(!field.disabled)field.focus()}));
 document.querySelector('#requestForm').addEventListener('submit',async e=>{
@@ -472,9 +498,10 @@ function patientData(record){
  const match=reports.find(item=>(record.code&&String(item.code)===String(record.code))||(!record.code&&item.patient?.toLowerCase()===record.patient?.toLowerCase()));return{...(match||{}),...record};
 }
 function openPatientRecord(record){
- const patient=patientData(record);document.querySelector('#patientRecordTitle').textContent=patient.patient||'Paciente';
+ const patient=patientData(record);activePatientRecord={...patient};document.querySelector('#patientRecordTitle').textContent=patient.patient||'Paciente';
  const fields=[['Nome',patient.patient],['Código',patient.code],['Nascimento',patient.birthDate?patient.birthDate.split('-').reverse().join('/'):''],['Telefone',patient.phone],['CPF',patient.cpf],['RG',patient.rg],['Carteirinha',patient.insuranceCard],['Convênio',patient.agreement],['Tratamento',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]];
- const root=document.querySelector('#patientRecordContent');root.innerHTML='';fields.forEach(([label,value])=>{const item=document.createElement('div');const title=document.createElement('span');title.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(title,content);root.append(item)});document.querySelector('#patientRecordDialog').showModal();
+ const root=document.querySelector('#patientRecordContent');root.innerHTML='';fields.forEach(([label,value])=>{const item=document.createElement('div');const title=document.createElement('span');title.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(title,content);root.append(item)});
+ const edit=document.querySelector('#editPatientRecord');edit.disabled=!patient.patientDocId;edit.textContent=patient.patientDocId?'Editar cadastro':'Sem cadastro-base para editar';document.querySelector('#patientRecordDialog').showModal();
 }
 function appointmentMoment(item){return new Date(`${item.date||'1970-01-01'}T${item.time||'00:00'}:00`)}
 function formatAppointmentDate(item){const date=new Date(`${item.date||'1970-01-01'}T12:00:00`);return new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'}).format(date)}
@@ -499,17 +526,25 @@ async function openAppointmentHistory(record){
   document.querySelector('#historyPastCount').textContent=past.length;document.querySelector('#historyMissedCount').textContent=missed.length;document.querySelector('#historyFutureCount').textContent=future.length;
  }catch(error){console.error(error);['historyPast','historyMissed','historyFuture'].forEach(id=>document.querySelector('#'+id).innerHTML='<p class="history-empty history-error">Não foi possível carregar os agendamentos.</p>');showToast('Não foi possível carregar o histórico do paciente.')}
 }
-function patientCandidates(){
- const map=new Map();[...reports,...appointments.filter(item=>item.patient)].forEach(item=>{const key=String(item.code||item.patient||'').toLowerCase();if(!key)return;map.set(key,{...(map.get(key)||{}),...item})});return[...map.values()];
-}
+function patientCandidates(){return patientDirectoryPool}
 function renderPatientSearch(){
  const term=document.querySelector('#patientGlobalSearch').value.trim().toLowerCase();const digits=term.replace(/\D/g,'');const root=document.querySelector('#patientSearchResults');root.innerHTML='';
- if(!term){root.innerHTML='<p class="empty-state">Digite uma informação para pesquisar.</p>';return}
- const found=patientCandidates().filter(item=>{const p=patientData(item);const values=[p.patient,p.code,p.birthDate,p.birthDate?.split('-').reverse().join('/'),p.rg,p.cpf,p.phone].filter(Boolean).map(value=>String(value).toLowerCase());return values.some(value=>value.includes(term)||(digits&&value.replace(/\D/g,'').includes(digits)))}).slice(0,30);
+ if(!term){root.innerHTML='<p class="empty-state">Digite o código, nome ou outro dado para pesquisar.</p>';return}
+ const found=patientCandidates().filter(item=>{const p=patientData(item);return patientSearchValues(p).some(value=>value.includes(term)||(digits&&value.replace(/\D/g,'').includes(digits)))}).slice(0,50);
  if(!found.length){root.innerHTML='<p class="empty-state">Nenhum paciente encontrado.</p>';return}
  found.forEach(item=>{const p=patientData(item);const button=document.createElement('button');button.type='button';button.className='patient-result';const main=document.createElement('strong');main.textContent=p.patient||'Paciente sem nome';const detail=document.createElement('span');detail.textContent='Código: '+(p.code||'—')+' • CPF: '+(p.cpf||'—')+' • Telefone: '+(p.phone||'—');button.append(main,detail);button.addEventListener('click',()=>{document.querySelector('#patientSearchDialog').close();openPatientRecord(p)});root.append(button)});
 }
-function openPatientSearch(){document.querySelector('#patientGlobalSearch').value='';renderPatientSearch();document.querySelector('#patientSearchDialog').showModal();setTimeout(()=>document.querySelector('#patientGlobalSearch').focus(),50)}
+async function loadPatientDirectory(){
+ const snapshot=await getDocs(collection(db,'pacientes'));const map=new Map();
+ snapshot.docs.forEach(item=>{const patient={patientDocId:item.id,...item.data()};const key=requestPatientKey(patient);if(key)map.set(key,patient)});
+ [...reports,...appointments.filter(item=>item.patient)].forEach(item=>{const patient=normalizePatientRecord(item);const key=requestPatientKey(patient);if(key&&!map.has(key))map.set(key,patient)});
+ patientDirectoryPool=[...map.values()].sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'))
+}
+async function openPatientSearch(){
+ const dialog=document.querySelector('#patientSearchDialog');const root=document.querySelector('#patientSearchResults');document.querySelector('#patientGlobalSearch').value='';root.innerHTML='<p class="empty-state">Carregando cadastros...</p>';dialog.showModal();
+ try{await loadPatientDirectory();renderPatientSearch()}catch(error){console.error(error);root.innerHTML='<p class="empty-state">Não foi possível carregar os cadastros.</p>';showToast('Não foi possível carregar os pacientes.','error')}
+ setTimeout(()=>document.querySelector('#patientGlobalSearch').focus(),50)
+}
 async function setWholeDayLock(lock){
  const professionalName=document.querySelector('#agendaProfessional').value;const professional=therapists.find(item=>item.name===professionalName);if(!professional)return;
  const columns=professional.agendaColumns===5?5:4;const periods=professional.scheduleGroup?.includes('Manhã')?['manha']:professional.scheduleGroup?.includes('Tarde')?['tarde']:['manha','tarde'];const times=periods.flatMap(period=>agendaSlots[period]);const active=appointments.filter(item=>item.cancelled!==true&&item.locked!==false);const batch=writeBatch(db);let changes=0;
@@ -523,6 +558,8 @@ document.querySelector('#scheduleActionForm').addEventListener('submit',async ev
  const action=pendingScheduleAction;const button=document.querySelector('#confirmScheduleAction');if(!action)return;button.disabled=true;
  try{if(action.type==='desmarcar'){await updateDoc(doc(db,'agendamentos',action.appointment.id),{cancelled:true,cancelledAt:serverTimestamp(),updatedAt:serverTimestamp()});showToast('Agendamento desmarcado e célula liberada.');resetAgendaMode()}else if(action.type==='confirmar'){await updateDoc(doc(db,'agendamentos',action.appointment.id),{present:true,updatedAt:serverTimestamp()});showToast('Presença do paciente confirmada.');resetAgendaMode()}document.querySelector('#scheduleActionDialog').close();pendingScheduleAction=null}catch(error){console.error(error);showToast('Não foi possível concluir a ação.')}finally{button.disabled=false}
 });
+document.querySelector('[data-report-action="localizar"]').addEventListener('click',openPatientSearch);
+document.querySelector('#editPatientRecord').addEventListener('click',()=>{if(!activePatientRecord?.patientDocId){showToast('Este paciente ainda não possui cadastro-base para editar.','warning');return}document.querySelector('#patientRecordDialog').close();openPatientRegistration(activePatientRecord,false)});
 document.querySelector('#patientGlobalSearch').addEventListener('input',renderPatientSearch);
 document.querySelector('#closePatientSearch').addEventListener('click',()=>document.querySelector('#patientSearchDialog').close());
 document.querySelector('#closePatientRecord').addEventListener('click',()=>document.querySelector('#patientRecordDialog').close());
