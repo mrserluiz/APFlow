@@ -219,7 +219,8 @@
 
   <dialog id="patientRegistrationDialog" class="patient-registration-dialog">
     <form id="patientRegistrationForm">
-      <div class="dialog-head"><div><p class="eyebrow">CADASTRO BÁSICO</p><h2>Cadastrar paciente</h2></div><button class="icon-button" type="button" id="closePatientRegistration" aria-label="Fechar">×</button></div>
+      <input name="patientId" type="hidden">
+      <div class="dialog-head"><div><p class="eyebrow">CADASTRO BÁSICO</p><h2 id="patientRegistrationTitle">Cadastrar paciente</h2></div><button class="icon-button" type="button" id="closePatientRegistration" aria-label="Fechar">×</button></div>
       <div class="form-grid patient-registration-grid">
         <label class="full">Nome completo *<input name="patient" required autocomplete="name" placeholder="Nome completo do paciente"></label>
         <label>Código *<input name="code" required inputmode="numeric" placeholder="Ex.: 410510"></label>
@@ -234,7 +235,7 @@
         <label id="patientInsuranceCardLabel">Carteirinha do convênio<input name="insuranceCard" placeholder="Número da carteirinha"></label>
       </div>
       <p class="deadline-note">Cadastro básico temporário. Depois criaremos a ficha completa do paciente.</p>
-      <div class="dialog-actions"><button class="secondary" type="button" id="cancelPatientRegistration">Cancelar</button><button class="primary" type="submit">Salvar e selecionar</button></div>
+      <div class="dialog-actions"><button class="secondary" type="button" id="cancelPatientRegistration">Cancelar</button><button class="primary" id="patientRegistrationSubmit" type="submit">Salvar e selecionar</button></div>
     </form>
   </dialog>
   <dialog id="appointmentDialog">
@@ -277,6 +278,7 @@
       <div class="dialog-head"><div><p class="eyebrow">CADASTRO DO PACIENTE</p><h2 id="patientRecordTitle">Paciente</h2></div><button class="icon-button" type="button" id="closePatientRecord" aria-label="Fechar">×</button></div>
       <div class="patient-record-grid" id="patientRecordContent"></div>
       <p class="deadline-note">Cadastro básico temporário. A ficha clínica completa será criada em uma próxima etapa.</p>
+      <div class="dialog-actions"><button class="primary" type="button" id="editPatientRecord">Editar cadastro</button></div>
     </div>
   </dialog>
 
@@ -471,7 +473,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261111-05"></script>
+  <script type="module" src="script.js?v=20261111-06"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
