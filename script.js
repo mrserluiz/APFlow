@@ -476,8 +476,13 @@ function syncPatientInsuranceCard(){
  patientInsuranceCardLabel.classList.toggle('field-disabled',particular);
  if(particular){patientInsuranceCard.value='';patientInsuranceCard.placeholder='Não se aplica a paciente particular'}else patientInsuranceCard.placeholder='Número da carteirinha'
 }
+function setPatientFormTab(tab='cadastro'){
+ document.querySelectorAll('[data-patient-tab]').forEach(button=>{const active=button.dataset.patientTab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
+ document.querySelectorAll('[data-patient-panel]').forEach(panel=>{panel.hidden=panel.dataset.patientPanel!==tab})
+}
+document.querySelectorAll('[data-patient-tab]').forEach(button=>button.addEventListener('click',()=>setPatientFormTab(button.dataset.patientTab)));
 function openPatientRegistration(patient=null,selectAfterSave=false){
- patientRegistrationForm.reset();selectPatientAfterRegistration=selectAfterSave;
+ patientRegistrationForm.reset();setPatientFormTab('cadastro');selectPatientAfterRegistration=selectAfterSave;
  patientRegistrationForm.elements.patientId.value=patient?.patientDocId||patient?.id||'';
  patientProfileFields.forEach(field=>{if(patientRegistrationForm.elements[field])patientRegistrationForm.elements[field].value=patient?.[field]||''});
  patientRegistrationForm.elements.birthDate.value=patient?.birthDate?patient.birthDate.split('-').reverse().join('/'):'';
@@ -605,33 +610,42 @@ function appendPatientRecordSection(root,title,fields){
 function renderFullPatientRecord(patient){
  document.querySelector('#patientRecordTitle').textContent=patient.patient||'Paciente';
  const root=document.querySelector('#patientRecordContent');root.innerHTML='';
- appendPatientRecordSection(root,'Dados cadastrais',[
-  ['Nome',patient.patient],['Nome de registro / social',patient.socialName],['Código',patient.code],['Prontuário',patient.medicalRecord],
-  ['Nascimento',patientRecordDate(patient.birthDate)],['Idade',calculatePatientAge(patient.birthDate)],['Sexo',patient.sex],['Orientação sexual',patient.sexualOrientation],
-  ['Estado civil',patient.maritalStatus],['Cor / raça',patient.raceColor],['Indicação',patient.referral],['Classificação de risco',patient.riskClassification],
-  ['Tipo de paciente',patient.patientType],['Profissão',patient.profession],['Naturalidade',patient.birthplace],['Nacionalidade',patient.nationality]
- ]);
- appendPatientRecordSection(root,'Documentos e contato',[
-  ['CPF',patient.cpf],['RG',patient.rg],['CNS',patient.cns],
-  [patient.phoneType||'Telefone 1',patient.phone],[patient.secondaryPhoneType||'Telefone 2',patient.secondaryPhone],
-  [patient.commercialPhoneType||'Telefone 3',patient.commercialPhone],[patient.additionalPhoneType||'Telefone 4',patient.additionalPhone],
-  ['Nome do contato',patient.contactName],['Telefone do contato',patient.contactPhone],
-  ['E-mail 1',patient.email],['E-mail 2',patient.email2],['E-mail 3',patient.email3],
-  ['Cônjuge',patient.spouse],['Nome do pai',patient.fatherName],['Nome da mãe',patient.motherName]
- ]);
- appendPatientRecordSection(root,'Endereço',[
-  ['Endereço',[patient.address,patient.addressNumber].filter(Boolean).join(', ')],['Complemento',patient.addressComplement],['Bairro',patient.district],['CEP',patient.zipCode],
-  ['Cidade',patient.city],['UF',patient.state]
- ]);
- appendPatientRecordSection(root,'Convênio',[
-  ['Convênio',patient.agreement],['Plano',patient.insurancePlan],['Carteirinha',patient.insuranceCard],['Validade',patientRecordDate(patient.insuranceValidity)],
-  ['Médico responsável / solicitante',patient.insuranceDoctor],['Empresa',patient.company],['Última visita',patientRecordDate(patient.lastVisit)],
-  ['Descrição da última visita',patient.lastVisitDescription]
- ]);
- appendPatientRecordSection(root,'Informações complementares',[
-  ['Observações',patient.observations],['Dados adicionais',patient.additionalData],['Acordos',patient.agreementsNotes],
-  ['Tratamento agendado',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]
- ]);
+ const sections=[
+  {id:'cadastro',label:'Dados cadastrais',fields:[
+   ['Nome',patient.patient],['Nome de registro / social',patient.socialName],['Código',patient.code],['Prontuário',patient.medicalRecord],
+   ['Nascimento',patientRecordDate(patient.birthDate)],['Idade',calculatePatientAge(patient.birthDate)],['Sexo',patient.sex],['Orientação sexual',patient.sexualOrientation],
+   ['Estado civil',patient.maritalStatus],['Cor / raça',patient.raceColor],['Indicação',patient.referral],['Classificação de risco',patient.riskClassification],
+   ['Tipo de paciente',patient.patientType],['Profissão',patient.profession],['Naturalidade',patient.birthplace],['Nacionalidade',patient.nationality]
+  ]},
+  {id:'contato',label:'Documentos e contatos',fields:[
+   ['CPF',patient.cpf],['RG',patient.rg],['CNS',patient.cns],[patient.phoneType||'Telefone 1',patient.phone],
+   [patient.secondaryPhoneType||'Telefone 2',patient.secondaryPhone],[patient.commercialPhoneType||'Telefone 3',patient.commercialPhone],
+   [patient.additionalPhoneType||'Telefone 4',patient.additionalPhone],['Nome do contato',patient.contactName],['Telefone do contato',patient.contactPhone],
+   ['E-mail 1',patient.email],['E-mail 2',patient.email2],['E-mail 3',patient.email3],['Cônjuge',patient.spouse],['Nome do pai',patient.fatherName],['Nome da mãe',patient.motherName]
+  ]},
+  {id:'endereco',label:'Endereço',fields:[
+   ['Endereço',[patient.address,patient.addressNumber].filter(Boolean).join(', ')],['Complemento',patient.addressComplement],['Bairro',patient.district],
+   ['CEP',patient.zipCode],['Cidade',patient.city],['UF',patient.state]
+  ]},
+  {id:'convenio',label:'Convênio',fields:[
+   ['Convênio',patient.agreement],['Plano',patient.insurancePlan],['Carteirinha',patient.insuranceCard],['Validade',patientRecordDate(patient.insuranceValidity)],
+   ['Médico responsável / solicitante',patient.insuranceDoctor],['Empresa',patient.company],['Última visita',patientRecordDate(patient.lastVisit)],
+   ['Descrição da última visita',patient.lastVisitDescription]
+  ]},
+  {id:'anotacoes',label:'Anotações',fields:[
+   ['Observações',patient.observations],['Dados adicionais',patient.additionalData],['Acordos',patient.agreementsNotes],
+   ['Tratamento agendado',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]
+  ]}
+ ];
+ const tabs=document.createElement('nav');tabs.className='patient-record-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Seções da ficha');
+ const panel=document.createElement('div');panel.className='patient-record-compact-grid';
+ const activate=id=>{
+  tabs.querySelectorAll('button').forEach(button=>{const active=button.dataset.recordTab===id;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
+  const section=sections.find(item=>item.id===id)||sections[0];panel.innerHTML='';
+  section.fields.forEach(([label,value])=>{const item=document.createElement('div');const fieldTitle=document.createElement('span');fieldTitle.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(fieldTitle,content);panel.append(item)})
+ };
+ sections.forEach((section,index)=>{const button=document.createElement('button');button.type='button';button.dataset.recordTab=section.id;button.setAttribute('role','tab');button.textContent=section.label;button.addEventListener('click',()=>activate(section.id));tabs.append(button)});
+ root.append(tabs,panel);activate('cadastro');
  const edit=document.querySelector('#editPatientRecord');edit.disabled=!patient.patientDocId;edit.textContent=patient.patientDocId?'Editar cadastro':'Cadastro completo não localizado'
 }
 async function openPatientRecord(record){
@@ -846,6 +860,7 @@ document.querySelector('#forgotPassword').addEventListener('click',async()=>{
  catch(error){console.error(error);document.querySelector('#loginError').textContent=error?.code==='auth/user-not-found'?'Conta não encontrada com este e-mail.':firebaseMessage(error)}
  finally{button.disabled=false}
 });
+document.querySelector('#refreshAppButton')?.addEventListener('click',()=>location.reload());
 document.querySelector('#logoutButton').addEventListener('click',async()=>{await signOut(auth);location.reload()});
 onAuthStateChanged(auth,user=>{if(user)revealApp(user);else showLogin()});
 
