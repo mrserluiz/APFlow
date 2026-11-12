@@ -736,7 +736,7 @@ function renderFullPatientRecord(patient){
  if(!source){root.innerHTML='<p class="patient-record-loading">Não foi possível montar a ficha do paciente.</p>';return}
  const sheet=source.cloneNode(true);sheet.classList.add('patient-record-readonly-sheet');
  sheet.querySelectorAll('[id]').forEach(element=>element.removeAttribute('id'));
- sheet.querySelectorAll('.patient-agreement-dropdown,.patient-profession-dropdown,datalist,.legacy-cep-control button,#patientCepStatus').forEach(element=>element.remove());
+ sheet.querySelectorAll('.patient-agreement-dropdown,.patient-profession-dropdown,datalist,.legacy-cep-control button,.legacy-cep-field small').forEach(element=>element.remove());
  const dateValue=value=>value?String(value).slice(0,10):'';
  sheet.querySelectorAll('input,select,textarea').forEach(control=>{
   const name=control.name;let value=patient?.[name]??'';
