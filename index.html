@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/apflow-app-icon.svg?v=20261112-01">
   <link rel="stylesheet" href="styles.css?v=20261112-01">
   <link rel="stylesheet" href="login.css?v=20261111-01">
-  <link rel="stylesheet" href="app-pages.css?v=20261112-09">
+  <link rel="stylesheet" href="app-pages.css?v=20261112-10">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -264,7 +264,12 @@
           </div>
 
           <div class="legacy-row legacy-row-docs">
-            <label>Profissão<input name="profession" list="patientProfessionOptions" autocomplete="off" placeholder="Digite para ver sugestões"><datalist id="patientProfessionOptions"></datalist></label>
+            <label>Profissão
+              <div class="patient-profession-picker">
+                <input name="profession" id="patientProfessionSearch" type="search" autocomplete="off" placeholder="Digite para pesquisar" aria-controls="patientProfessionDropdown" aria-expanded="false">
+                <div class="patient-profession-dropdown" id="patientProfessionDropdown" role="listbox" hidden></div>
+              </div>
+            </label>
             <label>RG<input name="rg" placeholder="Número do RG"></label>
             <label>CPF<input name="cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
           </div>
@@ -557,7 +562,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261112-10"></script>
+  <script type="module" src="script.js?v=20261112-11"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
