@@ -481,8 +481,13 @@ function setPatientFormTab(tab='cadastro'){
  document.querySelectorAll('[data-patient-panel]').forEach(panel=>{panel.hidden=panel.dataset.patientPanel!==tab})
 }
 document.querySelectorAll('[data-patient-tab]').forEach(button=>button.addEventListener('click',()=>setPatientFormTab(button.dataset.patientTab)));
+function setPatientNoteTab(tab='observations'){
+ document.querySelectorAll('[data-patient-note-tab]').forEach(button=>{const active=button.dataset.patientNoteTab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
+ document.querySelectorAll('[data-patient-note-panel]').forEach(panel=>{panel.hidden=panel.dataset.patientNotePanel!==tab})
+}
+document.querySelectorAll('[data-patient-note-tab]').forEach(button=>button.addEventListener('click',()=>setPatientNoteTab(button.dataset.patientNoteTab)));
 function openPatientRegistration(patient=null,selectAfterSave=false){
- patientRegistrationForm.reset();setPatientFormTab('cadastro');selectPatientAfterRegistration=selectAfterSave;
+ patientRegistrationForm.reset();setPatientFormTab('cadastro');setPatientNoteTab('observations');selectPatientAfterRegistration=selectAfterSave;
  patientRegistrationForm.elements.patientId.value=patient?.patientDocId||patient?.id||'';
  patientProfileFields.forEach(field=>{if(patientRegistrationForm.elements[field])patientRegistrationForm.elements[field].value=patient?.[field]||''});
  patientRegistrationForm.elements.birthDate.value=patient?.birthDate?patient.birthDate.split('-').reverse().join('/'):'';
