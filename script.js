@@ -96,13 +96,24 @@ const professionOptions=[
  'Pedreiro(a)','Professor(a)','Psicólogo(a)','Recepcionista','Representante comercial','Secretário(a)','Segurança','Técnico(a) de enfermagem',
  'Técnico(a) em informática','Terapeuta ocupacional','Vendedor(a)','Aposentado(a)','Do lar','Outra'
 ];
-function fillProfessionDatalist(){
- const list=document.querySelector('#patientProfessionOptions');if(!list)return;list.innerHTML='';
- professionOptions.forEach(value=>{const option=document.createElement('option');option.value=value;list.append(option)})
-}
-fillProfessionDatalist();
-
 function normalizedLookup(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+const professionSearch=document.querySelector('#patientProfessionSearch');
+const professionDropdown=document.querySelector('#patientProfessionDropdown');
+function hideProfessionDropdown(){if(!professionDropdown)return;professionDropdown.hidden=true;professionSearch?.setAttribute('aria-expanded','false')}
+function renderProfessionDropdown(){
+ if(!professionSearch||!professionDropdown)return;
+ const term=normalizedLookup(professionSearch.value);const matches=professionOptions.filter(value=>!term||normalizedLookup(value).includes(term));
+ professionDropdown.innerHTML='';
+ if(!matches.length){const empty=document.createElement('p');empty.textContent='Nenhuma profissão encontrada.';professionDropdown.append(empty)}
+ else matches.forEach(value=>{const button=document.createElement('button');button.type='button';button.role='option';button.textContent=value;button.addEventListener('mousedown',event=>event.preventDefault());button.addEventListener('click',()=>{professionSearch.value=value;hideProfessionDropdown()});professionDropdown.append(button)});
+ professionDropdown.hidden=false;professionSearch.setAttribute('aria-expanded','true')
+}
+professionSearch?.addEventListener('focus',renderProfessionDropdown);
+professionSearch?.addEventListener('click',renderProfessionDropdown);
+professionSearch?.addEventListener('input',renderProfessionDropdown);
+professionSearch?.addEventListener('keydown',event=>{if(event.key==='Escape')hideProfessionDropdown()});
+document.addEventListener('click',event=>{if(!event.target.closest('.patient-profession-picker'))hideProfessionDropdown()});
+
 const agreementSearch=document.querySelector('#patientAgreementSearch');
 const agreementDropdown=document.querySelector('#patientAgreementDropdown');
 function agreementValues(){return agreementOptions.map(item=>({value:typeof item==='string'?item:item.value,label:typeof item==='string'?item:item.label}))}
@@ -112,11 +123,17 @@ function renderAgreementDropdown(){
  const term=normalizedLookup(agreementSearch.value);const matches=agreementValues().filter(item=>!term||normalizedLookup(item.label).includes(term)||normalizedLookup(item.value).includes(term));
  agreementDropdown.innerHTML='';
  if(!matches.length){const empty=document.createElement('p');empty.textContent='Nenhum convênio encontrado.';agreementDropdown.append(empty)}
- else matches.forEach(item=>{const button=document.createElement('button');button.type='button';button.role='option';button.textContent=item.label;button.dataset.value=item.value;button.addEventListener('mousedown',event=>event.preventDefault());button.addEventListener('click',()=>{agreementSearch.value=item.value;agreementSearch.dispatchEvent(new Event('input',{bubbles:true}));hideAgreementDropdown();syncPatientInsuranceCard()});agreementDropdown.append(button)});
+ else matches.forEach(item=>{const button=document.createElement('button');button.type='button';button.role='option';button.textContent=item.label;button.dataset.value=item.value;button.addEventListener('mousedown',event=>event.preventDefault());button.addEventListener('click',()=>{agreementSearch.value=item.value;agreementSearch.dataset.defaultParticular='false';agreementSearch.dispatchEvent(new Event('input',{bubbles:true}));hideAgreementDropdown();syncPatientInsuranceCard()});agreementDropdown.append(button)});
  agreementDropdown.hidden=false;agreementSearch.setAttribute('aria-expanded','true')
 }
-agreementSearch?.addEventListener('focus',renderAgreementDropdown);
-agreementSearch?.addEventListener('click',renderAgreementDropdown);
+function openAgreementDropdown(){
+ if(agreementSearch?.dataset.defaultParticular==='true'&&normalizedLookup(agreementSearch.value)==='particular'){
+  agreementSearch.value='';agreementSearch.dataset.defaultParticular='false';syncPatientInsuranceCard()
+ }
+ renderAgreementDropdown()
+}
+agreementSearch?.addEventListener('focus',openAgreementDropdown);
+agreementSearch?.addEventListener('click',openAgreementDropdown);
 agreementSearch?.addEventListener('input',renderAgreementDropdown);
 agreementSearch?.addEventListener('keydown',event=>{if(event.key==='Escape')hideAgreementDropdown()});
 document.addEventListener('click',event=>{if(!event.target.closest('.patient-agreement-picker'))hideAgreementDropdown()});
@@ -571,6 +588,8 @@ function openPatientRegistration(patient=null,selectAfterSave=false){
  patientProfileFields.forEach(field=>{if(patientRegistrationForm.elements[field])patientRegistrationForm.elements[field].value=patient?.[field]||''});
  patientRegistrationForm.elements.birthDate.value=patient?.birthDate?patient.birthDate.split('-').reverse().join('/'):'';
  if(!patient)patientRegistrationForm.elements.agreement.value='Particular';
+ agreementSearch.dataset.defaultParticular=String(!patient);
+ hideProfessionDropdown();
  refreshPatientAge();
  const editing=Boolean(patientRegistrationForm.elements.patientId.value);
  document.querySelector('#patientRegistrationTitle').textContent=editing?'Editar ficha do paciente':'Cadastrar paciente';
