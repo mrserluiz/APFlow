@@ -94,6 +94,7 @@ function render(){
  visible.filter(r=>lists[r.status]).forEach(r=>{
    const card=document.createElement('article'); card.className='report-card'; card.style.setProperty('--accent',colors[r.status]);
    card.innerHTML=`<div class="card-top"><div><h3>${r.patient}</h3><span class="code">Nº ${r.code}</span></div><span class="due ${r.due<='18/09/2026'?'urgent':''}">${r.due}</span></div><p>${r.agreement} • ${r.purpose}</p><div class="card-footer"><span class="badge">${labels[r.status]}</span><span class="therapist">${r.therapist}</span></div>`;
+   const patientTitle=card.querySelector('h3');if(patientTitle)patientTitle.title=r.patient||'';
    card.tabIndex=0;card.setAttribute('role','button');
    const openReport=()=>{if(r.status==='pronto'||r.status==='entregue')openClinicalPreview(r);else if(canEditClinicalReport())openClinicalEditor(r);else showToast('Somente Admin, fisioterapeuta ou médico pode editar este relatório.')};
    card.addEventListener('click',openReport);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openReport()}});lists[r.status].append(card);
