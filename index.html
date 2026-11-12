@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/apflow-app-icon.svg?v=20261112-01">
   <link rel="stylesheet" href="styles.css?v=20261112-01">
   <link rel="stylesheet" href="login.css?v=20261111-01">
-  <link rel="stylesheet" href="app-pages.css?v=20261112-11">
+  <link rel="stylesheet" href="app-pages.css?v=20261112-12">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -188,7 +188,9 @@
 
   <dialog id="portalDialog" class="portal-dialog">
     <form id="portalForm">
-      <div class="dialog-head"><div><p class="eyebrow">ADMINISTRAÇÃO</p><h2>Adicionar portal de autorização</h2></div><button class="icon-button" type="button" id="closePortalDialog" aria-label="Fechar">×</button></div>
+      <input name="portalId" type="hidden">
+      <input name="sourceDefault" type="hidden">
+      <div class="dialog-head"><div><p class="eyebrow">ADMINISTRAÇÃO</p><h2 id="portalDialogTitle">Adicionar portal de autorização</h2></div><button class="icon-button" type="button" id="closePortalDialog" aria-label="Fechar">×</button></div>
       <div class="form-grid">
         <label>Nome do convênio *<input name="name" required placeholder="Ex.: IAMSPE"></label>
         <label>Modo de abertura<select name="openMode"><option value="internal">Dentro do APFlow</option><option value="external">Nova aba do navegador</option></select></label>
@@ -196,7 +198,7 @@
         <label class="full">Endereço do ícone ou logotipo (opcional)<input name="iconUrl" type="url" inputmode="url" placeholder="https://.../icone.png"></label>
       </div>
       <p class="deadline-note">Cadastre somente endereços HTTPS oficiais. Senhas não são armazenadas pelo APFlow.</p>
-      <div class="dialog-actions"><button class="secondary" type="button" id="cancelPortal">Cancelar</button><button class="primary" type="submit">Salvar portal</button></div>
+      <div class="dialog-actions"><button class="secondary" type="button" id="cancelPortal">Cancelar</button><button class="primary" id="portalSubmitButton" type="submit">Salvar portal</button></div>
     </form>
   </dialog>
 
@@ -562,7 +564,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261112-11"></script>
+  <script type="module" src="script.js?v=20261112-12"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
