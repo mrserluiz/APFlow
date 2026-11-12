@@ -559,17 +559,65 @@ document.querySelector('#closeInternalBrowser').addEventListener('click',()=>{do
 function patientData(record){
  const match=reports.find(item=>(record.code&&String(item.code)===String(record.code))||(!record.code&&item.patient?.toLowerCase()===record.patient?.toLowerCase()));return{...(match||{}),...record};
 }
-function openPatientRecord(record){
- const patient=patientData(record);activePatientRecord={...patient};document.querySelector('#patientRecordTitle').textContent=patient.patient||'Paciente';
- const fields=[
-  ['Nome',patient.patient],['Nome social',patient.socialName],['Código',patient.code],['Prontuário',patient.medicalRecord],
-  ['Nascimento',patient.birthDate?patient.birthDate.split('-').reverse().join('/'):'' ],['Idade',calculatePatientAge(patient.birthDate)],['Sexo',patient.sex],['Estado civil',patient.maritalStatus],
-  ['Telefone',patient.phone],['Outro telefone',patient.secondaryPhone],['E-mail',patient.email],['CPF',patient.cpf],['RG',patient.rg],['CNS',patient.cns],
-  ['Endereço',[patient.address,patient.addressNumber,patient.addressComplement].filter(Boolean).join(', ')],['Bairro',patient.district],['Cidade / UF',[patient.city,patient.state].filter(Boolean).join(' / ')],
-  ['Profissão',patient.profession],['Convênio',patient.agreement],['Plano',patient.insurancePlan],['Carteirinha',patient.insuranceCard],['Validade',patient.insuranceValidity?patient.insuranceValidity.split('-').reverse().join('/'):'' ],
-  ['Empresa',patient.company],['Observações',patient.observations],['Tratamento',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]
- ]; const root=document.querySelector('#patientRecordContent');root.innerHTML='';fields.forEach(([label,value])=>{const item=document.createElement('div');const title=document.createElement('span');title.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(title,content);root.append(item)});
- const edit=document.querySelector('#editPatientRecord');edit.disabled=!patient.patientDocId;edit.textContent=patient.patientDocId?'Editar cadastro':'Sem cadastro-base para editar';document.querySelector('#patientRecordDialog').showModal();
+async function resolvePatientRecord(record){
+ const patientDocumentId=record.patientDocId||record.patientId||'';
+ if(patientDocumentId){
+  const snapshot=await getDoc(doc(db,'pacientes',patientDocumentId));
+  if(snapshot.exists())return patientData({...record,...snapshot.data(),patientDocId:snapshot.id,id:snapshot.id})
+ }
+ const code=String(record.code||'').trim();
+ if(code){
+  let snapshot=await getDocs(query(collection(db,'pacientes'),where('code','==',code)));
+  let item=snapshot.docs[0];
+  if(!item){
+   const all=await getDocs(collection(db,'pacientes'));
+   item=all.docs.find(entry=>String(entry.data().code||'').trim()===code)
+  }
+  if(item)return patientData({...record,...item.data(),patientDocId:item.id,id:item.id})
+ }
+ return patientData(record)
+}
+function patientRecordDate(value){return value?String(value).slice(0,10).split('-').reverse().join('/'):''}
+function appendPatientRecordSection(root,title,fields){
+ const heading=document.createElement('h3');heading.className='patient-record-section-title';heading.textContent=title;root.append(heading);
+ fields.forEach(([label,value])=>{const item=document.createElement('div');const fieldTitle=document.createElement('span');fieldTitle.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(fieldTitle,content);root.append(item)})
+}
+function renderFullPatientRecord(patient){
+ document.querySelector('#patientRecordTitle').textContent=patient.patient||'Paciente';
+ const root=document.querySelector('#patientRecordContent');root.innerHTML='';
+ appendPatientRecordSection(root,'Dados cadastrais',[
+  ['Nome',patient.patient],['Nome de registro / social',patient.socialName],['Código',patient.code],['Prontuário',patient.medicalRecord],
+  ['Nascimento',patientRecordDate(patient.birthDate)],['Idade',calculatePatientAge(patient.birthDate)],['Sexo',patient.sex],['Orientação sexual',patient.sexualOrientation],
+  ['Estado civil',patient.maritalStatus],['Cor / raça',patient.raceColor],['Indicação',patient.referral],['Classificação de risco',patient.riskClassification],
+  ['Tipo de paciente',patient.patientType],['Profissão',patient.profession],['Naturalidade',patient.birthplace],['Nacionalidade',patient.nationality]
+ ]);
+ appendPatientRecordSection(root,'Documentos e contato',[
+  ['CPF',patient.cpf],['RG',patient.rg],['CNS',patient.cns],['Celular',patient.phone],
+  ['Outro telefone',patient.secondaryPhone],['E-mail',patient.email],['Cônjuge',patient.spouse],['Nome do pai',patient.fatherName],['Nome da mãe',patient.motherName]
+ ]);
+ appendPatientRecordSection(root,'Endereço',[
+  ['Endereço',[patient.address,patient.addressNumber].filter(Boolean).join(', ')],['Complemento',patient.addressComplement],['Bairro',patient.district],['CEP',patient.zipCode],
+  ['Cidade',patient.city],['UF',patient.state]
+ ]);
+ appendPatientRecordSection(root,'Convênio',[
+  ['Convênio',patient.agreement],['Plano',patient.insurancePlan],['Carteirinha',patient.insuranceCard],['Validade',patientRecordDate(patient.insuranceValidity)],
+  ['Empresa',patient.company],['Última visita',patientRecordDate(patient.lastVisit)]
+ ]);
+ appendPatientRecordSection(root,'Informações complementares',[
+  ['Observações',patient.observations],['Dados adicionais',patient.additionalData],['Tratamento agendado',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]
+ ]);
+ const edit=document.querySelector('#editPatientRecord');edit.disabled=!patient.patientDocId;edit.textContent=patient.patientDocId?'Editar cadastro':'Cadastro completo não localizado'
+}
+async function openPatientRecord(record){
+ const root=document.querySelector('#patientRecordContent');document.querySelector('#patientRecordTitle').textContent=record.patient||'Paciente';
+ root.innerHTML='<p class="patient-record-loading">Carregando ficha completa...</p>';const edit=document.querySelector('#editPatientRecord');edit.disabled=true;edit.textContent='Carregando...';
+ document.querySelector('#patientRecordDialog').showModal();
+ try{
+  const patient=await resolvePatientRecord(record);activePatientRecord={...patient};renderFullPatientRecord(patient);
+  if(!patient.patientDocId)showToast('O agendamento foi encontrado, mas não há uma ficha completa vinculada a este código.','warning',5600)
+ }catch(error){
+  console.error(error);activePatientRecord=patientData(record);renderFullPatientRecord(activePatientRecord);showToast('Não foi possível carregar a ficha completa do paciente.','error')
+ }
 }
 function appointmentMoment(item){return new Date(`${item.date||'1970-01-01'}T${item.time||'00:00'}:00`)}
 function formatAppointmentDate(item){const date=new Date(`${item.date||'1970-01-01'}T12:00:00`);return new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'}).format(date)}
