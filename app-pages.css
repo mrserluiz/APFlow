@@ -456,3 +456,12 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
  .patient-required-note{margin:12px}
  .patient-registration-actions{padding:12px}
 }
+
+
+/* Visualização integral da ficha pelo botão Cadastro da agenda */
+.patient-record-dialog{width:min(1080px,calc(100% - 24px));max-height:calc(100vh - 24px)}
+.patient-record-panel{max-height:calc(100vh - 64px);overflow:auto}
+.patient-record-section-title{grid-column:1/-1;margin:9px 0 0;padding:10px 12px;border-radius:7px;background:#315f7d;color:#fff;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.patient-record-loading{grid-column:1/-1;margin:0;padding:24px;text-align:center;color:#607986}
+.patient-record-grid strong{overflow-wrap:anywhere;white-space:pre-wrap}
+@media(min-width:850px){.patient-record-grid{grid-template-columns:repeat(3,minmax(200px,1fr))}}
