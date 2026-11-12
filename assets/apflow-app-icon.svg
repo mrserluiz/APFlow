@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">APFlow</title>
+  <defs>
+    <linearGradient id="bg" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#36b7ad"/>
+      <stop offset="1" stop-color="#315f7d"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-15%" width="140%" height="145%">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#17384d" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#eef6fa"/>
+  <path d="M256 58 420 121v120c0 105-62 174-164 226C154 415 92 346 92 241V121L256 58Z" fill="url(#bg)" filter="url(#shadow)"/>
+  <path d="M256 92 388 143v96c0 84-48 141-132 187-84-46-132-103-132-187v-96L256 92Z" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="8"/>
+  <path d="M231 151h50v76h76v50h-76v84h-50v-84h-76v-50h76v-76Z" fill="#fff"/>
+</svg>
