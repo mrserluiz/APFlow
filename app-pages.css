@@ -660,3 +660,9 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .workspace[data-page="relatorio"][hidden]{
  display:none!important;
 }
+
+
+/* Edição dos autorizadores */
+.authorization-card .portal-edit{position:absolute;top:7px;right:35px;display:grid;place-items:center;width:25px;height:25px;padding:0;border:1px solid #9db2be;border-radius:50%;background:#fff;color:#315f7d;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 2px 5px rgba(26,58,76,.13)}
+.authorization-card .portal-edit:hover{border-color:#315f7d;background:#e7f1f6}
+.authorization-card:has(.portal-edit) strong{padding-right:50px}
