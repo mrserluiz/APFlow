@@ -417,3 +417,42 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
  .admin-user-actions{align-items:stretch}
  .admin-user-actions select,.admin-access-button{width:100%}
 }
+
+
+/* Ficha completa do paciente e preenchimento do agendamento por código */
+.patient-registration-dialog{width:min(1180px,calc(100% - 24px));max-height:calc(100vh - 20px);padding:0}
+#patientRegistrationForm{box-sizing:border-box;max-height:calc(100vh - 22px);padding:0;overflow:auto;background:#f5f8fa}
+.patient-registration-head{position:sticky;z-index:4;top:0;margin:0;padding:20px 24px 16px;border-bottom:1px solid #cedbe2;background:#fff}
+.patient-registration-head span{display:block;margin-top:4px;color:#607986;font-size:13px}
+.patient-form-section{margin:16px 22px;padding:16px;border:1px solid #c9d8e0;border-radius:10px;background:#fff}
+.patient-form-section legend{padding:0 8px;color:#255d7b;font-size:13px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.patient-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px 15px}
+.patient-form-grid label{display:grid;align-content:start;gap:6px;min-width:0;color:#294b5e;font-size:12px;font-weight:800}
+.patient-form-grid input,.patient-form-grid select,.patient-form-grid textarea{box-sizing:border-box;width:100%;min-width:0;padding:11px 12px;border:1px solid #bdccd5;border-radius:7px;background:#fff;color:#18384a;font:inherit;font-weight:500}
+.patient-form-grid input:focus,.patient-form-grid select:focus,.patient-form-grid textarea:focus{border-color:#2e769d;outline:0;box-shadow:0 0 0 3px rgba(46,118,157,.13)}
+.patient-form-grid input[readonly]{background:#edf3f6;color:#536b77}
+.patient-form-grid textarea{resize:vertical}
+.patient-form-grid .span-2{grid-column:span 2}
+.patient-form-grid .span-4{grid-column:1/-1}
+.patient-insurance-section{border-top:4px solid #315f7d}
+.patient-required-note{margin:16px 22px}
+.patient-registration-actions{position:sticky;z-index:4;bottom:0;margin:0;padding:14px 22px;border-top:1px solid #cedbe2;background:rgba(255,255,255,.97);box-shadow:0 -6px 16px rgba(31,65,84,.08)}
+.field-disabled{opacity:.62}
+.appointment-patient-grid input[readonly]{background:#eaf1f6;color:#244c64;font-weight:800}
+.appointment-code-field input{border-color:#6b9db8}
+.appointment-patient-status{box-sizing:border-box;margin:-3px 0 2px;padding:9px 11px;border-left:4px solid #7e9bab;border-radius:5px;background:#edf3f6;color:#58717e;font-size:12px}
+.appointment-patient-status.searching{border-color:#357da5;background:#eef7fb;color:#2c6686}
+.appointment-patient-status.found{border-color:#2e916d;background:#eaf7f1;color:#236d53;font-weight:800}
+.appointment-patient-status.not-found{border-color:#ca7a13;background:#fff5e6;color:#8a570e;font-weight:800}
+@media(max-width:900px){
+ .patient-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .patient-form-grid .span-4{grid-column:1/-1}
+}
+@media(max-width:620px){
+ .patient-form-section{margin:12px;padding:13px}
+ .patient-registration-head{padding:16px}
+ .patient-form-grid{grid-template-columns:1fr}
+ .patient-form-grid .span-2,.patient-form-grid .span-4{grid-column:1}
+ .patient-required-note{margin:12px}
+ .patient-registration-actions{padding:12px}
+}
