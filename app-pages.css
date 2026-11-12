@@ -465,3 +465,8 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .patient-record-loading{grid-column:1/-1;margin:0;padding:24px;text-align:center;color:#607986}
 .patient-record-grid strong{overflow-wrap:anywhere;white-space:pre-wrap}
 @media(min-width:850px){.patient-record-grid{grid-template-columns:repeat(3,minmax(200px,1fr))}}
+
+
+/* Paciente selecionado antes da ação Cadastro */
+.appointment-slot.selected-patient{z-index:2;outline:4px solid #f2a900;outline-offset:2px;box-shadow:0 0 0 7px rgba(242,169,0,.2),0 6px 16px rgba(36,76,103,.24);transform:translateY(-1px)}
+.appointment-slot.selected-patient::after{content:'SELECIONADO';position:absolute;right:7px;bottom:6px;padding:3px 6px;border-radius:10px;background:#f2a900;color:#3f2b00;font-size:9px;font-weight:900;letter-spacing:.04em}
