@@ -688,3 +688,11 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .patient-record-panel>.dialog-actions{padding:7px 10px;background:#fff;border-top:1px solid #c8d5dc}
 @media(max-height:760px){#patientRecordContent{overflow:auto}.patient-record-readonly-sheet{min-width:1000px}}
 @media(max-width:1050px){#patientRecordContent{overflow:auto}.patient-record-readonly-sheet{min-width:1000px}}
+
+
+/* Anotações rápidas editáveis na ficha do paciente */
+.patient-record-readonly-sheet .legacy-notes-editor textarea:not(:disabled){border-color:#8eafc1;background:#fff;color:#18384a;-webkit-text-fill-color:#18384a;cursor:text}
+.patient-record-readonly-sheet .legacy-notes-editor textarea:not(:disabled):focus{border-color:#2e769d;box-shadow:0 0 0 2px rgba(46,118,157,.14)}
+.patient-record-actions{display:flex;justify-content:flex-end;gap:9px}
+#savePatientQuickNotes:not(:disabled){border-color:#2f8a68;background:#2f8a68;color:#fff;font-weight:800}
+#savePatientQuickNotes:not(:disabled):hover{background:#267456}
