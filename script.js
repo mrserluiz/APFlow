@@ -28,7 +28,7 @@ let activePatientRecord=null;
 let selectPatientAfterRegistration=false;
 let therapists=[];
 let appointments=[];let stopAppointments=null;
-let agendaMode=null;let moveSource=null;let pendingScheduleAction=null;let pendingChargeAppointment=null;let appointmentContext='agendar';
+let agendaMode=null;let moveSource=null;let selectedAgendaAppointment=null;let pendingScheduleAction=null;let pendingChargeAppointment=null;let appointmentContext='agendar';
 const defaultAuthorizationPortals=[{id:'orizon-brasil',name:'Orizon Brasil',url:'https://www.orizonbrasil.com.br/acesso-restrito.html',iconUrl:'',openMode:'internal',active:true,order:1,isDefault:true}];
 let portals=[...defaultAuthorizationPortals];let portalsConnected=false;let currentUserIsAdmin=false;let currentUserRole='equipe';let adminFunctionsEnabled=true;let currentPortalUrl='';let activeClinicalReport=null;let pendingClinicalStart=null;
 const defaultProfessionals=[
@@ -266,8 +266,11 @@ async function handleSlotClick(slot,appointment){
  }
  if(agendaMode==='destravar'){showToast('Selecione uma célula com cadeado.');return}
  if(agendaMode==='agendar'||agendaMode==='encaixar'){
-  if(appointment){showToast('Selecione uma célula vazia.');return}
-  openAppointment(slot,null,agendaMode);return;
+  if(appointment){
+   if(agendaMode==='encaixar'){showToast('Selecione uma célula vazia.');return}
+   selectedAgendaAppointment={...appointment};renderAgenda();showToast('Paciente selecionado. Agora clique em Cadastro para abrir a ficha completa.');return
+  }
+  selectedAgendaAppointment=null;openAppointment(slot,null,agendaMode);return;
  }
  if(agendaMode==='travar'){
   if(appointment){showToast('Somente horários vazios podem ser travados.');return}
@@ -307,7 +310,7 @@ async function handleSlotClick(slot,appointment){
 function createAgendaSlot(time,column,appointment,emptyLabel){
  const slot=document.createElement('button');slot.className=`appointment-slot column-${column}`;slot.type='button';slot.dataset.time=time;slot.dataset.column=column;
  if(appointment?.locked){slot.classList.add('locked');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty"><b>🔒 HORÁRIO TRAVADO</b></span>`}
- else if(appointment){slot.classList.add('occupied');if(moveSource?.id===appointment.id)slot.classList.add('move-source');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="patient-name">${appointment.patient}</span><small>${appointment.agreement||''}</small><small>${appointment.treatment||''}</small><small>Nº ${appointment.code||''}</small><span class="patient-actions">${appointment.billed?'💼':''} ${appointment.present?'✅':''}</span>`}
+ else if(appointment){slot.classList.add('occupied');if(moveSource?.id===appointment.id)slot.classList.add('move-source');if(selectedAgendaAppointment?.id===appointment.id)slot.classList.add('selected-patient');slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="patient-name">${appointment.patient}</span><small>${appointment.agreement||''}</small><small>${appointment.treatment||''}</small><small>Nº ${appointment.code||''}</small><span class="patient-actions">${appointment.billed?'💼':''} ${appointment.present?'✅':''}</span>`}
  else slot.innerHTML=`<span class="slot-time">${time.replace(':','h')}</span><span class="slot-empty">${emptyLabel}</span>`;
  slot.addEventListener('click',()=>handleSlotClick(slot,appointment));slot.addEventListener('dblclick',event=>{if(appointment?.locked)return;event.preventDefault();if(appointment)openPatientRecord(appointment);else openAppointment(slot,null,'agendar')});return slot;
 }
@@ -328,7 +331,7 @@ function renderAgenda(){
   slots.forEach(time=>{const row=document.createElement('div');row.className='schedule-row';for(let column=1;column<=columns;column++){const appointment=activeAppointments.find(item=>item.time===time&&Number(item.column)===column);row.append(createAgendaSlot(time,column,appointment,agendaMode?'Clique para selecionar':'Dois cliques para agendar'))}root.append(row)});
  });
 }
-function connectAppointments(){const professional=document.querySelector('#agendaProfessional').value;if(stopAppointments)stopAppointments();appointments=[];if(!professional){renderAgenda();return}const acceptedNames=new Set(professionalStoredNames(professional));stopAppointments=onSnapshot(query(collection(db,'agendamentos'),where('date','==',dateKey(selectedDate))),snapshot=>{appointments=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>acceptedNames.has(item.professional));renderAgenda()},error=>{console.error(error);appointments=[];renderAgenda();showToast('Publique as regras do Firestore para usar a agenda.')})}
+function connectAppointments(){const professional=document.querySelector('#agendaProfessional').value;selectedAgendaAppointment=null;if(stopAppointments)stopAppointments();appointments=[];if(!professional){renderAgenda();return}const acceptedNames=new Set(professionalStoredNames(professional));stopAppointments=onSnapshot(query(collection(db,'agendamentos'),where('date','==',dateKey(selectedDate))),snapshot=>{appointments=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>acceptedNames.has(item.professional));renderAgenda()},error=>{console.error(error);appointments=[];renderAgenda();showToast('Publique as regras do Firestore para usar a agenda.')})}
 const appointmentDialog=document.querySelector('#appointmentDialog');const appointmentForm=document.querySelector('#appointmentForm');
 let appointmentSelectedPatient=null;let appointmentCodeTimer=null;
 function appointmentBirthDate(value){return value?String(value).split('-').reverse().join('/'):''}
@@ -542,7 +545,23 @@ document.querySelector('#previousMonth').addEventListener('click',()=>{calendarM
 document.querySelector('#nextMonth').addEventListener('click',()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()});
 document.querySelector('#todayButton').addEventListener('click',()=>{selectedDate=new Date();calendarMonth=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);updateSelectedDate();renderCalendar();connectAppointments()});
 document.querySelector('#agendaProfessional').addEventListener('change',connectAppointments);
-document.querySelectorAll('[data-agenda-action]').forEach(button=>button.addEventListener('click',()=>{const action=button.dataset.agendaAction;if(action==='imprimir'){showToast('A impressão da ficha do paciente será adicionada futuramente.');return}if(action==='localizar'){openPatientSearch();return}if(action==='travar-dia'){if(!document.querySelector('#agendaProfessional').value){showToast('Selecione primeiro um profissional.');return}const locked=appointments.filter(item=>item.locked===true&&item.locked!==false).length;document.querySelector('#dayLockDescription').textContent=`Agenda de ${document.querySelector('#agendaProfessional').value}: ${locked} célula(s) travada(s).`;document.querySelector('#dayLockDialog').showModal();return}if(['agendar','desmarcar','remarcar','encaixar','confirmar','travar','destravar','cadastro','visualizacao','cobranca'].includes(action)){if(!document.querySelector('#agendaProfessional').value){showToast('Selecione primeiro um profissional.');return}setAgendaMode(action);return}showToast(`${button.textContent.trim()}: função em preparação.`)}));
+document.querySelectorAll('[data-agenda-action]').forEach(button=>button.addEventListener('click',()=>{
+ const action=button.dataset.agendaAction;
+ if(action==='imprimir'){showToast('A impressão da ficha do paciente será adicionada futuramente.');return}
+ if(action==='localizar'){openPatientSearch();return}
+ if(action==='cadastro'&&selectedAgendaAppointment){
+  const patient={...selectedAgendaAppointment};selectedAgendaAppointment=null;openPatientRecord(patient);resetAgendaMode();return
+ }
+ if(action==='travar-dia'){
+  if(!document.querySelector('#agendaProfessional').value){showToast('Selecione primeiro um profissional.');return}
+  const locked=appointments.filter(item=>item.locked===true&&item.locked!==false).length;document.querySelector('#dayLockDescription').textContent='Agenda de '+document.querySelector('#agendaProfessional').value+': '+locked+' célula(s) travada(s).';document.querySelector('#dayLockDialog').showModal();return
+ }
+ if(['agendar','desmarcar','remarcar','encaixar','confirmar','travar','destravar','cadastro','visualizacao','cobranca'].includes(action)){
+  if(!document.querySelector('#agendaProfessional').value){showToast('Selecione primeiro um profissional.');return}
+  setAgendaMode(action);return
+ }
+ showToast(button.textContent.trim()+': função em preparação.')
+}));
 const portalDialog=document.querySelector('#portalDialog');
 document.querySelector('#addPortalButton').addEventListener('click',()=>portalDialog.showModal());
 document.querySelectorAll('#closePortalDialog,#cancelPortal').forEach(button=>button.addEventListener('click',()=>portalDialog.close()));
