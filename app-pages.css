@@ -653,3 +653,10 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .patient-profession-dropdown p{margin:0;padding:10px;color:#718590;font-size:11px;text-align:center}
 .patient-profession-dropdown::-webkit-scrollbar{width:7px}
 .patient-profession-dropdown::-webkit-scrollbar-thumb{border-radius:7px;background:#9fb0ba}
+
+
+/* Garante que somente a aba selecionada permaneça visível */
+.workspace.page-view[hidden],
+.workspace[data-page="relatorio"][hidden]{
+ display:none!important;
+}
