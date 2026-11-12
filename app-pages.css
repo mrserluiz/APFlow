@@ -470,3 +470,53 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 /* Paciente selecionado antes da ação Cadastro */
 .appointment-slot.selected-patient{z-index:2;outline:4px solid #f2a900;outline-offset:2px;box-shadow:0 0 0 7px rgba(242,169,0,.2),0 6px 16px rgba(36,76,103,.24);transform:translateY(-1px)}
 .appointment-slot.selected-patient::after{content:'SELECIONADO';position:absolute;right:7px;bottom:6px;padding:3px 6px;border-radius:10px;background:#f2a900;color:#3f2b00;font-size:9px;font-weight:900;letter-spacing:.04em}
+
+
+/* Cadastro do paciente em janela única e compacta */
+.header-refresh-button{
+ display:grid;place-items:center;width:28px;height:28px;margin-left:4px;border:1px solid rgba(49,95,125,.28);border-radius:50%;
+ background:rgba(255,255,255,.62);color:#315f7d;font-size:18px;font-weight:900;line-height:1;cursor:pointer
+}
+.header-refresh-button:hover{background:#fff;border-color:#315f7d;transform:rotate(18deg)}
+.patient-registration-dialog{width:min(1240px,calc(100% - 18px));height:min(710px,calc(100vh - 18px));max-height:none;overflow:hidden}
+#patientRegistrationForm{display:flex;flex-direction:column;box-sizing:border-box;height:100%;max-height:none;padding:0;overflow:hidden;background:#edf3f6}
+.patient-registration-head{position:static;flex:0 0 auto;padding:12px 18px 10px}
+.patient-registration-head h2{font-size:21px}
+.patient-registration-head span{font-size:11px}
+.patient-form-tabs,.patient-record-tabs{display:flex;flex:0 0 auto;gap:2px;padding:6px 14px 0;border-bottom:1px solid #b9cbd5;background:#f8fafb}
+.patient-form-tabs button,.patient-record-tabs button{padding:8px 15px;border:1px solid transparent;border-bottom:0;border-radius:6px 6px 0 0;background:transparent;color:#536e7c;font-size:12px;font-weight:800;cursor:pointer}
+.patient-form-tabs button.active,.patient-record-tabs button.active{border-color:#b9cbd5;background:#fff;color:#245d7b}
+.patient-form-section{flex:1;min-height:0;margin:8px 14px;padding:10px 12px;overflow:hidden;border-radius:6px}
+.patient-form-section[hidden]{display:none}
+.patient-form-section legend{font-size:11px}
+.patient-form-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 9px}
+.patient-form-grid label{gap:3px;font-size:10px}
+.patient-form-grid input,.patient-form-grid select,.patient-form-grid textarea{height:32px;padding:5px 8px;border-radius:4px;font-size:12px}
+.patient-form-grid textarea{height:52px;min-height:52px}
+.patient-required-note{flex:0 0 auto;margin:2px 14px 5px;padding:7px 10px;font-size:11px}
+.patient-registration-actions{position:static;flex:0 0 auto;padding:8px 14px;box-shadow:none}
+.patient-registration-actions button{padding:8px 13px}
+
+/* Ficha completa compacta, organizada como o cadastro antigo */
+.patient-record-dialog{width:min(1180px,calc(100% - 18px));height:min(675px,calc(100vh - 18px));max-height:none;overflow:hidden}
+.patient-record-panel{display:flex;flex-direction:column;box-sizing:border-box;height:100%;max-height:none;padding:14px;overflow:hidden;background:#edf3f6}
+.patient-record-panel>.dialog-head{flex:0 0 auto;padding:0 2px 10px}
+#patientRecordContent{display:flex;flex:1;flex-direction:column;min-height:0}
+.patient-record-tabs{padding:5px 6px 0}
+.patient-record-compact-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-content:start;gap:7px;min-height:0;padding:10px 6px;overflow:hidden}
+.patient-record-compact-grid>div{display:grid;gap:3px;min-width:0;padding:8px 9px;border:1px solid #bdccd5;border-radius:4px;background:#fff}
+.patient-record-compact-grid span{color:#6a7e89;font-size:10px;font-weight:800;text-transform:uppercase}
+.patient-record-compact-grid strong{overflow:hidden;color:#203b4a;font-size:12px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
+.patient-record-panel>.deadline-note{flex:0 0 auto;margin:2px 6px 5px;padding:7px 10px;font-size:11px}
+.patient-record-panel>.dialog-actions{flex:0 0 auto;padding:7px 6px 0}
+@media(max-width:900px){
+ .patient-registration-dialog,.patient-record-dialog{height:calc(100vh - 12px)}
+ .patient-form-grid,.patient-record-compact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .patient-form-section,.patient-record-compact-grid{overflow:auto}
+ .patient-form-tabs,.patient-record-tabs{overflow-x:auto}
+}
+@media(max-width:620px){
+ .patient-form-grid,.patient-record-compact-grid{grid-template-columns:1fr}
+ .patient-form-section{margin:6px}
+ .patient-form-tabs,.patient-record-tabs{padding-left:6px}
+}
