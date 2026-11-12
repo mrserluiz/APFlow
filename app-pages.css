@@ -666,3 +666,25 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .authorization-card .portal-edit{position:absolute;top:7px;right:35px;display:grid;place-items:center;width:25px;height:25px;padding:0;border:1px solid #9db2be;border-radius:50%;background:#fff;color:#315f7d;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 2px 5px rgba(26,58,76,.13)}
 .authorization-card .portal-edit:hover{border-color:#315f7d;background:#e7f1f6}
 .authorization-card:has(.portal-edit) strong{padding-right:50px}
+
+
+/* Visualização da ficha com o mesmo desenho da edição, porém somente leitura */
+.patient-record-dialog{width:min(1420px,calc(100% - 12px));height:min(800px,calc(100vh - 12px));max-height:none}
+.patient-record-panel{padding:0;background:#eaf0f4}
+.patient-record-panel>.dialog-head{padding:12px 16px 10px;border-bottom:4px solid #315f7d;background:#fff}
+#patientRecordContent{display:flex;flex:1 1 auto;min-height:0;overflow:hidden}
+.patient-record-readonly-sheet{width:100%;padding-top:7px}
+.patient-record-readonly-sheet input:disabled,
+.patient-record-readonly-sheet select:disabled,
+.patient-record-readonly-sheet textarea:disabled{opacity:1;border-color:#b8c9d3;background:#f8fafb;color:#203d4d;-webkit-text-fill-color:#203d4d;cursor:default}
+.patient-record-readonly-sheet input:disabled::placeholder,
+.patient-record-readonly-sheet textarea:disabled::placeholder{color:#738791;-webkit-text-fill-color:#738791}
+.patient-record-readonly-sheet .patient-profession-picker::after,
+.patient-record-readonly-sheet .patient-agreement-picker::after{display:none}
+.patient-record-readonly-sheet .legacy-cep-control{grid-template-columns:1fr}
+.patient-record-readonly-sheet .legacy-cep-control input{border-radius:4px}
+.patient-record-readonly-sheet .legacy-notes-tabs button{cursor:pointer}
+.patient-record-panel>.deadline-note{margin:0 10px 4px}
+.patient-record-panel>.dialog-actions{padding:7px 10px;background:#fff;border-top:1px solid #c8d5dc}
+@media(max-height:760px){#patientRecordContent{overflow:auto}.patient-record-readonly-sheet{min-width:1000px}}
+@media(max-width:1050px){#patientRecordContent{overflow:auto}.patient-record-readonly-sheet{min-width:1000px}}
