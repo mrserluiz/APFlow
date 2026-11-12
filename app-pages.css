@@ -520,3 +520,46 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
  .patient-form-section{margin:6px}
  .patient-form-tabs,.patient-record-tabs{padding-left:6px}
 }
+
+
+/* Rolagem independente em cada coluna do fluxo de relatórios */
+.workspace[data-page="relatorio"]{
+ display:flex;
+ flex-direction:column;
+ min-height:0;
+ overflow:hidden;
+}
+.workspace[data-page="relatorio"]>.workspace-head,
+.workspace[data-page="relatorio"]>.report-actions,
+.workspace[data-page="relatorio"]>.summary{
+ flex:0 0 auto;
+}
+.workspace[data-page="relatorio"]>.board{
+ display:grid;
+ flex:1 1 auto;
+ min-height:0;
+ overflow-x:auto;
+ overflow-y:hidden;
+ align-items:stretch;
+}
+.workspace[data-page="relatorio"] .lane{
+ display:flex;
+ flex-direction:column;
+ min-height:0;
+ overflow:hidden;
+}
+.workspace[data-page="relatorio"] .lane>header{
+ flex:0 0 auto;
+}
+.workspace[data-page="relatorio"] .card-list{
+ flex:1 1 auto;
+ min-height:0;
+ overflow-x:hidden;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ scrollbar-gutter:stable;
+}
+.workspace[data-page="relatorio"] .card-list::-webkit-scrollbar{width:8px}
+.workspace[data-page="relatorio"] .card-list::-webkit-scrollbar-track{background:#e6edf1}
+.workspace[data-page="relatorio"] .card-list::-webkit-scrollbar-thumb{border-radius:8px;background:#9cabb4}
+.workspace[data-page="relatorio"] .card-list::-webkit-scrollbar-thumb:hover{background:#71838e}
