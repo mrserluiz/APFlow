@@ -732,42 +732,28 @@ function appendPatientRecordSection(root,title,fields){
 function renderFullPatientRecord(patient){
  document.querySelector('#patientRecordTitle').textContent=patient.patient||'Paciente';
  const root=document.querySelector('#patientRecordContent');root.innerHTML='';
- const sections=[
-  {id:'cadastro',label:'Dados cadastrais',fields:[
-   ['Nome',patient.patient],['Nome de registro / social',patient.socialName],['Código',patient.code],['Prontuário',patient.medicalRecord],
-   ['Nascimento',patientRecordDate(patient.birthDate)],['Idade',calculatePatientAge(patient.birthDate)],['Sexo',patient.sex],['Orientação sexual',patient.sexualOrientation],
-   ['Estado civil',patient.maritalStatus],['Cor / raça',patient.raceColor],['Indicação',patient.referral],['Classificação de risco',patient.riskClassification],
-   ['Tipo de paciente',patient.patientType],['Profissão',patient.profession],['Naturalidade',patient.birthplace],['Nacionalidade',patient.nationality]
-  ]},
-  {id:'contato',label:'Documentos e contatos',fields:[
-   ['CPF',patient.cpf],['RG',patient.rg],['CNS',patient.cns],[patient.phoneType||'Telefone 1',patient.phone],
-   [patient.secondaryPhoneType||'Telefone 2',patient.secondaryPhone],[patient.commercialPhoneType||'Telefone 3',patient.commercialPhone],
-   [patient.additionalPhoneType||'Telefone 4',patient.additionalPhone],['Nome do contato',patient.contactName],['Telefone do contato',patient.contactPhone],
-   ['E-mail 1',patient.email],['E-mail 2',patient.email2],['E-mail 3',patient.email3],['Cônjuge',patient.spouse],['Nome do pai',patient.fatherName],['Nome da mãe',patient.motherName]
-  ]},
-  {id:'endereco',label:'Endereço',fields:[
-   ['Endereço',[patient.address,patient.addressNumber].filter(Boolean).join(', ')],['Complemento',patient.addressComplement],['Bairro',patient.district],
-   ['CEP',patient.zipCode],['Cidade',patient.city],['UF',patient.state]
-  ]},
-  {id:'convenio',label:'Convênio',fields:[
-   ['Convênio',patient.agreement],['Plano',patient.insurancePlan],['Carteirinha',patient.insuranceCard],['Validade',patientRecordDate(patient.insuranceValidity)],
-   ['Médico responsável / solicitante',patient.insuranceDoctor],['Empresa',patient.company],['Última visita',patientRecordDate(patient.lastVisit)],
-   ['Descrição da última visita',patient.lastVisitDescription]
-  ]},
-  {id:'anotacoes',label:'Anotações',fields:[
-   ['Observações',patient.observations],['Dados adicionais',patient.additionalData],['Acordos',patient.agreementsNotes],
-   ['Tratamento agendado',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]
-  ]}
- ];
- const tabs=document.createElement('nav');tabs.className='patient-record-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Seções da ficha');
- const panel=document.createElement('div');panel.className='patient-record-compact-grid';
- const activate=id=>{
-  tabs.querySelectorAll('button').forEach(button=>{const active=button.dataset.recordTab===id;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
-  const section=sections.find(item=>item.id===id)||sections[0];panel.innerHTML='';
-  section.fields.forEach(([label,value])=>{const item=document.createElement('div');const fieldTitle=document.createElement('span');fieldTitle.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(fieldTitle,content);panel.append(item)})
- };
- sections.forEach((section,index)=>{const button=document.createElement('button');button.type='button';button.dataset.recordTab=section.id;button.setAttribute('role','tab');button.textContent=section.label;button.addEventListener('click',()=>activate(section.id));tabs.append(button)});
- root.append(tabs,panel);activate('cadastro');
+ const source=document.querySelector('#patientRegistrationForm .legacy-patient-sheet');
+ if(!source){root.innerHTML='<p class="patient-record-loading">Não foi possível montar a ficha do paciente.</p>';return}
+ const sheet=source.cloneNode(true);sheet.classList.add('patient-record-readonly-sheet');
+ sheet.querySelectorAll('[id]').forEach(element=>element.removeAttribute('id'));
+ sheet.querySelectorAll('.patient-agreement-dropdown,.patient-profession-dropdown,datalist,.legacy-cep-control button,#patientCepStatus').forEach(element=>element.remove());
+ const dateValue=value=>value?String(value).slice(0,10):'';
+ sheet.querySelectorAll('input,select,textarea').forEach(control=>{
+  const name=control.name;let value=patient?.[name]??'';
+  if(name==='birthDate')value=patientRecordDate(patient.birthDate);
+  if(name==='age')value=calculatePatientAge(patient.birthDate);
+  if(name==='insuranceValidity'||name==='lastVisit')value=dateValue(patient?.[name]);
+  if(control.tagName==='SELECT'&&value&&![...control.options].some(option=>option.value===String(value))){const option=document.createElement('option');option.value=String(value);option.textContent=String(value);control.append(option)}
+  if(control.tagName==='SELECT'&&!value){const option=document.createElement('option');option.value='';option.textContent='Não informado';control.prepend(option)}
+  control.value=String(value||'');
+  if(!value&&control.tagName!=='SELECT')control.placeholder='Não informado';
+  control.disabled=true;control.removeAttribute('required')
+ });
+ const noteTabs=[...sheet.querySelectorAll('[data-patient-note-tab]')];const notePanels=[...sheet.querySelectorAll('[data-patient-note-panel]')];
+ const activateNote=tab=>{noteTabs.forEach(button=>{const active=button.dataset.patientNoteTab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});notePanels.forEach(panel=>{panel.hidden=panel.dataset.patientNotePanel!==tab})};
+ noteTabs.forEach(button=>{button.disabled=false;button.addEventListener('click',()=>activateNote(button.dataset.patientNoteTab))});
+ activateNote('observations');
+ root.append(sheet);
  const edit=document.querySelector('#editPatientRecord');edit.disabled=!patient.patientDocId;edit.textContent=patient.patientDocId?'Editar cadastro':'Cadastro completo não localizado'
 }
 async function openPatientRecord(record){
