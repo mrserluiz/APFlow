@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/apflow-app-icon.svg?v=20261112-01">
   <link rel="stylesheet" href="styles.css?v=20261112-01">
   <link rel="stylesheet" href="login.css?v=20261111-01">
-  <link rel="stylesheet" href="app-pages.css?v=20261112-08">
+  <link rel="stylesheet" href="app-pages.css?v=20261112-09">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -254,7 +254,7 @@
           </div>
 
           <div class="legacy-row legacy-row-address">
-            <label>CEP<input name="zipCode" inputmode="numeric" placeholder="00000-000"></label>
+            <label class="legacy-cep-field">CEP<div class="legacy-cep-control"><input name="zipCode" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code"><button type="button" id="lookupPatientCep" aria-label="Pesquisar CEP" title="Pesquisar CEP">⌕</button></div><small id="patientCepStatus" aria-live="polite"></small></label>
             <label>Endereço<input name="address" autocomplete="street-address" placeholder="Rua, avenida e número"></label>
             <label>Bairro<input name="district" placeholder="Bairro"></label>
           </div>
@@ -264,7 +264,7 @@
           </div>
 
           <div class="legacy-row legacy-row-docs">
-            <label>Profissão<input name="profession" placeholder="Profissão"></label>
+            <label>Profissão<input name="profession" list="patientProfessionOptions" autocomplete="off" placeholder="Digite para ver sugestões"><datalist id="patientProfessionOptions"></datalist></label>
             <label>RG<input name="rg" placeholder="Número do RG"></label>
             <label>CPF<input name="cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
           </div>
@@ -288,8 +288,10 @@
             <legend>Dados de convênios</legend>
             <div class="legacy-insurance-grid">
               <label class="insurance-agreement">Convênio *
-                <input name="agreement" type="search" list="patientAgreementOptions" required autocomplete="off" placeholder="Pesquise ou selecione">
-                <datalist id="patientAgreementOptions"></datalist>
+                <div class="patient-agreement-picker">
+                  <input name="agreement" id="patientAgreementSearch" type="search" required autocomplete="off" placeholder="Pesquise ou selecione" aria-controls="patientAgreementDropdown" aria-expanded="false">
+                  <div class="patient-agreement-dropdown" id="patientAgreementDropdown" role="listbox" hidden></div>
+                </div>
               </label>
               <label>Plano<input name="insurancePlan" placeholder="Nome do plano"></label>
               <label id="patientInsuranceCardLabel">Nº da carteirinha<input name="insuranceCard" placeholder="Número da carteirinha"></label>
@@ -555,7 +557,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261112-08"></script>
+  <script type="module" src="script.js?v=20261112-09"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
