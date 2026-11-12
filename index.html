@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/apflow-app-icon.svg?v=20261112-01">
   <link rel="stylesheet" href="styles.css?v=20261110-01">
   <link rel="stylesheet" href="login.css?v=20261111-01">
-  <link rel="stylesheet" href="app-pages.css?v=20261112-04">
+  <link rel="stylesheet" href="app-pages.css?v=20261112-05">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -251,9 +251,19 @@
         <div class="patient-form-grid">
           <label>CPF<input name="cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
           <label>RG<input name="rg" placeholder="Número do RG"></label>
-          <label>Celular<input name="phone" type="tel" autocomplete="tel" placeholder="(11) 99999-9999"></label>
-          <label>Outro telefone<input name="secondaryPhone" type="tel" placeholder="Telefone alternativo"></label>
-          <label class="span-2">E-mail<input name="email" type="email" autocomplete="email" placeholder="paciente@email.com"></label>
+          <label>Tipo do telefone 1<select name="phoneType"><option>Celular</option><option>Residencial</option><option>Comercial</option><option>Recado</option><option>WhatsApp</option></select></label>
+          <label>Telefone 1<input name="phone" type="tel" autocomplete="tel" placeholder="(11) 99999-9999"></label>
+          <label>Tipo do telefone 2<select name="secondaryPhoneType"><option value="">Selecione</option><option>Celular</option><option>Residencial</option><option>Comercial</option><option>Recado</option><option>WhatsApp</option></select></label>
+          <label>Telefone 2<input name="secondaryPhone" type="tel" placeholder="Telefone alternativo"></label>
+          <label>Tipo do telefone 3<select name="commercialPhoneType"><option value="">Selecione</option><option>Comercial 1</option><option>Comercial 2</option><option>Celular</option><option>Residencial</option><option>Recado</option></select></label>
+          <label>Telefone 3<input name="commercialPhone" type="tel" placeholder="Outro telefone"></label>
+          <label>Tipo do telefone 4<select name="additionalPhoneType"><option value="">Selecione</option><option>Comercial</option><option>Celular</option><option>Residencial</option><option>Recado</option></select></label>
+          <label>Telefone 4<input name="additionalPhone" type="tel" placeholder="Outro telefone"></label>
+          <label>Nome do contato<input name="contactName" placeholder="Pessoa para contato"></label>
+          <label>Telefone do contato<input name="contactPhone" type="tel" placeholder="Telefone para contato"></label>
+          <label class="span-2">E-mail 1<input name="email" type="email" autocomplete="email" placeholder="paciente@email.com"></label>
+          <label class="span-2">E-mail 2<input name="email2" type="email" placeholder="Segundo e-mail"></label>
+          <label class="span-2">E-mail 3<input name="email3" type="email" placeholder="Terceiro e-mail"></label>
           <label>CEP<input name="zipCode" inputmode="numeric" placeholder="00000-000"></label>
           <label class="span-2">Endereço<input name="address" autocomplete="street-address" placeholder="Rua, avenida..."></label>
           <label>Número<input name="addressNumber" placeholder="Nº"></label>
@@ -281,9 +291,11 @@
           <label>Plano<input name="insurancePlan" placeholder="Nome do plano"></label>
           <label id="patientInsuranceCardLabel">Carteirinha do convênio<input name="insuranceCard" placeholder="Número da carteirinha"></label>
           <label>Validade da carteirinha<input name="insuranceValidity" type="date"></label>
+          <label class="span-2">Médico responsável / solicitante<input name="insuranceDoctor" placeholder="Nome do médico"></label>
           <label class="span-2">Cartão Nacional de Saúde (CNS)<input name="cns" inputmode="numeric" placeholder="Número do CNS"></label>
           <label>Empresa<input name="company"></label>
           <label>Última visita<input name="lastVisit" type="date"></label>
+          <label class="span-2">Descrição da última visita<input name="lastVisitDescription" placeholder="Ex.: consulta, avaliação ou retorno"></label>
         </div>
       </fieldset>
 
@@ -292,6 +304,7 @@
         <div class="patient-form-grid">
           <label class="span-4">Observações<textarea name="observations" rows="3" placeholder="Informações importantes para o atendimento"></textarea></label>
           <label class="span-4">Dados adicionais<textarea name="additionalData" rows="3" placeholder="Outras informações do cadastro"></textarea></label>
+          <label class="span-4">Acordos<textarea name="agreementsNotes" rows="3" placeholder="Acordos, orientações e combinações registradas com o paciente"></textarea></label>
         </div>
       </fieldset>
 
@@ -535,7 +548,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261112-04"></script>
+  <script type="module" src="script.js?v=20261112-05"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
