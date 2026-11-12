@@ -25,6 +25,7 @@ let reports=[];
 let requestPatientPool=[];
 let patientDirectoryPool=[];
 let activePatientRecord=null;
+let patientRecordNotesDirty=false;
 let selectPatientAfterRegistration=false;
 let therapists=[];
 let appointments=[];let stopAppointments=null;
@@ -752,8 +753,11 @@ function renderFullPatientRecord(patient){
  const noteTabs=[...sheet.querySelectorAll('[data-patient-note-tab]')];const notePanels=[...sheet.querySelectorAll('[data-patient-note-panel]')];
  const activateNote=tab=>{noteTabs.forEach(button=>{const active=button.dataset.patientNoteTab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});notePanels.forEach(panel=>{panel.hidden=panel.dataset.patientNotePanel!==tab})};
  noteTabs.forEach(button=>{button.disabled=false;button.addEventListener('click',()=>activateNote(button.dataset.patientNoteTab))});
+ notePanels.forEach(panel=>{panel.disabled=!patient.patientDocId;panel.addEventListener('input',()=>{patientRecordNotesDirty=true;const save=document.querySelector('#savePatientQuickNotes');save.disabled=false;save.textContent='Salvar ficha *'})});
  activateNote('observations');
  root.append(sheet);
+ patientRecordNotesDirty=false;
+ const save=document.querySelector('#savePatientQuickNotes');save.disabled=!patient.patientDocId;save.textContent='Salvar ficha';
  const edit=document.querySelector('#editPatientRecord');edit.disabled=!patient.patientDocId;edit.textContent=patient.patientDocId?'Editar cadastro':'Cadastro completo não localizado'
 }
 async function openPatientRecord(record){
@@ -823,10 +827,40 @@ document.querySelector('#scheduleActionForm').addEventListener('submit',async ev
  try{if(action.type==='desmarcar'){await updateDoc(doc(db,'agendamentos',action.appointment.id),{cancelled:true,cancelledAt:serverTimestamp(),updatedAt:serverTimestamp()});showToast('Agendamento desmarcado e célula liberada.');resetAgendaMode()}else if(action.type==='confirmar'){await updateDoc(doc(db,'agendamentos',action.appointment.id),{present:true,updatedAt:serverTimestamp()});showToast('Presença do paciente confirmada.');resetAgendaMode()}document.querySelector('#scheduleActionDialog').close();pendingScheduleAction=null}catch(error){console.error(error);showToast('Não foi possível concluir a ação.')}finally{button.disabled=false}
 });
 document.querySelector('[data-report-action="localizar"]').addEventListener('click',openPatientSearch);
+function patientQuickNotesValues(){
+ const root=document.querySelector('#patientRecordContent');
+ return{
+  observations:root.querySelector('[name="observations"]')?.value.trim()||'',
+  additionalData:root.querySelector('[name="additionalData"]')?.value.trim()||'',
+  agreementsNotes:root.querySelector('[name="agreementsNotes"]')?.value.trim()||''
+ }
+}
+async function savePatientQuickNotes(closeAfter=false){
+ if(!activePatientRecord?.patientDocId){showToast('Cadastro-base do paciente não localizado.','warning');return false}
+ const button=document.querySelector('#savePatientQuickNotes');const original=button.textContent;button.disabled=true;button.textContent='Salvando...';
+ try{
+  const notes=patientQuickNotesValues();
+  await updateDoc(doc(db,'pacientes',activePatientRecord.patientDocId),{...notes,updatedAt:serverTimestamp(),updatedBy:auth.currentUser?.uid||''});
+  activePatientRecord={...activePatientRecord,...notes};patientRecordNotesDirty=false;button.textContent='Ficha salva';showToast('Anotações da ficha salvas.','success');
+  if(closeAfter)document.querySelector('#patientRecordDialog').close();
+  else setTimeout(()=>{button.textContent='Salvar ficha';button.disabled=false},900);
+  return true
+ }catch(error){
+  console.error(error);showToast('Não foi possível salvar as anotações da ficha.','error');button.disabled=false;button.textContent=original;return false
+ }
+}
+async function closePatientRecordWithCheck(){
+ const dialog=document.querySelector('#patientRecordDialog');
+ if(!patientRecordNotesDirty){dialog.close();return}
+ const saveBeforeClose=confirm('Foram feitas alterações nas anotações da ficha.\n\nClique em OK para salvar antes de fechar.\nClique em Cancelar para fechar sem salvar.');
+ if(saveBeforeClose)await savePatientQuickNotes(true);
+ else{patientRecordNotesDirty=false;dialog.close()}
+}
+document.querySelector('#savePatientQuickNotes').addEventListener('click',()=>savePatientQuickNotes(false));
 document.querySelector('#editPatientRecord').addEventListener('click',()=>{if(!activePatientRecord?.patientDocId){showToast('Este paciente ainda não possui cadastro-base para editar.','warning');return}document.querySelector('#patientRecordDialog').close();openPatientRegistration(activePatientRecord,false)});
 document.querySelector('#patientGlobalSearch').addEventListener('input',renderPatientSearch);
 document.querySelector('#closePatientSearch').addEventListener('click',()=>document.querySelector('#patientSearchDialog').close());
-document.querySelector('#closePatientRecord').addEventListener('click',()=>document.querySelector('#patientRecordDialog').close());
+document.querySelector('#closePatientRecord').addEventListener('click',closePatientRecordWithCheck);
 document.querySelector('#closeAppointmentHistory').addEventListener('click',()=>document.querySelector('#appointmentHistoryDialog').close());
 document.querySelectorAll('#closeChargeDialog,#cancelCharge').forEach(button=>button.addEventListener('click',()=>document.querySelector('#chargeDialog').close()));
 document.querySelector('#confirmCharge').addEventListener('click',async()=>{if(!pendingChargeAppointment||pendingChargeAppointment.billed)return;const button=document.querySelector('#confirmCharge');button.disabled=true;try{await updateDoc(doc(db,'agendamentos',pendingChargeAppointment.id),{billed:true,billedAt:serverTimestamp(),updatedAt:serverTimestamp()});document.querySelector('#chargeDialog').close();pendingChargeAppointment=null;resetAgendaMode();showToast('Atendimento marcado como cobrado/faturado.')}catch(error){console.error(error);showToast('Não foi possível registrar a cobrança.')}finally{button.disabled=false}});
