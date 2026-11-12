@@ -330,7 +330,53 @@ function renderAgenda(){
 }
 function connectAppointments(){const professional=document.querySelector('#agendaProfessional').value;if(stopAppointments)stopAppointments();appointments=[];if(!professional){renderAgenda();return}const acceptedNames=new Set(professionalStoredNames(professional));stopAppointments=onSnapshot(query(collection(db,'agendamentos'),where('date','==',dateKey(selectedDate))),snapshot=>{appointments=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>acceptedNames.has(item.professional));renderAgenda()},error=>{console.error(error);appointments=[];renderAgenda();showToast('Publique as regras do Firestore para usar a agenda.')})}
 const appointmentDialog=document.querySelector('#appointmentDialog');const appointmentForm=document.querySelector('#appointmentForm');
-function openAppointment(slot,appointment,context='agendar'){appointmentContext=context;appointmentForm.reset();appointmentForm.elements.appointmentId.value=appointment?.id||'';appointmentForm.elements.time.value=slot.dataset.time;appointmentForm.elements.column.value=slot.dataset.column;document.querySelector('#appointmentTitle').textContent=appointment?'Cadastro do paciente':context==='encaixar'?`Encaixar às ${slot.dataset.time}`:`Agendar às ${slot.dataset.time}`;if(appointment){['patient','code','agreement','treatment'].forEach(field=>{const input=appointmentForm.elements[field];if(input.type==='checkbox')input.checked=Boolean(appointment[field]);else input.value=appointment[field]||''})}appointmentDialog.showModal()}
+let appointmentSelectedPatient=null;let appointmentCodeTimer=null;
+function appointmentBirthDate(value){return value?String(value).split('-').reverse().join('/'):''}
+function clearAppointmentPatient(message='Digite o código do paciente para preencher os dados automaticamente.'){
+ appointmentSelectedPatient=null;
+ ['patient','birthDate','agreement','patientId'].forEach(field=>{if(appointmentForm.elements[field])appointmentForm.elements[field].value=''});
+ const status=document.querySelector('#appointmentPatientStatus');status.textContent=message;status.className='appointment-patient-status full';
+}
+function fillAppointmentPatient(patient){
+ appointmentSelectedPatient=patient;
+ appointmentForm.elements.patientId.value=patient.patientDocId||patient.id||'';
+ appointmentForm.elements.patient.value=patient.patient||'';
+ appointmentForm.elements.birthDate.value=appointmentBirthDate(patient.birthDate);
+ appointmentForm.elements.agreement.value=patient.agreement||'Particular';
+ const status=document.querySelector('#appointmentPatientStatus');status.textContent='Paciente localizado. Dados preenchidos pelo cadastro.';status.className='appointment-patient-status full found';
+}
+async function findAppointmentPatientByCode(showNotFound=true){
+ const code=String(appointmentForm.elements.code.value||'').trim();clearTimeout(appointmentCodeTimer);
+ if(!code){clearAppointmentPatient();return null}
+ const status=document.querySelector('#appointmentPatientStatus');status.textContent='Localizando cadastro...';status.className='appointment-patient-status full searching';
+ try{
+  let snapshot=await getDocs(query(collection(db,'pacientes'),where('code','==',code)));
+  let item=snapshot.docs[0];
+  if(!item){
+   const all=await getDocs(collection(db,'pacientes'));
+   item=all.docs.find(entry=>String(entry.data().code||'').trim()===code);
+  }
+  if(!item){clearAppointmentPatient(showNotFound?'Código não encontrado. Cadastre ou localize o paciente antes de agendar.':'');status.classList.add('not-found');return null}
+  const patient={patientDocId:item.id,id:item.id,...item.data()};fillAppointmentPatient(patient);return patient
+ }catch(error){console.error(error);clearAppointmentPatient('Não foi possível consultar o cadastro agora.');status.classList.add('not-found');return null}
+}
+function openAppointment(slot,appointment,context='agendar'){
+ appointmentContext=context;appointmentForm.reset();appointmentSelectedPatient=null;
+ appointmentForm.elements.appointmentId.value=appointment?.id||'';appointmentForm.elements.time.value=slot.dataset.time;appointmentForm.elements.column.value=slot.dataset.column;
+ document.querySelector('#appointmentTitle').textContent=appointment?'Cadastro do paciente':context==='encaixar'?'Encaixar às '+slot.dataset.time:'Agendar às '+slot.dataset.time;
+ if(appointment){
+  ['patient','code','birthDate','agreement','treatment','patientId'].forEach(field=>{if(appointmentForm.elements[field])appointmentForm.elements[field].value=field==='birthDate'?appointmentBirthDate(appointment[field]):appointment[field]||''});
+  appointmentSelectedPatient={...appointment,patientDocId:appointment.patientId||''};
+  const status=document.querySelector('#appointmentPatientStatus');status.textContent='Dados do paciente vinculados a este agendamento.';status.className='appointment-patient-status full found';
+ }else clearAppointmentPatient();
+ appointmentDialog.showModal();setTimeout(()=>appointmentForm.elements.code.focus(),50)
+}
+appointmentForm.elements.code.addEventListener('input',()=>{
+ clearAppointmentPatient('Aguardando a conclusão do código...');
+ clearTimeout(appointmentCodeTimer);appointmentCodeTimer=setTimeout(()=>findAppointmentPatientByCode(),450)
+});
+appointmentForm.elements.code.addEventListener('blur',()=>{if(appointmentForm.elements.code.value.trim()&&!appointmentSelectedPatient)findAppointmentPatientByCode()});
+appointmentForm.elements.code.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();findAppointmentPatientByCode()}});
 function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
 function longDate(date){const value=new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);return value.charAt(0).toUpperCase()+value.slice(1)}
 function dateKey(date){const year=date.getFullYear();const month=String(date.getMonth()+1).padStart(2,'0');const day=String(date.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
@@ -378,7 +424,7 @@ async function hashText(value){const bytes=new TextEncoder().encode(value);const
 const dialog=document.querySelector('#requestDialog');
 function normalizePatientRecord(item){return patientData(item)}
 function requestPatientKey(item){return String(item.code||item.cpf||item.rg||item.patient||'').trim().toLowerCase()}
-function patientSearchValues(item){return[item.patient,item.code,item.birthDate,item.birthDate?.split('-').reverse().join('/'),item.phone,item.cpf,item.rg,item.insuranceCard].filter(Boolean).map(value=>String(value).toLowerCase())}
+function patientSearchValues(item){return[item.patient,item.socialName,item.code,item.medicalRecord,item.birthDate,item.birthDate?.split('-').reverse().join('/'),item.phone,item.secondaryPhone,item.email,item.cpf,item.rg,item.cns,item.insuranceCard,item.agreement,item.address,item.city].filter(Boolean).map(value=>String(value).toLowerCase())}
 function renderRequestPatientResults(){
  const input=document.querySelector('#requestPatientSearch');const root=document.querySelector('#requestPatientResults');const term=input.value.trim().toLowerCase();const digits=term.replace(/\D/g,'');root.innerHTML='';
  if(!term){root.innerHTML='<p>Digite uma informação para localizar o paciente.</p>';return}
@@ -411,6 +457,16 @@ const patientRegistrationForm=document.querySelector('#patientRegistrationForm')
 const patientAgreement=patientRegistrationForm.elements.agreement;
 const patientInsuranceCard=patientRegistrationForm.elements.insuranceCard;
 const patientInsuranceCardLabel=document.querySelector('#patientInsuranceCardLabel');
+const patientProfileFields=['patient','code','socialName','medicalRecord','sex','sexualOrientation','maritalStatus','raceColor','referral','riskClassification','phone','secondaryPhone','email','cpf','rg','zipCode','address','addressNumber','addressComplement','district','city','state','birthplace','nationality','profession','spouse','fatherName','motherName','patientType','agreement','insurancePlan','insuranceCard','insuranceValidity','cns','company','lastVisit','observations','additionalData'];
+function formText(data,name){return String(data.get(name)||'').trim()}
+function calculatePatientAge(iso){
+ if(!iso)return'';const birth=new Date(iso+'T12:00:00');if(Number.isNaN(birth.getTime()))return'';
+ const today=new Date();let age=today.getFullYear()-birth.getFullYear();const before=today.getMonth()<birth.getMonth()||(today.getMonth()===birth.getMonth()&&today.getDate()<birth.getDate());if(before)age--;return age>=0?String(age):''
+}
+function refreshPatientAge(){
+ const iso=birthDateToIso(patientRegistrationForm.elements.birthDate.value);
+ patientRegistrationForm.elements.age.value=iso?calculatePatientAge(iso):''
+}
 function syncPatientInsuranceCard(){
  const particular=patientAgreement.value.toUpperCase().startsWith('PARTICULAR');patientInsuranceCard.disabled=particular;
  patientInsuranceCardLabel.classList.toggle('field-disabled',particular);
@@ -419,16 +475,12 @@ function syncPatientInsuranceCard(){
 function openPatientRegistration(patient=null,selectAfterSave=false){
  patientRegistrationForm.reset();selectPatientAfterRegistration=selectAfterSave;
  patientRegistrationForm.elements.patientId.value=patient?.patientDocId||patient?.id||'';
- patientRegistrationForm.elements.patient.value=patient?.patient||'';
- patientRegistrationForm.elements.code.value=patient?.code||'';
+ patientProfileFields.forEach(field=>{if(patientRegistrationForm.elements[field])patientRegistrationForm.elements[field].value=patient?.[field]||''});
  patientRegistrationForm.elements.birthDate.value=patient?.birthDate?patient.birthDate.split('-').reverse().join('/'):'';
- patientRegistrationForm.elements.phone.value=patient?.phone||'';
- patientRegistrationForm.elements.cpf.value=patient?.cpf||'';
- patientRegistrationForm.elements.rg.value=patient?.rg||'';
- patientRegistrationForm.elements.agreement.value=patient?.agreement||'';
- patientRegistrationForm.elements.insuranceCard.value=patient?.insuranceCard||'';
+ if(!patient)patientRegistrationForm.elements.agreement.value='Particular';
+ refreshPatientAge();
  const editing=Boolean(patientRegistrationForm.elements.patientId.value);
- document.querySelector('#patientRegistrationTitle').textContent=editing?'Editar paciente':'Cadastrar paciente';
+ document.querySelector('#patientRegistrationTitle').textContent=editing?'Editar ficha do paciente':'Cadastrar paciente';
  document.querySelector('#patientRegistrationSubmit').textContent=editing?'Salvar alterações':'Salvar e selecionar';
  syncPatientInsuranceCard();patientRegistrationDialog.showModal();setTimeout(()=>patientRegistrationForm.elements.patient.focus(),50)
 }
@@ -437,17 +489,27 @@ document.querySelectorAll('#closePatientRegistration,#cancelPatientRegistration'
 patientAgreement.addEventListener('input',syncPatientInsuranceCard);
 patientAgreement.addEventListener('change',syncPatientInsuranceCard);
 patientAgreement.addEventListener('click',()=>{try{patientAgreement.showPicker?.()}catch(error){}});
-patientRegistrationForm.elements.birthDate.addEventListener('input',event=>{event.target.value=maskBirthDate(event.target.value)});
+patientRegistrationForm.elements.birthDate.addEventListener('input',event=>{event.target.value=maskBirthDate(event.target.value);refreshPatientAge()});
 patientRegistrationForm.addEventListener('submit',async event=>{
- event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');const patientId=String(data.get('patientId')||'');
+ event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const submit=form.querySelector('[type="submit"]');const patientId=formText(data,'patientId');
  const birthDate=birthDateToIso(data.get('birthDate'));
- if(birthDate===null){showToast('Digite uma data de nascimento válida no formato dd/mm/aaaa.','warning');form.elements.birthDate.focus();return}
- const patient={patient:data.get('patient').trim(),code:data.get('code').trim(),birthDate,phone:data.get('phone').trim(),cpf:data.get('cpf').trim(),rg:data.get('rg').trim(),agreement:data.get('agreement'),insuranceCard:patientAgreement.value.toUpperCase().startsWith('PARTICULAR')?'':data.get('insuranceCard').trim()};
+ if(!birthDate){showToast('Digite uma data de nascimento válida no formato dd/mm/aaaa.','warning');form.elements.birthDate.focus();return}
+ let code=formText(data,'code');
+ if(!code)code=String(Date.now()).slice(-6);
+ const patient={patient:formText(data,'patient'),code,birthDate};
+ patientProfileFields.filter(field=>!['patient','code'].includes(field)).forEach(field=>{patient[field]=formText(data,field)});
+ patient.agreement=patient.agreement||'Particular';
+ patient.insuranceCard=patient.agreement.toUpperCase().startsWith('PARTICULAR')?'':patient.insuranceCard;
+ if(!patient.patient||!patient.agreement){showToast('Preencha nome, data de nascimento e convênio.','warning');return}
  submit.disabled=true;submit.textContent='Verificando código...';
  try{
-  const duplicateSnapshot=await getDocs(query(collection(db,'pacientes'),where('code','==',patient.code)));
-  const duplicate=duplicateSnapshot.docs.find(item=>item.id!==patientId);
-  if(duplicate){showToast('Paciente já possui cadastro com este código.','warning',5600);return}
+  let duplicateSnapshot=await getDocs(query(collection(db,'pacientes'),where('code','==',patient.code)));
+  let duplicate=duplicateSnapshot.docs.find(item=>item.id!==patientId);
+  if(duplicate&&formText(data,'code')){showToast('Paciente já possui cadastro com este código.','warning',5600);return}
+  while(duplicate&&!formText(data,'code')){
+   patient.code=String(Math.floor(100000+Math.random()*900000));
+   duplicateSnapshot=await getDocs(query(collection(db,'pacientes'),where('code','==',patient.code)));duplicate=duplicateSnapshot.docs.find(item=>item.id!==patientId)
+  }
   submit.textContent='Salvando...';
   let referenceId=patientId;
   if(patientId)await updateDoc(doc(db,'pacientes',patientId),{...patient,active:true,updatedAt:serverTimestamp(),updatedBy:auth.currentUser?.uid||''});
@@ -457,7 +519,7 @@ patientRegistrationForm.addEventListener('submit',async event=>{
   patientDirectoryPool=patientDirectoryPool.filter(item=>item.patientDocId!==referenceId);patientDirectoryPool.push(saved);patientDirectoryPool.sort((a,b)=>(a.patient||'').localeCompare(b.patient||'','pt-BR'));
   activePatientRecord=saved;patientRegistrationDialog.close();
   if(selectPatientAfterRegistration)selectRequestPatient(saved);else renderPatientSearch();
-  showToast(patientId?'Cadastro do paciente atualizado.':'Paciente cadastrado e selecionado.','success')
+  showToast(patientId?'Ficha do paciente atualizada.':'Paciente cadastrado com o código '+patient.code+'.','success')
  }catch(error){console.error(error);showToast(firebasePatientError(error),'error',7200)}
  finally{submit.disabled=false;submit.textContent=patientId?'Salvar alterações':'Salvar e selecionar'}
 });
@@ -499,8 +561,14 @@ function patientData(record){
 }
 function openPatientRecord(record){
  const patient=patientData(record);activePatientRecord={...patient};document.querySelector('#patientRecordTitle').textContent=patient.patient||'Paciente';
- const fields=[['Nome',patient.patient],['Código',patient.code],['Nascimento',patient.birthDate?patient.birthDate.split('-').reverse().join('/'):''],['Telefone',patient.phone],['CPF',patient.cpf],['RG',patient.rg],['Carteirinha',patient.insuranceCard],['Convênio',patient.agreement],['Tratamento',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]];
- const root=document.querySelector('#patientRecordContent');root.innerHTML='';fields.forEach(([label,value])=>{const item=document.createElement('div');const title=document.createElement('span');title.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(title,content);root.append(item)});
+ const fields=[
+  ['Nome',patient.patient],['Nome social',patient.socialName],['Código',patient.code],['Prontuário',patient.medicalRecord],
+  ['Nascimento',patient.birthDate?patient.birthDate.split('-').reverse().join('/'):'' ],['Idade',calculatePatientAge(patient.birthDate)],['Sexo',patient.sex],['Estado civil',patient.maritalStatus],
+  ['Telefone',patient.phone],['Outro telefone',patient.secondaryPhone],['E-mail',patient.email],['CPF',patient.cpf],['RG',patient.rg],['CNS',patient.cns],
+  ['Endereço',[patient.address,patient.addressNumber,patient.addressComplement].filter(Boolean).join(', ')],['Bairro',patient.district],['Cidade / UF',[patient.city,patient.state].filter(Boolean).join(' / ')],
+  ['Profissão',patient.profession],['Convênio',patient.agreement],['Plano',patient.insurancePlan],['Carteirinha',patient.insuranceCard],['Validade',patient.insuranceValidity?patient.insuranceValidity.split('-').reverse().join('/'):'' ],
+  ['Empresa',patient.company],['Observações',patient.observations],['Tratamento',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]
+ ]; const root=document.querySelector('#patientRecordContent');root.innerHTML='';fields.forEach(([label,value])=>{const item=document.createElement('div');const title=document.createElement('span');title.textContent=label;const content=document.createElement('strong');content.textContent=value||'Não informado';item.append(title,content);root.append(item)});
  const edit=document.querySelector('#editPatientRecord');edit.disabled=!patient.patientDocId;edit.textContent=patient.patientDocId?'Editar cadastro':'Sem cadastro-base para editar';document.querySelector('#patientRecordDialog').showModal();
 }
 function appointmentMoment(item){return new Date(`${item.date||'1970-01-01'}T${item.time||'00:00'}:00`)}
@@ -569,7 +637,16 @@ document.querySelector('#confirmCharge').addEventListener('click',async()=>{if(!
 document.querySelector('#lockWholeDay').addEventListener('click',async()=>{try{await setWholeDayLock(true)}catch(error){console.error(error);showToast('Não foi possível travar o dia.')}});
 document.querySelector('#unlockWholeDay').addEventListener('click',async()=>{try{await setWholeDayLock(false)}catch(error){console.error(error);showToast('Não foi possível destravar o dia.')}});
 document.querySelectorAll('#closeAppointment,#cancelAppointment').forEach(button=>button.addEventListener('click',()=>appointmentDialog.close()));
-appointmentForm.addEventListener('submit',async event=>{event.preventDefault();const data=new FormData(appointmentForm);const id=data.get('appointmentId');const previous=appointments.find(item=>item.id===id);const payload={professional:document.querySelector('#agendaProfessional').value,date:dateKey(selectedDate),time:data.get('time'),column:Number(data.get('column')),patient:data.get('patient').trim(),code:data.get('code').trim(),agreement:data.get('agreement'),treatment:data.get('treatment').trim(),billed:previous?.billed===true,present:previous?.present===true,fit:appointmentContext==='encaixar'||previous?.fit===true,updatedAt:serverTimestamp()};const button=appointmentForm.querySelector('[type="submit"]');button.disabled=true;try{if(id)await updateDoc(doc(db,'agendamentos',id),payload);else await addDoc(collection(db,'agendamentos'),{...payload,createdAt:serverTimestamp()});appointmentDialog.close();showToast(appointmentContext==='encaixar'?'Encaixe salvo.':'Agendamento salvo.');resetAgendaMode()}catch(error){console.error(error);showToast('Não foi possível salvar. Publique as regras do Firestore.')}finally{button.disabled=false}});
+appointmentForm.addEventListener('submit',async event=>{
+ event.preventDefault();
+ if(!appointmentSelectedPatient){const found=await findAppointmentPatientByCode();if(!found){showToast('Localize um paciente cadastrado pelo código antes de salvar.','warning');appointmentForm.elements.code.focus();return}}
+ const data=new FormData(appointmentForm);const id=data.get('appointmentId');const previous=appointments.find(item=>item.id===id);
+ const payload={professional:document.querySelector('#agendaProfessional').value,date:dateKey(selectedDate),time:data.get('time'),column:Number(data.get('column')),patient:data.get('patient').trim(),patientId:data.get('patientId')||appointmentSelectedPatient?.patientDocId||appointmentSelectedPatient?.id||'',code:data.get('code').trim(),birthDate:appointmentSelectedPatient?.birthDate||'',agreement:data.get('agreement')||'Particular',treatment:data.get('treatment').trim(),billed:previous?.billed===true,present:previous?.present===true,fit:appointmentContext==='encaixar'||previous?.fit===true,updatedAt:serverTimestamp()};
+ const button=appointmentForm.querySelector('[type="submit"]');button.disabled=true;
+ try{if(id)await updateDoc(doc(db,'agendamentos',id),payload);else await addDoc(collection(db,'agendamentos'),{...payload,createdAt:serverTimestamp()});appointmentDialog.close();showToast(appointmentContext==='encaixar'?'Encaixe salvo.':'Agendamento salvo.');resetAgendaMode()}
+ catch(error){console.error(error);showToast('Não foi possível salvar. Publique as regras do Firestore.')}
+ finally{button.disabled=false}
+});
 function connectFirestore(){
  const reportsQuery=query(collection(db,'relatorios'),orderBy('createdAt','desc'));
  onSnapshot(reportsQuery,snapshot=>{
