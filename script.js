@@ -427,7 +427,7 @@ async function hashText(value){const bytes=new TextEncoder().encode(value);const
 const dialog=document.querySelector('#requestDialog');
 function normalizePatientRecord(item){return patientData(item)}
 function requestPatientKey(item){return String(item.code||item.cpf||item.rg||item.patient||'').trim().toLowerCase()}
-function patientSearchValues(item){return[item.patient,item.socialName,item.code,item.medicalRecord,item.birthDate,item.birthDate?.split('-').reverse().join('/'),item.phone,item.secondaryPhone,item.email,item.cpf,item.rg,item.cns,item.insuranceCard,item.agreement,item.address,item.city].filter(Boolean).map(value=>String(value).toLowerCase())}
+function patientSearchValues(item){return[item.patient,item.socialName,item.code,item.medicalRecord,item.birthDate,item.birthDate?.split('-').reverse().join('/'),item.phone,item.secondaryPhone,item.commercialPhone,item.additionalPhone,item.contactName,item.contactPhone,item.email,item.email2,item.email3,item.cpf,item.rg,item.cns,item.insuranceCard,item.agreement,item.insuranceDoctor,item.address,item.city].filter(Boolean).map(value=>String(value).toLowerCase())}
 function renderRequestPatientResults(){
  const input=document.querySelector('#requestPatientSearch');const root=document.querySelector('#requestPatientResults');const term=input.value.trim().toLowerCase();const digits=term.replace(/\D/g,'');root.innerHTML='';
  if(!term){root.innerHTML='<p>Digite uma informação para localizar o paciente.</p>';return}
@@ -460,7 +460,7 @@ const patientRegistrationForm=document.querySelector('#patientRegistrationForm')
 const patientAgreement=patientRegistrationForm.elements.agreement;
 const patientInsuranceCard=patientRegistrationForm.elements.insuranceCard;
 const patientInsuranceCardLabel=document.querySelector('#patientInsuranceCardLabel');
-const patientProfileFields=['patient','code','socialName','medicalRecord','sex','sexualOrientation','maritalStatus','raceColor','referral','riskClassification','phone','secondaryPhone','email','cpf','rg','zipCode','address','addressNumber','addressComplement','district','city','state','birthplace','nationality','profession','spouse','fatherName','motherName','patientType','agreement','insurancePlan','insuranceCard','insuranceValidity','cns','company','lastVisit','observations','additionalData'];
+const patientProfileFields=['patient','code','socialName','medicalRecord','sex','sexualOrientation','maritalStatus','raceColor','referral','riskClassification','phoneType','phone','secondaryPhoneType','secondaryPhone','commercialPhoneType','commercialPhone','additionalPhoneType','additionalPhone','contactName','contactPhone','email','email2','email3','cpf','rg','zipCode','address','addressNumber','addressComplement','district','city','state','birthplace','nationality','profession','spouse','fatherName','motherName','patientType','agreement','insurancePlan','insuranceCard','insuranceValidity','insuranceDoctor','cns','company','lastVisit','lastVisitDescription','observations','additionalData','agreementsNotes'];
 function formText(data,name){return String(data.get(name)||'').trim()}
 function calculatePatientAge(iso){
  if(!iso)return'';const birth=new Date(iso+'T12:00:00');if(Number.isNaN(birth.getTime()))return'';
@@ -611,8 +611,12 @@ function renderFullPatientRecord(patient){
   ['Tipo de paciente',patient.patientType],['Profissão',patient.profession],['Naturalidade',patient.birthplace],['Nacionalidade',patient.nationality]
  ]);
  appendPatientRecordSection(root,'Documentos e contato',[
-  ['CPF',patient.cpf],['RG',patient.rg],['CNS',patient.cns],['Celular',patient.phone],
-  ['Outro telefone',patient.secondaryPhone],['E-mail',patient.email],['Cônjuge',patient.spouse],['Nome do pai',patient.fatherName],['Nome da mãe',patient.motherName]
+  ['CPF',patient.cpf],['RG',patient.rg],['CNS',patient.cns],
+  [patient.phoneType||'Telefone 1',patient.phone],[patient.secondaryPhoneType||'Telefone 2',patient.secondaryPhone],
+  [patient.commercialPhoneType||'Telefone 3',patient.commercialPhone],[patient.additionalPhoneType||'Telefone 4',patient.additionalPhone],
+  ['Nome do contato',patient.contactName],['Telefone do contato',patient.contactPhone],
+  ['E-mail 1',patient.email],['E-mail 2',patient.email2],['E-mail 3',patient.email3],
+  ['Cônjuge',patient.spouse],['Nome do pai',patient.fatherName],['Nome da mãe',patient.motherName]
  ]);
  appendPatientRecordSection(root,'Endereço',[
   ['Endereço',[patient.address,patient.addressNumber].filter(Boolean).join(', ')],['Complemento',patient.addressComplement],['Bairro',patient.district],['CEP',patient.zipCode],
@@ -620,10 +624,12 @@ function renderFullPatientRecord(patient){
  ]);
  appendPatientRecordSection(root,'Convênio',[
   ['Convênio',patient.agreement],['Plano',patient.insurancePlan],['Carteirinha',patient.insuranceCard],['Validade',patientRecordDate(patient.insuranceValidity)],
-  ['Empresa',patient.company],['Última visita',patientRecordDate(patient.lastVisit)]
+  ['Médico responsável / solicitante',patient.insuranceDoctor],['Empresa',patient.company],['Última visita',patientRecordDate(patient.lastVisit)],
+  ['Descrição da última visita',patient.lastVisitDescription]
  ]);
  appendPatientRecordSection(root,'Informações complementares',[
-  ['Observações',patient.observations],['Dados adicionais',patient.additionalData],['Tratamento agendado',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]
+  ['Observações',patient.observations],['Dados adicionais',patient.additionalData],['Acordos',patient.agreementsNotes],
+  ['Tratamento agendado',patient.treatment],['Fisioterapeuta',patient.therapist||patient.professional]
  ]);
  const edit=document.querySelector('#editPatientRecord');edit.disabled=!patient.patientDocId;edit.textContent=patient.patientDocId?'Editar cadastro':'Cadastro completo não localizado'
 }
