@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/apflow-app-icon.svg?v=20261112-01">
   <link rel="stylesheet" href="styles.css?v=20261110-01">
   <link rel="stylesheet" href="login.css?v=20261111-01">
-  <link rel="stylesheet" href="app-pages.css?v=20261030-01">
+  <link rel="stylesheet" href="app-pages.css?v=20261112-02">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -226,35 +226,91 @@
   <dialog id="patientRegistrationDialog" class="patient-registration-dialog">
     <form id="patientRegistrationForm">
       <input name="patientId" type="hidden">
-      <div class="dialog-head"><div><p class="eyebrow">CADASTRO BÁSICO</p><h2 id="patientRegistrationTitle">Cadastrar paciente</h2></div><button class="icon-button" type="button" id="closePatientRegistration" aria-label="Fechar">×</button></div>
-      <div class="form-grid patient-registration-grid">
-        <label class="full">Nome completo *<input name="patient" required autocomplete="name" placeholder="Nome completo do paciente"></label>
-        <label>Código *<input name="code" required inputmode="numeric" placeholder="Ex.: 410510"></label>
-        <label>Data de nascimento<input name="birthDate" type="text" inputmode="numeric" maxlength="10" autocomplete="bday" placeholder="dd/mm/aaaa"></label>
-        <label>Telefone<input name="phone" type="tel" autocomplete="tel" placeholder="(11) 99999-9999"></label>
-        <label>CPF<input name="cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
-        <label>RG<input name="rg" placeholder="Número do RG"></label>
-        <label>Convênio *
-          <input name="agreement" type="search" list="patientAgreementOptions" required autocomplete="off" placeholder="Digite ou selecione o convênio">
-          <datalist id="patientAgreementOptions"></datalist>
-        </label>
-        <label id="patientInsuranceCardLabel">Carteirinha do convênio<input name="insuranceCard" placeholder="Número da carteirinha"></label>
-      </div>
-      <p class="deadline-note">Cadastro básico temporário. Depois criaremos a ficha completa do paciente.</p>
-      <div class="dialog-actions"><button class="secondary" type="button" id="cancelPatientRegistration">Cancelar</button><button class="primary" id="patientRegistrationSubmit" type="submit">Salvar e selecionar</button></div>
+      <div class="dialog-head patient-registration-head"><div><p class="eyebrow">FICHA DO PACIENTE</p><h2 id="patientRegistrationTitle">Cadastrar paciente</h2><span>Preencha os dados cadastrais, contatos e informações do convênio.</span></div><button class="icon-button" type="button" id="closePatientRegistration" aria-label="Fechar">×</button></div>
+
+      <fieldset class="patient-form-section">
+        <legend>Dados cadastrais</legend>
+        <div class="patient-form-grid">
+          <label class="span-2">Nome completo *<input name="patient" required autocomplete="name" placeholder="Nome completo do paciente"></label>
+          <label>Código<input name="code" inputmode="numeric" placeholder="Gerado automaticamente se vazio"></label>
+          <label>Nome de registro / social<input name="socialName" placeholder="Como prefere ser chamado"></label>
+          <label>Data de nascimento *<input name="birthDate" type="text" required inputmode="numeric" maxlength="10" autocomplete="bday" placeholder="dd/mm/aaaa"></label>
+          <label>Idade<input name="age" readonly tabindex="-1" placeholder="Calculada automaticamente"></label>
+          <label>Nº do prontuário<input name="medicalRecord" placeholder="Número do prontuário"></label>
+          <label>Sexo<select name="sex"><option value="">Selecione</option><option>Feminino</option><option>Masculino</option><option>Intersexo</option><option>Não informado</option></select></label>
+          <label>Orientação sexual<select name="sexualOrientation"><option value="">Selecione</option><option>Heterossexual</option><option>Homossexual</option><option>Bissexual</option><option>Assexual</option><option>Outra</option><option>Prefere não informar</option></select></label>
+          <label>Estado civil<select name="maritalStatus"><option value="">Selecione</option><option>Solteiro(a)</option><option>Casado(a)</option><option>União estável</option><option>Divorciado(a)</option><option>Viúvo(a)</option></select></label>
+          <label>Cor / raça<select name="raceColor"><option value="">Selecione</option><option>Branca</option><option>Preta</option><option>Parda</option><option>Amarela</option><option>Indígena</option><option>Prefere não informar</option></select></label>
+          <label>Indicação<input name="referral" placeholder="Origem da indicação"></label>
+          <label class="span-2">Classificação de risco<select name="riskClassification"><option value="">Sem classificação</option><option>Azul — não urgente</option><option>Verde — pouco urgente</option><option>Amarelo — urgente</option><option>Laranja — muito urgente</option><option>Vermelho — emergência</option></select></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="patient-form-section">
+        <legend>Documentos, contato e endereço</legend>
+        <div class="patient-form-grid">
+          <label>CPF<input name="cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
+          <label>RG<input name="rg" placeholder="Número do RG"></label>
+          <label>Celular<input name="phone" type="tel" autocomplete="tel" placeholder="(11) 99999-9999"></label>
+          <label>Outro telefone<input name="secondaryPhone" type="tel" placeholder="Telefone alternativo"></label>
+          <label class="span-2">E-mail<input name="email" type="email" autocomplete="email" placeholder="paciente@email.com"></label>
+          <label>CEP<input name="zipCode" inputmode="numeric" placeholder="00000-000"></label>
+          <label class="span-2">Endereço<input name="address" autocomplete="street-address" placeholder="Rua, avenida..."></label>
+          <label>Número<input name="addressNumber" placeholder="Nº"></label>
+          <label>Complemento<input name="addressComplement" placeholder="Apto., bloco..."></label>
+          <label>Bairro<input name="district"></label>
+          <label>Cidade<input name="city"></label>
+          <label>UF<select name="state"><option value="">UF</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></label>
+          <label>Naturalidade<input name="birthplace"></label>
+          <label>Nacionalidade<input name="nationality" placeholder="Brasileira"></label>
+          <label>Profissão<input name="profession"></label>
+          <label>Cônjuge<input name="spouse"></label>
+          <label>Nome do pai<input name="fatherName"></label>
+          <label>Nome da mãe<input name="motherName"></label>
+          <label>Tipo de paciente<input name="patientType" placeholder="Ex.: adulto, pediátrico"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="patient-form-section patient-insurance-section">
+        <legend>Dados do convênio</legend>
+        <div class="patient-form-grid">
+          <label class="span-2">Convênio *
+            <input name="agreement" type="search" list="patientAgreementOptions" required autocomplete="off" placeholder="Pesquise ou selecione o convênio">
+            <datalist id="patientAgreementOptions"></datalist>
+          </label>
+          <label>Plano<input name="insurancePlan" placeholder="Nome do plano"></label>
+          <label id="patientInsuranceCardLabel">Carteirinha do convênio<input name="insuranceCard" placeholder="Número da carteirinha"></label>
+          <label>Validade da carteirinha<input name="insuranceValidity" type="date"></label>
+          <label class="span-2">Cartão Nacional de Saúde (CNS)<input name="cns" inputmode="numeric" placeholder="Número do CNS"></label>
+          <label>Empresa<input name="company"></label>
+          <label>Última visita<input name="lastVisit" type="date"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="patient-form-section">
+        <legend>Informações complementares</legend>
+        <div class="patient-form-grid">
+          <label class="span-4">Observações<textarea name="observations" rows="3" placeholder="Informações importantes para o atendimento"></textarea></label>
+          <label class="span-4">Dados adicionais<textarea name="additionalData" rows="3" placeholder="Outras informações do cadastro"></textarea></label>
+        </div>
+      </fieldset>
+
+      <p class="deadline-note patient-required-note">* Campos obrigatórios: nome, data de nascimento e convênio. Não utilizaremos foto no cadastro.</p>
+      <div class="dialog-actions patient-registration-actions"><button class="secondary" type="button" id="cancelPatientRegistration">Cancelar</button><button class="primary" id="patientRegistrationSubmit" type="submit">Salvar e selecionar</button></div>
     </form>
   </dialog>
+
   <dialog id="appointmentDialog">
     <form id="appointmentForm">
       <div class="dialog-head"><div><p class="eyebrow">AGENDA DE FISIOTERAPIA</p><h2 id="appointmentTitle">Agendar paciente</h2></div><button class="icon-button" type="button" id="closeAppointment" aria-label="Fechar">×</button></div>
-      <input name="appointmentId" type="hidden"><input name="time" type="hidden"><input name="column" type="hidden">
-      <div class="form-grid">
-        <label class="full">Nome do paciente *<input name="patient" required></label>
-        <label>Código<input name="code" required></label>
-        <label>Convênio<select name="agreement"><option>IAMSPE</option><option>Outros</option></select></label>
+      <input name="appointmentId" type="hidden"><input name="time" type="hidden"><input name="column" type="hidden"><input name="patientId" type="hidden">
+      <div class="form-grid appointment-patient-grid">
+        <label class="full appointment-code-field">Código do paciente *<input name="code" required inputmode="numeric" autocomplete="off" placeholder="Digite o código para localizar o cadastro"></label>
+        <p class="appointment-patient-status full" id="appointmentPatientStatus">Digite o código do paciente para preencher os dados automaticamente.</p>
+        <label class="full">Nome do paciente *<input name="patient" required readonly></label>
+        <label>Data de nascimento<input name="birthDate" readonly placeholder="dd/mm/aaaa"></label>
+        <label>Convênio<input name="agreement" required readonly></label>
         <label class="full">Tipo de tratamento<input name="treatment" required placeholder="Ex.: Fisioterapia, trauma ou ortopedia"></label>
-        
-        
       </div>
       <div class="dialog-actions"><button class="secondary" type="button" id="cancelAppointment">Cancelar</button><button class="primary" type="submit">Salvar agendamento</button></div>
     </form>
@@ -479,7 +535,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261111-07"></script>
+  <script type="module" src="script.js?v=20261112-02"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
