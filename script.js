@@ -159,7 +159,7 @@ async function lookupPatientCep(){
   console.error(error);setCepStatus('CEP não localizado. Preencha o endereço manualmente.','error');showToast('Não foi possível localizar esse CEP. Os campos continuam disponíveis para preenchimento manual.','warning',5200)
  }
 }
-const patientCepField=patientRegistrationForm.elements.zipCode;
+const patientCepField=document.querySelector('#patientRegistrationForm [name="zipCode"]');
 let cepLookupTimer=null;
 patientCepField?.addEventListener('input',event=>{event.target.value=maskCep(event.target.value);setCepStatus('');clearTimeout(cepLookupTimer);if(event.target.value.replace(/\D/g,'').length===8)cepLookupTimer=setTimeout(lookupPatientCep,450)});
 patientCepField?.addEventListener('blur',()=>{if(patientCepField.value.replace(/\D/g,'').length===8&&!patientRegistrationForm.elements.city.value)lookupPatientCep()});
