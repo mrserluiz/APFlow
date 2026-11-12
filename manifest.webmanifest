@@ -1,0 +1,32 @@
+{
+  "id": "/APFlow/",
+  "name": "APFlow — Gestão de processos clínicos",
+  "short_name": "APFlow",
+  "description": "Gestão de agendas, pacientes, autorizações e relatórios clínicos.",
+  "lang": "pt-BR",
+  "start_url": "/APFlow/?source=pwa",
+  "scope": "/APFlow/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eef6fa",
+  "theme_color": "#315f7d",
+  "icons": [
+    {
+      "src": "assets/apflow-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/apflow-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "medical",
+    "business",
+    "productivity"
+  ]
+}
