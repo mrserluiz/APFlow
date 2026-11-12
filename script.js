@@ -87,6 +87,85 @@ fillAgreementSelect(document.querySelector('#agreementFilter'),'Todos');
 fillAgreementDatalist(document.querySelector('#patientAgreementOptions'));
 fillAgreementSelect(document.querySelector('#appointmentForm select[name="agreement"]'),'Selecione');
 
+const professionOptions=[
+ 'Administrador(a)','Advogado(a)','Analista administrativo','Analista de sistemas','Arquiteto(a)','Assistente administrativo',
+ 'Atendente','Autônomo(a)','Auxiliar administrativo','Auxiliar de enfermagem','Bancário(a)','Cabeleireiro(a)','Comerciante',
+ 'Contador(a)','Costureiro(a)','Cozinheiro(a)','Cuidador(a)','Dentista','Desempregado(a)','Designer','Diarista','Doméstico(a)',
+ 'Eletricista','Empresário(a)','Enfermeiro(a)','Engenheiro(a)','Estudante','Farmacêutico(a)','Fisioterapeuta','Funcionário(a) público(a)',
+ 'Gerente','Jornalista','Maqueiro(a)','Mecânico(a)','Médico(a)','Motorista','Nutricionista','Operador(a) de máquinas',
+ 'Pedreiro(a)','Professor(a)','Psicólogo(a)','Recepcionista','Representante comercial','Secretário(a)','Segurança','Técnico(a) de enfermagem',
+ 'Técnico(a) em informática','Terapeuta ocupacional','Vendedor(a)','Aposentado(a)','Do lar','Outra'
+];
+function fillProfessionDatalist(){
+ const list=document.querySelector('#patientProfessionOptions');if(!list)return;list.innerHTML='';
+ professionOptions.forEach(value=>{const option=document.createElement('option');option.value=value;list.append(option)})
+}
+fillProfessionDatalist();
+
+function normalizedLookup(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+const agreementSearch=document.querySelector('#patientAgreementSearch');
+const agreementDropdown=document.querySelector('#patientAgreementDropdown');
+function agreementValues(){return agreementOptions.map(item=>({value:typeof item==='string'?item:item.value,label:typeof item==='string'?item:item.label}))}
+function hideAgreementDropdown(){if(!agreementDropdown)return;agreementDropdown.hidden=true;agreementSearch?.setAttribute('aria-expanded','false')}
+function renderAgreementDropdown(){
+ if(!agreementSearch||!agreementDropdown)return;
+ const term=normalizedLookup(agreementSearch.value);const matches=agreementValues().filter(item=>!term||normalizedLookup(item.label).includes(term)||normalizedLookup(item.value).includes(term));
+ agreementDropdown.innerHTML='';
+ if(!matches.length){const empty=document.createElement('p');empty.textContent='Nenhum convênio encontrado.';agreementDropdown.append(empty)}
+ else matches.forEach(item=>{const button=document.createElement('button');button.type='button';button.role='option';button.textContent=item.label;button.dataset.value=item.value;button.addEventListener('mousedown',event=>event.preventDefault());button.addEventListener('click',()=>{agreementSearch.value=item.value;agreementSearch.dispatchEvent(new Event('input',{bubbles:true}));hideAgreementDropdown();syncPatientInsuranceCard()});agreementDropdown.append(button)});
+ agreementDropdown.hidden=false;agreementSearch.setAttribute('aria-expanded','true')
+}
+agreementSearch?.addEventListener('focus',renderAgreementDropdown);
+agreementSearch?.addEventListener('click',renderAgreementDropdown);
+agreementSearch?.addEventListener('input',renderAgreementDropdown);
+agreementSearch?.addEventListener('keydown',event=>{if(event.key==='Escape')hideAgreementDropdown()});
+document.addEventListener('click',event=>{if(!event.target.closest('.patient-agreement-picker'))hideAgreementDropdown()});
+
+let cepLookupController=null;
+function maskCep(value){const digits=String(value||'').replace(/\D/g,'').slice(0,8);return digits.length>5?digits.slice(0,5)+'-'+digits.slice(5):digits}
+function setCepStatus(message,state=''){const status=document.querySelector('#patientCepStatus');if(!status)return;status.textContent=message;status.dataset.state=state}
+function googleComponent(components,...types){const item=(components||[]).find(component=>types.some(type=>component.types?.includes(type)));return item?.long_name||''}
+async function lookupCepWithGoogle(cep,signal){
+ const endpoint='https://maps.googleapis.com/maps/api/geocode/json?components=postal_code:'+encodeURIComponent(cep)+'|country:BR&language=pt-BR&key='+encodeURIComponent(firebaseConfig.apiKey);
+ const response=await fetch(endpoint,{signal});if(!response.ok)throw new Error('google-http');
+ const payload=await response.json();if(payload.status!=='OK'||!payload.results?.length)throw new Error('google-unavailable');
+ const components=payload.results[0].address_components||[];
+ return{
+  address:googleComponent(components,'route'),
+  district:googleComponent(components,'sublocality_level_1','sublocality','neighborhood'),
+  city:googleComponent(components,'administrative_area_level_2','locality')
+ }
+}
+async function lookupCepWithViaCep(cep,signal){
+ const response=await fetch('https://viacep.com.br/ws/'+encodeURIComponent(cep)+'/json/',{signal});if(!response.ok)throw new Error('cep-http');
+ const payload=await response.json();if(payload.erro)throw new Error('cep-not-found');
+ return{address:payload.logradouro||'',district:payload.bairro||'',city:payload.localidade||''}
+}
+async function lookupPatientCep(){
+ const cepField=patientRegistrationForm.elements.zipCode;const cep=String(cepField.value||'').replace(/\D/g,'');
+ if(cep.length!==8){setCepStatus('Digite os 8 números do CEP.','warning');return}
+ cepLookupController?.abort();cepLookupController=new AbortController();const signal=cepLookupController.signal;
+ setCepStatus('Pesquisando endereço…','loading');
+ try{
+  let address;
+  try{address=await lookupCepWithGoogle(cep,signal)}catch(error){if(error.name==='AbortError')throw error;address=await lookupCepWithViaCep(cep,signal)}
+  patientRegistrationForm.elements.address.value=address.address||'';
+  patientRegistrationForm.elements.district.value=address.district||'';
+  patientRegistrationForm.elements.city.value=address.city||'';
+  setCepStatus('Endereço preenchido. Você pode editar os campos.','success');
+  if(!address.address)patientRegistrationForm.elements.address.focus()
+ }catch(error){
+  if(error.name==='AbortError')return;
+  console.error(error);setCepStatus('CEP não localizado. Preencha o endereço manualmente.','error');showToast('Não foi possível localizar esse CEP. Os campos continuam disponíveis para preenchimento manual.','warning',5200)
+ }
+}
+const patientCepField=patientRegistrationForm.elements.zipCode;
+let cepLookupTimer=null;
+patientCepField?.addEventListener('input',event=>{event.target.value=maskCep(event.target.value);setCepStatus('');clearTimeout(cepLookupTimer);if(event.target.value.replace(/\D/g,'').length===8)cepLookupTimer=setTimeout(lookupPatientCep,450)});
+patientCepField?.addEventListener('blur',()=>{if(patientCepField.value.replace(/\D/g,'').length===8&&!patientRegistrationForm.elements.city.value)lookupPatientCep()});
+document.querySelector('#lookupPatientCep')?.addEventListener('click',lookupPatientCep);
+
+
 function render(){
  Object.values(lists).forEach(list=>list.innerHTML='');
  const term=filters.search.value.trim().toLowerCase();const compactTerm=term.replace(/\D/g,'');
@@ -487,7 +566,7 @@ function setPatientNoteTab(tab='observations'){
 }
 document.querySelectorAll('[data-patient-note-tab]').forEach(button=>button.addEventListener('click',()=>setPatientNoteTab(button.dataset.patientNoteTab)));
 function openPatientRegistration(patient=null,selectAfterSave=false){
- patientRegistrationForm.reset();setPatientFormTab('cadastro');setPatientNoteTab('observations');selectPatientAfterRegistration=selectAfterSave;
+ patientRegistrationForm.reset();setPatientFormTab('cadastro');setPatientNoteTab('observations');hideAgreementDropdown();setCepStatus('');selectPatientAfterRegistration=selectAfterSave;
  patientRegistrationForm.elements.patientId.value=patient?.patientDocId||patient?.id||'';
  patientProfileFields.forEach(field=>{if(patientRegistrationForm.elements[field])patientRegistrationForm.elements[field].value=patient?.[field]||''});
  patientRegistrationForm.elements.birthDate.value=patient?.birthDate?patient.birthDate.split('-').reverse().join('/'):'';
