@@ -17,13 +17,13 @@
   <link rel="apple-touch-icon" href="assets/apflow-app-icon.svg?v=20261112-01">
   <link rel="stylesheet" href="styles.css?v=20261112-01">
   <link rel="stylesheet" href="login.css?v=20261111-01">
-  <link rel="stylesheet" href="app-pages.css?v=20261112-05">
+  <link rel="stylesheet" href="app-pages.css?v=20261112-06">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
   <header class="app-header">
     <div class="window-title"><span class="brand-mark">✚</span><strong>APFlow</strong><span>Gestão de processos clínicos</span></div>
-    <div class="user-area"><span class="online-dot" id="connectionDot"></span> <span id="connectionStatus">Aguardando acesso</span> <strong>Equipe APFlow</strong><button class="admin-mode-switch" id="adminModeToggle" type="button" hidden>Visualizar como usuário comum</button><button class="avatar" id="logoutButton" aria-label="Sair do sistema" title="Sair">↪</button></div>
+    <div class="user-area"><span class="online-dot" id="connectionDot"></span> <span id="connectionStatus">Aguardando acesso</span> <strong>Equipe APFlow</strong><button class="admin-mode-switch" id="adminModeToggle" type="button" hidden>Visualizar como usuário comum</button><button class="header-refresh-button" id="refreshAppButton" type="button" aria-label="Atualizar APFlow" title="Atualizar página">↻</button><button class="avatar" id="logoutButton" aria-label="Sair do sistema" title="Sair">↪</button></div>
   </header>
 
   <nav class="ribbon" aria-label="Navegação principal">
@@ -227,8 +227,14 @@
     <form id="patientRegistrationForm">
       <input name="patientId" type="hidden">
       <div class="dialog-head patient-registration-head"><div><p class="eyebrow">FICHA DO PACIENTE</p><h2 id="patientRegistrationTitle">Cadastrar paciente</h2><span>Preencha os dados cadastrais, contatos e informações do convênio.</span></div><button class="icon-button" type="button" id="closePatientRegistration" aria-label="Fechar">×</button></div>
+      <nav class="patient-form-tabs" role="tablist" aria-label="Seções do cadastro">
+        <button type="button" class="active" role="tab" aria-selected="true" data-patient-tab="cadastro">Dados cadastrais</button>
+        <button type="button" role="tab" aria-selected="false" data-patient-tab="contato">Contato e endereço</button>
+        <button type="button" role="tab" aria-selected="false" data-patient-tab="convenio">Convênio</button>
+        <button type="button" role="tab" aria-selected="false" data-patient-tab="anotacoes">Anotações</button>
+      </nav>
 
-      <fieldset class="patient-form-section">
+      <fieldset class="patient-form-section" data-patient-panel="cadastro">
         <legend>Dados cadastrais</legend>
         <div class="patient-form-grid">
           <label class="span-2">Nome completo *<input name="patient" required autocomplete="name" placeholder="Nome completo do paciente"></label>
@@ -246,7 +252,7 @@
         </div>
       </fieldset>
 
-      <fieldset class="patient-form-section">
+      <fieldset class="patient-form-section" data-patient-panel="contato" hidden>
         <legend>Documentos, contato e endereço</legend>
         <div class="patient-form-grid">
           <label>CPF<input name="cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
@@ -281,7 +287,7 @@
         </div>
       </fieldset>
 
-      <fieldset class="patient-form-section patient-insurance-section">
+      <fieldset class="patient-form-section patient-insurance-section" data-patient-panel="convenio" hidden>
         <legend>Dados do convênio</legend>
         <div class="patient-form-grid">
           <label class="span-2">Convênio *
@@ -299,7 +305,7 @@
         </div>
       </fieldset>
 
-      <fieldset class="patient-form-section">
+      <fieldset class="patient-form-section" data-patient-panel="anotacoes" hidden>
         <legend>Informações complementares</legend>
         <div class="patient-form-grid">
           <label class="span-4">Observações<textarea name="observations" rows="3" placeholder="Informações importantes para o atendimento"></textarea></label>
@@ -548,7 +554,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261112-06"></script>
+  <script type="module" src="script.js?v=20261112-07"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
