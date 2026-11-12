@@ -306,7 +306,10 @@ function renderPortals(){
   const name=document.createElement('strong');name.textContent=portal.name;const mode=document.createElement('small');mode.textContent=portal.openMode==='external'?'Nova aba':'Abrir internamente';card.append(name,mode);
   const open=()=>openPortal(portal);card.addEventListener('click',open);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open()}});
   const portalCount=document.querySelector('#adminPortalCount');if(portalCount)portalCount.textContent=`${portals.length} ${portals.length===1?'portal cadastrado':'portais cadastrados'}`;
- if(currentUserIsAdmin&&adminFunctionsEnabled&&!portal.isDefault){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
+ if(currentUserIsAdmin&&adminFunctionsEnabled){
+  const edit=document.createElement('button');edit.type='button';edit.className='portal-edit';edit.title='Editar autorizador';edit.setAttribute('aria-label',`Editar ${portal.name}`);edit.textContent='✎';edit.addEventListener('click',event=>{event.stopPropagation();openPortalEditor(portal)});card.append(edit);
+  if(!portal.isDefault){const remove=document.createElement('button');remove.type='button';remove.className='portal-delete';remove.title='Remover portal';remove.setAttribute('aria-label',`Remover ${portal.name}`);remove.textContent='×';remove.addEventListener('click',async event=>{event.stopPropagation();if(!confirm(`Remover o portal ${portal.name}?`))return;try{await deleteDoc(doc(db,'portais',portal.id));showToast('Portal removido.')}catch(error){console.error(error);showToast('Não foi possível remover o portal.')}});card.append(remove)}
+ }
   root.append(card);
  });
 }
@@ -672,15 +675,31 @@ document.querySelectorAll('[data-agenda-action]').forEach(button=>button.addEven
  showToast(button.textContent.trim()+': função em preparação.')
 }));
 const portalDialog=document.querySelector('#portalDialog');
-document.querySelector('#addPortalButton').addEventListener('click',()=>portalDialog.showModal());
+function openPortalEditor(portal=null){
+ const form=document.querySelector('#portalForm');form.reset();
+ form.elements.portalId.value=portal&&!portal.isDefault?portal.id:'';
+ form.elements.sourceDefault.value=portal?.isDefault?'true':'';
+ form.elements.name.value=portal?.name||'';
+ form.elements.url.value=portal?.url||'';
+ form.elements.iconUrl.value=portal?.iconUrl||'';
+ form.elements.openMode.value=portal?.openMode||'internal';
+ const editing=Boolean(portal);
+ document.querySelector('#portalDialogTitle').textContent=editing?'Editar portal de autorização':'Adicionar portal de autorização';
+ document.querySelector('#portalSubmitButton').textContent=editing?'Salvar alterações':'Salvar portal';
+ portalDialog.showModal();
+ setTimeout(()=>form.elements[editing?'openMode':'name'].focus(),40)
+}
+document.querySelector('#addPortalButton').addEventListener('click',()=>openPortalEditor());
 document.querySelectorAll('#closePortalDialog,#cancelPortal').forEach(button=>button.addEventListener('click',()=>portalDialog.close()));
 document.querySelector('#portalForm').addEventListener('submit',async event=>{
- event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const button=form.querySelector('[type="submit"]');button.disabled=true;
+ event.preventDefault();const form=event.currentTarget;const data=new FormData(form);const button=form.querySelector('[type="submit"]');const portalId=String(data.get('portalId')||'');const editing=Boolean(portalId||data.get('sourceDefault'));button.disabled=true;
  try{
   const url=normalizePortalUrl(data.get('url').trim());const rawIcon=data.get('iconUrl').trim();const iconUrl=rawIcon?normalizePortalUrl(rawIcon):'';
-  await addDoc(collection(db,'portais'),{name:data.get('name').trim(),url,iconUrl,openMode:data.get('openMode'),active:true,order:Date.now(),createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
-  form.reset();portalDialog.close();showToast('Portal adicionado às Autorizações.');
- }catch(error){console.error(error);showToast(error.message||'Não foi possível salvar o portal.')}finally{button.disabled=false}
+  const payload={name:data.get('name').trim(),url,iconUrl,openMode:data.get('openMode'),active:true,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid};
+  if(portalId)await updateDoc(doc(db,'portais',portalId),payload);
+  else await addDoc(collection(db,'portais'),{...payload,order:Date.now(),createdAt:serverTimestamp(),createdBy:auth.currentUser.uid});
+  form.reset();portalDialog.close();showToast(editing?'Autorizador atualizado.':'Portal adicionado às Autorizações.');
+ }catch(error){console.error(error);showToast(error.message||'Não foi possível salvar o portal.')}finally{button.disabled=false;button.textContent=editing?'Salvar alterações':'Salvar portal'}
 });
 document.querySelector('#openPortalExternal').addEventListener('click',()=>{if(currentPortalUrl)window.open(currentPortalUrl,'_blank','noopener,noreferrer')});
 document.querySelector('#closeInternalBrowser').addEventListener('click',()=>{document.querySelector('#authorizationFrame').src='about:blank';document.querySelector('#internalBrowser').hidden=true;currentPortalUrl='';document.querySelectorAll('.authorization-card').forEach(card=>card.classList.remove('active'))});
