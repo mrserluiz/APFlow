@@ -703,3 +703,30 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .report-reminder-button[hidden]{display:none}
 .report-reminder-button:hover{border-color:#315f7d;background:#fff}
 .report-reminder-button.active{border-color:#2f8a68;background:#e6f5ef;box-shadow:0 0 0 3px rgba(47,138,104,.12)}
+
+
+/* Sugestões clínicas para preencher a Evolução */
+.clinical-evolution-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px}
+.clinical-suggestion-trigger{padding:7px 11px;border-color:#7ea5ba;background:#edf6fa;color:#245d7b;font-size:12px;font-weight:800}
+.clinical-suggestion-trigger:hover{background:#dceef6}
+.clinical-suggestion-dialog{width:min(940px,calc(100% - 24px));max-height:calc(100vh - 24px);padding:0;border:0;border-radius:12px}
+.clinical-suggestion-panel{position:relative;padding:18px;background:#f4f8fa}
+.clinical-suggestion-toolbar{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:14px 0 10px}
+.clinical-suggestion-toolbar label{display:grid;flex:1;gap:5px;color:#294b5e;font-size:12px;font-weight:800}
+.clinical-suggestion-toolbar input,.clinical-suggestion-admin input,.clinical-suggestion-admin textarea{box-sizing:border-box;width:100%;padding:10px 12px;border:1px solid #b8cbd5;border-radius:6px;background:#fff;color:#18384a;font:14px "Segoe UI",Arial,sans-serif}
+.clinical-suggestion-layout{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(360px,1.5fr);gap:12px;min-height:350px}
+.clinical-suggestion-list{max-height:390px;overflow-y:auto;border:1px solid #c4d3db;border-radius:8px;background:#fff}
+.clinical-suggestion-option{display:grid;width:100%;gap:4px;padding:12px;border:0;border-bottom:1px solid #e1e9ed;background:#fff;color:#294b5e;text-align:left;cursor:pointer}
+.clinical-suggestion-option:last-child{border-bottom:0}
+.clinical-suggestion-option:hover,.clinical-suggestion-option.active{background:#e8f3f8;box-shadow:inset 4px 0 #2f789d}
+.clinical-suggestion-option strong{font-size:14px}
+.clinical-suggestion-option span{overflow:hidden;color:#6c818c;font-size:12px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.clinical-suggestion-preview{display:flex;flex-direction:column;min-width:0;padding:16px;border:1px solid #c4d3db;border-radius:8px;background:#fff}
+.clinical-suggestion-preview h3{margin:2px 0 10px;color:#18384a}
+.clinical-suggestion-text{flex:1;min-height:180px;padding:12px;overflow:auto;border:1px solid #dae4e9;border-radius:6px;background:#f8fafb;color:#294b5e;font-size:14px;line-height:1.5;white-space:pre-wrap}
+.clinical-suggestion-preview button{align-self:flex-end;margin-top:12px}
+.clinical-suggestion-admin{position:absolute;z-index:3;inset:14px;display:flex;flex-direction:column;gap:12px;padding:18px;border:1px solid #aebfca;border-radius:10px;background:#fff;box-shadow:0 12px 35px rgba(23,55,73,.24)}
+.clinical-suggestion-admin[hidden]{display:none}
+.clinical-suggestion-admin>label{display:grid;gap:5px;color:#294b5e;font-size:12px;font-weight:800}
+.clinical-suggestion-admin textarea{min-height:220px;resize:vertical}
+@media(max-width:700px){.clinical-suggestion-layout{grid-template-columns:1fr}.clinical-suggestion-list{max-height:180px}.clinical-suggestion-toolbar{align-items:stretch;flex-direction:column}.clinical-suggestion-toolbar button{align-self:flex-end}.clinical-evolution-heading{align-items:flex-start;flex-direction:column}}
