@@ -696,3 +696,10 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .patient-record-actions{display:flex;justify-content:flex-end;gap:9px}
 #savePatientQuickNotes:not(:disabled){border-color:#2f8a68;background:#2f8a68;color:#fff;font-weight:800}
 #savePatientQuickNotes:not(:disabled):hover{background:#267456}
+
+
+/* Lembretes de relatórios no sistema operacional */
+.report-reminder-button{display:grid;place-items:center;width:30px;height:30px;margin-left:3px;padding:0;border:1px solid rgba(49,95,125,.28);border-radius:50%;background:rgba(255,255,255,.62);font-size:15px;line-height:1;cursor:pointer}
+.report-reminder-button[hidden]{display:none}
+.report-reminder-button:hover{border-color:#315f7d;background:#fff}
+.report-reminder-button.active{border-color:#2f8a68;background:#e6f5ef;box-shadow:0 0 0 3px rgba(47,138,104,.12)}
