@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/apflow-app-icon.svg?v=20261112-01">
   <link rel="stylesheet" href="styles.css?v=20261112-01">
   <link rel="stylesheet" href="login.css?v=20261111-01">
-  <link rel="stylesheet" href="app-pages.css?v=20261113-02">
+  <link rel="stylesheet" href="app-pages.css?v=20261113-03">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -151,6 +151,11 @@
           <div><p>CONTROLE DE ACESSO</p><h2>Permissões por cargo</h2><strong>8 cargos disponíveis</strong><small>Admin, Financeiro, Gerente, Atendente e equipe clínica.</small></div>
           <button class="primary" type="button" data-admin-open="permissions">Configurar permissões</button>
         </article>
+        <article class="admin-dashboard-card startup-dashboard-card">
+          <span class="startup-card-icon" aria-hidden="true">⏻</span>
+          <div><p>INICIALIZAÇÃO DO WINDOWS</p><h2>Iniciar com o computador</h2><strong>Acesso rápido ao abrir o Windows</strong><small>Baixe o configurador para adicionar o APFlow à pasta Inicializar deste computador.</small></div>
+          <button class="primary" type="button" id="openStartupSetup">Configurar inicialização</button>
+        </article>
         <article class="admin-dashboard-card maintenance-dashboard-card">
           <span class="ui-icon icon-agenda"></span>
           <div><p>DEMONSTRAÇÃO E MANUTENÇÃO</p><h2>Dados das agendas</h2><strong>Ferramentas exclusivas do administrador</strong><small>Preencha a data selecionada com pacientes fictícios ou remova definitivamente todos os registros das agendas.</small></div>
@@ -173,6 +178,23 @@
   </main>
 
   <footer><span>APFlow • Relatórios clínicos</span><span id="footerSummary">0 registros • 0 aguardando • 0 prontos</span><span>Sincronizado agora</span></footer>
+
+  <dialog id="startupSetupDialog" class="startup-setup-dialog">
+    <div class="startup-setup-panel">
+      <div class="dialog-head"><div><p class="eyebrow">CONFIGURAÇÃO DO WINDOWS</p><h2>Iniciar o APFlow com o computador</h2></div><button class="icon-button" type="button" id="closeStartupSetup" aria-label="Fechar">×</button></div>
+      <div class="startup-setup-content">
+        <span class="startup-setup-symbol">⏻</span>
+        <div><strong>O Windows precisa autorizar esta configuração.</strong><p>Baixe o configurador, abra o arquivo e confirme a execução. Ele procura o atalho instalado do APFlow e cria uma cópia na pasta Inicializar, preservando o ícone sempre que possível.</p></div>
+      </div>
+      <ol class="startup-setup-steps">
+        <li>Clique em <strong>Baixar configurador</strong>.</li>
+        <li>Abra o arquivo <strong>Ativar_APFlow_na_Inicializacao.cmd</strong>.</li>
+        <li>Se o Windows perguntar, confirme a execução. Uma mensagem mostrará o resultado.</li>
+      </ol>
+      <p class="deadline-note">A configuração vale somente para este computador e pode ser removida depois pela pasta <strong>shell:startup</strong>.</p>
+      <div class="dialog-actions"><button class="secondary" type="button" id="cancelStartupSetup">Cancelar</button><button class="primary" type="button" id="downloadStartupSetup">Baixar configurador</button></div>
+    </div>
+  </dialog>
 
   <dialog id="filterDialog" class="filter-dialog">
     <form method="dialog" class="filter-panel">
@@ -588,7 +610,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261113-02"></script>
+  <script type="module" src="script.js?v=20261113-03"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
