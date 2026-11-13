@@ -53,6 +53,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /sugestoesClinicas/{suggestionId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
