@@ -730,3 +730,14 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .clinical-suggestion-admin>label{display:grid;gap:5px;color:#294b5e;font-size:12px;font-weight:800}
 .clinical-suggestion-admin textarea{min-height:220px;resize:vertical}
 @media(max-width:700px){.clinical-suggestion-layout{grid-template-columns:1fr}.clinical-suggestion-list{max-height:180px}.clinical-suggestion-toolbar{align-items:stretch;flex-direction:column}.clinical-suggestion-toolbar button{align-self:flex-end}.clinical-evolution-heading{align-items:flex-start;flex-direction:column}}
+
+
+/* Configurador de inicialização do Windows */
+.startup-dashboard-card .startup-card-icon{display:grid;place-items:center;width:54px;height:54px;border-radius:12px;background:#e8f2f7;color:#315f7d;font-size:31px;font-weight:900}
+.startup-setup-dialog{width:min(660px,calc(100% - 24px));padding:0;border:0;border-radius:12px}
+.startup-setup-panel{padding:20px;background:#f7fafc}
+.startup-setup-content{display:flex;align-items:center;gap:15px;margin:16px 0;padding:16px;border:1px solid #bed0da;border-radius:9px;background:#fff;color:#294b5e}
+.startup-setup-symbol{display:grid;flex:0 0 auto;place-items:center;width:58px;height:58px;border-radius:50%;background:#e3f0f6;color:#315f7d;font-size:32px}
+.startup-setup-content strong{display:block;margin-bottom:5px;color:#18384a}
+.startup-setup-content p{margin:0;font-size:13px;line-height:1.45}
+.startup-setup-steps{margin:12px 0;padding-left:24px;color:#294b5e;font-size:13px;line-height:1.8}
