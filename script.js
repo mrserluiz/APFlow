@@ -26,6 +26,7 @@ let requestPatientPool=[];
 let patientDirectoryPool=[];
 let activePatientRecord=null;
 let patientRecordNotesDirty=false;
+let reportReminderTimer=null;
 let selectPatientAfterRegistration=false;
 let therapists=[];
 let appointments=[];let stopAppointments=null;
@@ -182,6 +183,57 @@ let cepLookupTimer=null;
 patientCepField?.addEventListener('input',event=>{event.target.value=maskCep(event.target.value);setCepStatus('');clearTimeout(cepLookupTimer);if(event.target.value.replace(/\D/g,'').length===8)cepLookupTimer=setTimeout(lookupPatientCep,450)});
 patientCepField?.addEventListener('blur',()=>{if(patientCepField.value.replace(/\D/g,'').length===8&&!patientRegistrationForm.elements.city.value)lookupPatientCep()});
 document.querySelector('#lookupPatientCep')?.addEventListener('click',lookupPatientCep);
+
+
+const REPORT_REMINDER_INTERVAL=30*60*1000;
+const REPORT_REMINDER_ENABLED_KEY='apflow.reportRemindersEnabled';
+const REPORT_REMINDER_LAST_KEY='apflow.reportReminderLastAt';
+function canReceiveReportReminders(){const role=normalizedRole();return currentUserIsAdmin||role==='fisioterapeuta'||role==='medico'}
+function pendingClinicalReports(){return reports.filter(report=>report.status==='aguardando'||report.status==='confeccao')}
+function reportRemindersEnabled(){return localStorage.getItem(REPORT_REMINDER_ENABLED_KEY)==='true'&&typeof Notification!=='undefined'&&Notification.permission==='granted'}
+function updateReportReminderButton(){
+ const button=document.querySelector('#reportReminderButton');if(!button)return;
+ const allowed=canReceiveReportReminders();button.hidden=!allowed;
+ const enabled=reportRemindersEnabled();button.classList.toggle('active',enabled);
+ button.textContent=enabled?'🔔':'🔕';button.title=enabled?'Lembretes de relatórios ativados':'Ativar lembretes de relatórios';
+ button.setAttribute('aria-label',button.title)
+}
+function showReportDesktopNotification(force=false){
+ if(!canReceiveReportReminders()||!reportRemindersEnabled())return;
+ const pending=pendingClinicalReports();if(!pending.length)return;
+ const now=Date.now();const last=Number(localStorage.getItem(REPORT_REMINDER_LAST_KEY)||0);
+ if(!force&&now-last<REPORT_REMINDER_INTERVAL)return;
+ const waiting=pending.filter(report=>report.status==='aguardando').length;
+ const drafting=pending.filter(report=>report.status==='confeccao').length;
+ const parts=[];if(waiting)parts.push(`${waiting} aguardando início`);if(drafting)parts.push(`${drafting} em confecção`);
+ const notification=new Notification('APFlow • Relatórios pendentes',{
+  body:`Há ${pending.length} ${pending.length===1?'relatório pendente':'relatórios pendentes'}: ${parts.join(' e ')}.`,
+  icon:new URL('assets/apflow-app-icon.svg',location.href).href,
+  badge:new URL('assets/apflow-app-icon.svg',location.href).href,
+  tag:'apflow-report-reminder',
+  renotify:true
+ });
+ notification.onclick=()=>{window.focus();switchPage('relatorio');notification.close()};
+ localStorage.setItem(REPORT_REMINDER_LAST_KEY,String(now))
+}
+function startReportReminderSchedule(){
+ if(reportReminderTimer)clearInterval(reportReminderTimer);
+ reportReminderTimer=setInterval(()=>showReportDesktopNotification(false),REPORT_REMINDER_INTERVAL);
+ updateReportReminderButton();
+ setTimeout(()=>showReportDesktopNotification(false),8000)
+}
+async function toggleReportReminders(){
+ const button=document.querySelector('#reportReminderButton');
+ if(typeof Notification==='undefined'){showToast('Este navegador não oferece notificações do sistema.','warning');return}
+ if(reportRemindersEnabled()){
+  localStorage.setItem(REPORT_REMINDER_ENABLED_KEY,'false');updateReportReminderButton();showToast('Lembretes de relatórios desativados.');return
+ }
+ let permission=Notification.permission;
+ if(permission!=='granted')permission=await Notification.requestPermission();
+ if(permission!=='granted'){localStorage.setItem(REPORT_REMINDER_ENABLED_KEY,'false');updateReportReminderButton();showToast('Permissão de notificações bloqueada. Libere as notificações do APFlow nas configurações do Chrome.','warning',7000);return}
+ localStorage.setItem(REPORT_REMINDER_ENABLED_KEY,'true');localStorage.setItem(REPORT_REMINDER_LAST_KEY,'0');updateReportReminderButton();showToast('Lembretes ativados. O APFlow avisará a cada 30 minutos enquanto estiver aberto.','success',6500);showReportDesktopNotification(true)
+}
+document.querySelector('#reportReminderButton')?.addEventListener('click',toggleReportReminders);
 
 
 function render(){
@@ -881,7 +933,7 @@ function connectFirestore(){
  const reportsQuery=query(collection(db,'relatorios'),orderBy('createdAt','desc'));
  onSnapshot(reportsQuery,snapshot=>{
    reports=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(report=>report.status!=='excluido');
-   setConnection(true,'Firebase conectado');render();
+   setConnection(true,'Firebase conectado');render();updateReportReminderButton();showReportDesktopNotification(false);
  },error=>{console.error(error);reports=[];setConnection(false,'Firebase requer configuração');render();showToast('Não foi possível carregar os relatórios.')});
 }
 const loginScreen=document.querySelector('#loginScreen');
@@ -954,7 +1006,7 @@ async function revealApp(user){
  if(!therapistsConnected){therapistsConnected=true;connectTherapists()}
  connectPortals();
  try{const profile=await getDoc(doc(db,'usuarios',user.uid));if(profile.exists()){currentUserRole=profile.data().role||'equipe';if(currentUserRole==='admin'){currentUserIsAdmin=true;document.querySelector('#adminModeToggle').hidden=false;connectAdminUsers();applyAdminPreviewMode(localStorage.getItem('apflow.adminPreview')==='true');if(adminFunctionsEnabled)switchPage(localStorage.getItem('apflow.activePage')||'inicio',false)}}}catch(error){console.error('Perfil indisponível:',error)}
- applyReportRolePermissions();
+ applyReportRolePermissions();startReportReminderSchedule();
 }
 function showLogin(){loginScreen.classList.remove('hidden');setConnection(false,'Aguardando acesso');setTimeout(()=>loginForm.elements.username.focus(),50)}
 
