@@ -381,6 +381,26 @@ async function saveClinicalSuggestion(event){
  finally{button.disabled=false;button.textContent=original}
 }
 
+function downloadWindowsStartupConfigurator(){
+ const script=`@echo off
+chcp 65001 >nul
+title APFlow - Inicialização do Windows
+echo.
+echo Configurando o APFlow para iniciar com o Windows...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $startup=[Environment]::GetFolderPath('Startup'); $roots=@([Environment]::GetFolderPath('Programs'),[Environment]::GetFolderPath('CommonPrograms')); $source=Get-ChildItem -Path $roots -Filter '*.lnk' -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.BaseName -like '*APFlow*' } | Select-Object -First 1; $destination=Join-Path $startup 'APFlow.lnk'; if($source){ Copy-Item $source.FullName $destination -Force } else { $browsers=@(\"$env:ProgramFiles\\Google\\Chrome\\Application\\chrome.exe\",\"$env:ProgramFiles(x86)\\Google\\Chrome\\Application\\chrome.exe\",\"$env:LocalAppData\\Google\\Chrome\\Application\\chrome.exe\",\"$env:ProgramFiles(x86)\\Microsoft\\Edge\\Application\\msedge.exe\",\"$env:ProgramFiles\\Microsoft\\Edge\\Application\\msedge.exe\"); $browser=$browsers | Where-Object { Test-Path $_ } | Select-Object -First 1; if(-not $browser){ throw 'Chrome ou Edge não encontrado.' }; $shell=New-Object -ComObject WScript.Shell; $link=$shell.CreateShortcut($destination); $link.TargetPath=$browser; $link.Arguments='--app=https://mrserluiz.github.io/APFlow/?source=startup'; $link.WorkingDirectory=Split-Path $browser; $link.IconLocation=$browser+',0'; $link.Description='APFlow - Gestão de processos clínicos'; $link.Save() }; Write-Host ''; Write-Host 'APFlow configurado com sucesso!' -ForegroundColor Green; Write-Host ('Atalho criado em: '+$destination)"
+if errorlevel 1 (
+ echo.
+ echo Não foi possível configurar automaticamente.
+ echo Digite shell:startup no Executar do Windows e copie o atalho do APFlow para a pasta.
+)
+echo.
+pause
+`;
+ const blob=new Blob([script],{type:'application/octet-stream;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='Ativar_APFlow_na_Inicializacao.cmd';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);showToast('Configurador baixado. Abra o arquivo para concluir no Windows.','success',6500)
+}
+function openStartupSetup(){document.querySelector('#startupSetupDialog').showModal()}
+function closeStartupSetup(){document.querySelector('#startupSetupDialog').close()}
+
 function normalizePortalUrl(value){
  const url=new URL(value);
  if(url.protocol!=='https:')throw new Error('Somente endereços HTTPS são permitidos.');
@@ -1200,6 +1220,11 @@ document.querySelector('#markClinicalDelivered').addEventListener('click',()=>up
 document.querySelector('#archiveClinicalReport').addEventListener('click',()=>updateReportDelivery('archive'));
 document.querySelector('#deleteClinicalReport').addEventListener('click',()=>updateReportDelivery('delete'));
 window.addEventListener('afterprint',()=>document.body.classList.remove('clinical-printing'));
+
+document.querySelector('#openStartupSetup').addEventListener('click',openStartupSetup);
+document.querySelectorAll('#closeStartupSetup,#cancelStartupSetup').forEach(button=>button.addEventListener('click',closeStartupSetup));
+document.querySelector('#startupSetupDialog').addEventListener('cancel',event=>{event.preventDefault();closeStartupSetup()});
+document.querySelector('#downloadStartupSetup').addEventListener('click',downloadWindowsStartupConfigurator);
 
 const adminDialog=document.querySelector('#adminDialog');
 document.querySelector('#adminModeToggle').addEventListener('click',()=>applyAdminPreviewMode(adminFunctionsEnabled));
