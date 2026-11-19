@@ -354,18 +354,18 @@ function renderClinicalSuggestions(){
  visible.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='clinical-suggestion-option';if(selectedClinicalSuggestion?.id===item.id)button.classList.add('active');const title=document.createElement('strong');title.textContent=item.title||'Sugestão sem título';const preview=document.createElement('span');preview.textContent=String(item.message||'').slice(0,120);button.append(title,preview);button.addEventListener('click',()=>selectClinicalSuggestion(item));root.append(button)})
 }
 function selectClinicalSuggestion(item){
- selectedClinicalSuggestion=item;const preview=document.querySelector('#clinicalSuggestionPreview');preview.querySelector('h3').textContent=item.title||'Sugestão';preview.querySelector('.clinical-suggestion-text').textContent=item.message||'';document.querySelector('#applyClinicalSuggestion').disabled=!String(item.message||'').trim();renderClinicalSuggestions()
+ selectedClinicalSuggestion=item;const preview=document.querySelector('#clinicalSuggestionPreview');preview.querySelector('h3').textContent=item.title||'Sugestão';preview.querySelector('.clinical-suggestion-text').textContent=item.message||'';document.querySelector('#applyClinicalSuggestion').disabled=!String(item.message||'').trim();document.querySelector('#clinicalSuggestionAdminActions').hidden=!(currentUserIsAdmin&&adminFunctionsEnabled);renderClinicalSuggestions()
 }
 async function openClinicalSuggestions(){
- const dialog=document.querySelector('#clinicalSuggestionDialog');selectedClinicalSuggestion=null;document.querySelector('#clinicalSuggestionSearch').value='';document.querySelector('#clinicalSuggestionForm').hidden=true;document.querySelector('#newClinicalSuggestion').hidden=!(currentUserIsAdmin&&adminFunctionsEnabled);dialog.showModal();
+ const dialog=document.querySelector('#clinicalSuggestionDialog');selectedClinicalSuggestion=null;document.querySelector('#clinicalSuggestionSearch').value='';document.querySelector('#clinicalSuggestionForm').hidden=true;document.querySelector('#clinicalSuggestionAdminActions').hidden=true;document.querySelector('#applyClinicalSuggestion').disabled=true;const preview=document.querySelector('#clinicalSuggestionPreview');preview.querySelector('h3').textContent='Selecione uma sugestão';preview.querySelector('.clinical-suggestion-text').textContent='O texto-base aparecerá aqui para conferência.';document.querySelector('#newClinicalSuggestion').hidden=!(currentUserIsAdmin&&adminFunctionsEnabled);dialog.showModal();
  const root=document.querySelector('#clinicalSuggestionList');root.innerHTML='<p class="empty-state">Carregando sugestões...</p>';
  try{const snapshot=await getDocs(query(collection(db,'sugestoesClinicas'),orderBy('title')));clinicalSuggestions=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.active!==false);renderClinicalSuggestions()}
  catch(error){console.error(error);root.innerHTML='<p class="empty-state">Não foi possível carregar as sugestões. Confira as regras do Firebase.</p>'}
 }
 function closeClinicalSuggestions(){document.querySelector('#clinicalSuggestionDialog').close();selectedClinicalSuggestion=null}
-function toggleClinicalSuggestionForm(show){
- if(show&&!(currentUserIsAdmin&&adminFunctionsEnabled)){showToast('Somente o administrador pode criar sugestões.','warning');return}
- const form=document.querySelector('#clinicalSuggestionForm');form.hidden=!show;if(show){form.reset();setTimeout(()=>form.elements.title.focus(),30)}
+function toggleClinicalSuggestionForm(show,item=null){
+ if(show&&!(currentUserIsAdmin&&adminFunctionsEnabled)){showToast('Somente o administrador pode alterar sugestões.','warning');return}
+ const form=document.querySelector('#clinicalSuggestionForm');form.hidden=!show;if(show){form.reset();form.elements.suggestionId.value=item?.id||'';form.elements.title.value=item?.title||'';form.elements.message.value=item?.message||'';document.querySelector('#clinicalSuggestionFormTitle').textContent=item?'Editar sugestão':'Criar nova sugestão';form.querySelector('button[type="submit"]').textContent=item?'Salvar alterações':'Salvar sugestão';setTimeout(()=>form.elements.title.focus(),30)}
 }
 function applySelectedClinicalSuggestion(){
  if(!selectedClinicalSuggestion)return;const evolution=document.querySelector('#clinicalReportForm').elements.evolution;const existing=evolution.value.trim();
@@ -373,12 +373,25 @@ function applySelectedClinicalSuggestion(){
  evolution.value=String(selectedClinicalSuggestion.message||'').trim();evolution.dispatchEvent(new Event('input',{bubbles:true}));closeClinicalSuggestions();evolution.focus();showToast('Sugestão inserida. Você pode editar o texto antes de finalizar.','success',5200)
 }
 async function saveClinicalSuggestion(event){
- event.preventDefault();if(!(currentUserIsAdmin&&adminFunctionsEnabled)){showToast('Somente o administrador pode criar sugestões.','warning');return}
- const form=event.currentTarget;const title=form.elements.title.value.trim();const message=form.elements.message.value.trim();if(!title||!message)return;
+ event.preventDefault();if(!(currentUserIsAdmin&&adminFunctionsEnabled)){showToast('Somente o administrador pode alterar sugestões.','warning');return}
+ const form=event.currentTarget;const suggestionId=form.elements.suggestionId.value;const title=form.elements.title.value.trim();const message=form.elements.message.value.trim();if(!title||!message)return;
  const button=form.querySelector('button[type="submit"]');button.disabled=true;const original=button.textContent;button.textContent='Salvando...';
- try{const reference=await addDoc(collection(db,'sugestoesClinicas'),{title,message,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});clinicalSuggestions.push({id:reference.id,title,message,active:true});clinicalSuggestions.sort((a,b)=>String(a.title).localeCompare(String(b.title),'pt-BR'));toggleClinicalSuggestionForm(false);renderClinicalSuggestions();selectClinicalSuggestion({id:reference.id,title,message,active:true});showToast('Sugestão clínica cadastrada.','success')}
+ try{
+  if(suggestionId){await updateDoc(doc(db,'sugestoesClinicas',suggestionId),{title,message,updatedAt:serverTimestamp(),updatedBy:auth.currentUser?.uid||''});const index=clinicalSuggestions.findIndex(item=>item.id===suggestionId);if(index>=0)clinicalSuggestions[index]={...clinicalSuggestions[index],title,message};selectedClinicalSuggestion=clinicalSuggestions.find(item=>item.id===suggestionId)||{id:suggestionId,title,message};showToast('Sugestão clínica atualizada.','success')}
+  else{const reference=await addDoc(collection(db,'sugestoesClinicas'),{title,message,active:true,createdAt:serverTimestamp(),createdBy:auth.currentUser?.uid||'',updatedAt:serverTimestamp()});selectedClinicalSuggestion={id:reference.id,title,message,active:true};clinicalSuggestions.push(selectedClinicalSuggestion);showToast('Sugestão clínica cadastrada.','success')}
+  clinicalSuggestions.sort((a,b)=>String(a.title).localeCompare(String(b.title),'pt-BR'));toggleClinicalSuggestionForm(false);selectClinicalSuggestion(selectedClinicalSuggestion)
+ }
  catch(error){console.error(error);showToast('Não foi possível salvar a sugestão. Confira as regras do Firebase.','error')}
  finally{button.disabled=false;button.textContent=original}
+}
+async function deleteSelectedClinicalSuggestion(){
+ if(!(currentUserIsAdmin&&adminFunctionsEnabled)){showToast('Somente o administrador pode remover sugestões.','warning');return}
+ if(!selectedClinicalSuggestion?.id)return;
+ if(!confirm(`Remover definitivamente a sugestão "${selectedClinicalSuggestion.title||'Sem título'}"?`))return;
+ const button=document.querySelector('#deleteClinicalSuggestion');button.disabled=true;const id=selectedClinicalSuggestion.id;
+ try{await deleteDoc(doc(db,'sugestoesClinicas',id));clinicalSuggestions=clinicalSuggestions.filter(item=>item.id!==id);selectedClinicalSuggestion=null;const preview=document.querySelector('#clinicalSuggestionPreview');preview.querySelector('h3').textContent='Selecione uma sugestão';preview.querySelector('.clinical-suggestion-text').textContent='O texto-base aparecerá aqui para conferência.';document.querySelector('#clinicalSuggestionAdminActions').hidden=true;document.querySelector('#applyClinicalSuggestion').disabled=true;renderClinicalSuggestions();showToast('Sugestão clínica removida.','success')}
+ catch(error){console.error(error);showToast('Não foi possível remover a sugestão. Confira as regras do Firebase.','error')}
+ finally{button.disabled=false}
 }
 
 function downloadWindowsStartupConfigurator(){
@@ -1207,6 +1220,8 @@ document.querySelector('#closeClinicalSuggestions').addEventListener('click',clo
 document.querySelector('#clinicalSuggestionDialog').addEventListener('cancel',event=>{event.preventDefault();closeClinicalSuggestions()});
 document.querySelector('#clinicalSuggestionSearch').addEventListener('input',renderClinicalSuggestions);
 document.querySelector('#newClinicalSuggestion').addEventListener('click',()=>toggleClinicalSuggestionForm(true));
+document.querySelector('#editClinicalSuggestion').addEventListener('click',()=>{if(selectedClinicalSuggestion)toggleClinicalSuggestionForm(true,selectedClinicalSuggestion)});
+document.querySelector('#deleteClinicalSuggestion').addEventListener('click',deleteSelectedClinicalSuggestion);
 document.querySelectorAll('#cancelClinicalSuggestionForm,#cancelClinicalSuggestionEdit').forEach(button=>button.addEventListener('click',()=>toggleClinicalSuggestionForm(false)));
 document.querySelector('#clinicalSuggestionForm').addEventListener('submit',saveClinicalSuggestion);
 document.querySelector('#applyClinicalSuggestion').addEventListener('click',applySelectedClinicalSuggestion);
