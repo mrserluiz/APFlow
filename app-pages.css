@@ -741,3 +741,14 @@ body.clinical-printing #clinicalPreviewDialog .clinical-document {
 .startup-setup-content strong{display:block;margin-bottom:5px;color:#18384a}
 .startup-setup-content p{margin:0;font-size:13px;line-height:1.45}
 .startup-setup-steps{margin:12px 0;padding-left:24px;color:#294b5e;font-size:13px;line-height:1.8}
+
+
+/* Administração das sugestões clínicas */
+.clinical-suggestion-preview-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.clinical-suggestion-preview-actions>#applyClinicalSuggestion{margin-top:0}
+.clinical-suggestion-admin-actions{display:flex;gap:8px}
+.clinical-suggestion-admin-actions[hidden]{display:none}
+.clinical-suggestion-admin-actions button{margin-top:0;padding:9px 14px;font-weight:800}
+.clinical-suggestion-admin-actions .danger-button{border:1px solid #bd4a4a;border-radius:6px;background:#fff;color:#a33131}
+.clinical-suggestion-admin-actions .danger-button:hover{background:#a33131;color:#fff}
+@media(max-width:700px){.clinical-suggestion-preview-actions{align-items:stretch;flex-direction:column}.clinical-suggestion-admin-actions{width:100%}.clinical-suggestion-admin-actions button{flex:1}.clinical-suggestion-preview-actions>#applyClinicalSuggestion{width:100%}}
