@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/apflow-app-icon.svg?v=20261112-01">
   <link rel="stylesheet" href="styles.css?v=20261112-01">
   <link rel="stylesheet" href="login.css?v=20261111-01">
-  <link rel="stylesheet" href="app-pages.css?v=20261113-03">
+  <link rel="stylesheet" href="app-pages.css?v=20261119-01">
   <link rel="stylesheet" href="icons.css">
 </head>
 <body>
@@ -480,11 +480,18 @@
         <div class="clinical-suggestion-list" id="clinicalSuggestionList"><p class="empty-state">Carregando sugestões...</p></div>
         <section class="clinical-suggestion-preview" id="clinicalSuggestionPreview">
           <p class="eyebrow">PRÉVIA</p><h3>Selecione uma sugestão</h3><div class="clinical-suggestion-text">O texto-base aparecerá aqui para conferência.</div>
-          <button class="primary" id="applyClinicalSuggestion" type="button" disabled>Confirmar e usar na Evolução</button>
+          <div class="clinical-suggestion-preview-actions">
+            <div class="clinical-suggestion-admin-actions" id="clinicalSuggestionAdminActions" hidden>
+              <button class="secondary" id="editClinicalSuggestion" type="button">Editar</button>
+              <button class="danger-button" id="deleteClinicalSuggestion" type="button">Remover</button>
+            </div>
+            <button class="primary" id="applyClinicalSuggestion" type="button" disabled>Confirmar e usar na Evolução</button>
+          </div>
         </section>
       </div>
       <form class="clinical-suggestion-admin" id="clinicalSuggestionForm" hidden>
-        <div class="dialog-head"><div><p class="eyebrow">ADMINISTRAÇÃO</p><h3>Criar nova sugestão</h3></div><button class="icon-button" type="button" id="cancelClinicalSuggestionForm" aria-label="Cancelar">×</button></div>
+        <input name="suggestionId" type="hidden">
+        <div class="dialog-head"><div><p class="eyebrow">ADMINISTRAÇÃO</p><h3 id="clinicalSuggestionFormTitle">Criar nova sugestão</h3></div><button class="icon-button" type="button" id="cancelClinicalSuggestionForm" aria-label="Cancelar">×</button></div>
         <label>Título que aparecerá na listagem *<input name="title" required maxlength="100" placeholder="Ex.: Lombalgia em melhora"></label>
         <label>Mensagem-base dos procedimentos *<textarea name="message" required rows="8" placeholder="Digite a evolução-base que poderá ser ajustada pelo profissional."></textarea></label>
         <div class="dialog-actions"><button class="secondary" type="button" id="cancelClinicalSuggestionEdit">Cancelar</button><button class="primary" type="submit">Salvar sugestão</button></div>
@@ -610,7 +617,7 @@
       </div>
     </div>
   </section>
-  <script type="module" src="script.js?v=20261113-04"></script>
+  <script type="module" src="script.js?v=20261119-01"></script>
 <!-- publicação: calendário sem semana excedente 2026-11-10-04 -->
 </body>
 </html>
